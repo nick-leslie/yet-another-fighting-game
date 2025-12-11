@@ -6,8 +6,11 @@ import "core:log"
 
 PHYS_LAYER_MOVING :: jolt.ObjectLayer(0)
 PHYS_LAYER_NON_MOVING :: jolt.ObjectLayer(1)
+PHYS_LAYER_HURT_BOX :: jolt.ObjectLayer(2)
+
 PHYS_BROAD_LAYER_MOVING :: jolt.BroadPhaseLayer(0)
 PHYS_BROAD_LAYER_NON_MOVING :: jolt.BroadPhaseLayer(1)
+PHYS_BROAD_LAYER_HURT_BOX :: jolt.BroadPhaseLayer(2)
 
 Physics_Manager :: struct {
 	jobSystem:                     ^jolt.JobSystem,

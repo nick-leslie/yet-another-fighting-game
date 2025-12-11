@@ -4,21 +4,33 @@ import "base:runtime"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import rl "vendor:raylib"
+
 
 CHARACTER_CAPSULE_HALF_HEIGHT: f32 : 1
 CHARACTER_CAPSULE_RADIUS: f32 : 0.3
 
 Charecter :: struct {
 	physics_character: ^jolt.CharacterVirtual,
-	move_input:        Vec3,
+	using position:    Vec3,
+	input_buffer:      InputBuffer,
+	move_dir:          Vec3,
 	jump_requested:    bool,
+	in_air:            bool,
 	prev_position:     Vec3,
-	position:          Vec3,
 	jump_height:       f32,
 	move_speed:        f32,
 	air_move_speed:    f32,
 	air_drag:          f32,
+	controls:          Controls,
+	p1_side:           bool,
+	moves:             [dynamic]Move,
 }
+
+//which is slower waking or resizing
+
+
+
 
 setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	// capsule shape with origin at the bottom
@@ -99,21 +111,33 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	char.physics_character = character
 }
 
+charecter_update::proc(character:^Charecter) {
+    log.debug(poll_charecter_input(character))
+    character.jump_requested = false
+    if character.in_air == false {
+        character.move_dir = {}
+        if rl.IsKeyDown(.W) do character.jump_requested = true
+        // else if rl.IsKeyDown(.S) do g.character.move_input.y = 1 set this for crouch
+        if rl.IsKeyDown(.A) do character.move_dir.x = -1
+        else if rl.IsKeyDown(.D) do character.move_dir.x = 1
+    }
+}
 
 charecter_physics_update :: proc(character: ^Charecter) {
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
 
 	// get up vector (and update it in the character struct just in case)
-	up_const := UP
-	up: Vec3; jolt.CharacterBase_GetUp(auto_cast character.physics_character, &up_const)
+	// up_const := UP
+	// log.debug(up_const)
+	// up: Vec3; jolt.CharacterBase_GetUp(auto_cast character.physics_character, &up_const)
 
 	// A cheaper way to update the character's ground velocity, the platforms that the character is standing on may have changed velocity
 	jolt.CharacterVirtual_UpdateGroundVelocity(character.physics_character)
 	ground_velocity: Vec3; jolt.CharacterBase_GetGroundVelocity(auto_cast character.physics_character, &ground_velocity)
 
 	current_velocity: Vec3; jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &current_velocity)
-	current_vertical_velocity := linalg.dot(current_velocity, up) * up
+	current_vertical_velocity := linalg.dot(current_velocity, UP) * UP
 
 	new_velocity: Vec3
 	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
@@ -123,7 +147,7 @@ charecter_physics_update :: proc(character: ^Charecter) {
 		// Jump
 		moving_towards_ground := (current_vertical_velocity.y - ground_velocity.y) < 0.1
 		if jump_pressed && moving_towards_ground {
-			new_velocity += character.jump_height * up
+			new_velocity += character.jump_height * UP
 		}
 	} else {
 		new_velocity = current_vertical_velocity
@@ -132,15 +156,16 @@ charecter_physics_update :: proc(character: ^Charecter) {
 	// Add gravity
 	gravity: Vec3; jolt.PhysicsSystem_GetGravity(g.physicsManager.physicsSystem, &gravity)
 	new_velocity += gravity * FIXED_STEP
-	input := character.move_input
+	input := character.move_dir
 
 	input.y = 0
 	input = linalg.normalize0(input)
 	if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
 		new_velocity += input * (character.move_speed)
-		log.debug("sprinting")
+		character.in_air= false
 	} else {
 		// preserve horizontal velocity
+		character.in_air= true
 		current_horizontal_velocity := current_velocity - current_vertical_velocity
 		new_velocity += current_horizontal_velocity * character.air_drag
 		new_velocity += input * character.air_move_speed
@@ -188,4 +213,13 @@ charecter_physics_update :: proc(character: ^Charecter) {
 			}
 		}
 	}
+}
+
+
+
+delete_charecter :: proc(char:^Charecter) {
+    // delete all moves
+    for &moves in char.moves {
+        delete_move(&moves)
+    }
 }

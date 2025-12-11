@@ -3,11 +3,11 @@
 package jolt
 
 when ODIN_OS == .Windows {
-	foreign import lib "joltc.lib"
+	foreign import lib "joltcd.lib"
 } else when ODIN_OS == .Darwin {
-	foreign import lib "libjoltc.dylib"
+	foreign import lib "libjoltcd.dylib"
 } else when ODIN_OS == .Linux {
-	foreign import lib "libjoltc.so"
+	foreign import lib "libjoltcd.so"
 }
 
 

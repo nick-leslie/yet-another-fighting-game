@@ -52,7 +52,11 @@ Stage :: struct {
 CAMERA_DISTANCE :: 50
 
 Vec3 :: [3]f32
+Vec2 :: [2]f32
+Vec4 :: [4]f32
+
 Quat :: quaternion128
+
 FLOOR_POSITION: Vec3 = {0, -10, 0}
 QUAT_IDENTITY: Quat = 1
 VEC3_ZERO: Vec3 = 0
@@ -79,7 +83,7 @@ ui_camera :: proc() -> rl.Camera2D {
 }
 
 update :: proc() {
-
+    charecter_update(&g.p1)
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
@@ -88,8 +92,6 @@ update :: proc() {
 
 physics_update :: proc() {
 	charecter_physics_update(&g.p1)
-
-
 	// update normal physics
 	jolt.PhysicsSystem_Update(
 		g.physicsManager.physicsSystem,
@@ -129,7 +131,7 @@ draw :: proc() {
 	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
-	rl.DrawText(fmt.ctprintf("some_number: %v\nplayer_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("player_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
 
 	rl.EndMode2D()
 
@@ -163,8 +165,17 @@ game_init :: proc() {
 	char := Charecter {
 		position       = {0, 10, 0},
 		move_speed     = 10,
-		air_drag       = 1,
-		air_move_speed = 10,
+		air_drag       = 0.5,
+		air_move_speed = 5,
+		jump_height = 20,
+		p1_side=false,
+		input_buffer={},
+		controls= Keyboard{
+		    up_key=rl.KeyboardKey.W,
+		    down_key=rl.KeyboardKey.S,
+		    left_key=rl.KeyboardKey.A,
+		    right_key=rl.KeyboardKey.D,
+		},
 	}
 
 	setup_charecter_collison(&char, &pm)

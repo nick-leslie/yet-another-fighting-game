@@ -1,0 +1,111 @@
+package game
+
+import rl "vendor:raylib"
+import "../libs/jolt"
+
+Move :: struct {
+    frames:        [dynamic]Frame,
+    hurtbox_bodys: [dynamic]jolt.BodyID,// all these bodys are precreated or alocated but asleep
+    animation_ptr: ^rl.ModelAnimation,
+    model_ptr:     ^rl.Model,
+}
+
+delete_move :: proc(move:^Move) {
+    delete(move.frames)
+    delete(move.hurtbox_bodys)
+}
+
+Frame :: struct {
+    frame_index:   int,
+    frame_type:    FrameType,
+    hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static
+    hitbox_list:   [dynamic]Hit_box,
+    on_frame:      ^proc(^Charecter),
+
+}
+
+Hurt_box :: struct {
+    using position:  Vec2,
+    extent:          Vec2, // width height extent will be static
+    body_id:         jolt.BodyID, // all these bodys are precreated or alocated but asleep
+    // todo properties
+}
+Hit_box :: struct {
+    pos:       Vec2,
+    extent:    Vec2, // width height extent will be static
+    // todo properties
+}
+
+
+FrameType :: enum {
+    Startup,
+    Active,
+    Recovery,
+}
+
+
+//todo we may want to replace this with code gen
+// man this sucks but we love it
+setup_move_physics :: proc(move:^Move) {
+    move.hurtbox_bodys = make([dynamic]jolt.BodyID)
+    past_hurtboxes := make([dynamic]^Hurt_box)
+    delete(past_hurtboxes)
+    for &frame in move.frames {
+        for &hurt_box in frame.hurtbox_list {
+            if hurt_box.extent[0] == 0 || hurt_box.extent[1] == 0 {
+                // too check if in debug mode and assert fail
+                assert(ODIN_DEBUG == false, "Hurtboxes should never have a 0 width or height")
+                continue
+            }
+            used_past := false
+            for &past_hurtboxes in past_hurtboxes {
+                if hurt_box.x == past_hurtboxes.x &&
+                hurt_box.y == past_hurtboxes.y &&
+                hurt_box.extent.x == past_hurtboxes.extent.x &&
+                hurt_box.extent.y == past_hurtboxes.extent.y{ // we use a because its slot 3
+                    //should we just use a pointer no probs more error prone
+                    hurt_box.body_id = past_hurtboxes.body_id
+                    used_past=true
+                    break
+                }
+            }
+            if used_past == true {
+                continue // skip the rest of the loop
+            }
+            box := hurt_box
+
+            box_shape := jolt.BoxShape_Create(&{box.extent.x,box.extent.y,10}, 0)
+            defer jolt.Shape_Destroy(auto_cast box_shape)
+            box_settings := jolt.BodyCreationSettings_Create3(
+                shape = auto_cast box_shape,
+                position = &{hurt_box.x,hurt_box.y,0},
+                rotation = &{},
+                motionType = .Dynamic,
+                objectLayer = PHYS_LAYER_HURT_BOX,
+            )
+            box.body_id = jolt.BodyInterface_CreateAndAddBody(g.physicsManager.bodyInterface, box_settings, .Activate)
+            jolt.BodyCreationSettings_Destroy(box_settings)
+            append(&move.hurtbox_bodys,box.body_id)
+            append(&past_hurtboxes,&hurt_box)
+        }
+    }
+}
+
+// we need to have a pool of hit and hurt boxes that we resize every frame so that we can save state
+scan_for_hits :: proc() {
+    // NarrowPhaseQuery_CastShape2 :: proc(
+    //     query: ^NarrowPhaseQuery,
+    //     shape: ^Shape,
+    //     worldTransform: ^RMat4,
+    //     direction: ^Vec3,
+    //     settings: ^ShapeCastSettings,
+    //     baseOffset: ^RVec3,
+    //     collectorType: CollisionCollectorType,
+    //     callback: CastShapeResultCallback,
+    //     userData: rawptr, // this should be context
+    //     broadPhaseLayerFilter: ^BroadPhaseLayerFilter,
+    //     objectLayerFilter: ^ObjectLayerFilter,
+    //     bodyFilter: ^BodyFilter,
+    //     shapeFilter: ^ShapeFilter
+    // ) -> bool
+}

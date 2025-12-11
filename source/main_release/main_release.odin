@@ -19,7 +19,7 @@ main :: proc() {
 	exe_path := os.args[0]
 	exe_dir := filepath.dir(string(exe_path), context.temp_allocator)
 	os.set_current_directory(exe_dir)
-	
+
 	mode: int = 0
 	when ODIN_OS == .Linux || ODIN_OS == .Darwin {
 		mode = os.S_IRUSR | os.S_IWUSR | os.S_IRGRP | os.S_IROTH
