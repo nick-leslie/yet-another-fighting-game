@@ -168,7 +168,7 @@ game_init :: proc() {
 		air_drag       = 0.5,
 		air_move_speed = 5,
 		jump_height = 20,
-		p1_side=false,
+		p1_side=true,
 		input_buffer={},
 		controls= Keyboard{
 		    up_key=rl.KeyboardKey.W,
@@ -187,7 +187,7 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
-	add_move_movement(&g.p1)// the nill is tmp
+	add_state_movement(&g.p1)// the nill is tmp
 
 	game_hot_reloaded(g)
 }

@@ -1,12 +1,11 @@
 package game
 import rl "vendor:raylib"
-// import "core:log"
 
 
 Direction :: enum {
+    Neutral,
     Forward,
     Back,
-    Neutral,
     Up,
     UpBack,
     UpForward,
@@ -54,7 +53,7 @@ Pattern :: struct {
     // these are essently fixed. could we use code gen?
     inputs:       [dynamic]Input,
     pritority:    int,
-    move_index:   int,
+    state_index:   int,
 }
 
 delete_pattern :: proc(pattern:^Pattern) {
@@ -134,7 +133,7 @@ update_input_buffer :: proc(charecter:^Charecter) {
     input := poll_charecter_input(charecter)
     charecter.input_buffer.buffer[charecter.input_buffer.input_index] = input
     charecter.input_buffer.input_index +=1
-    if charecter.input_buffer.input_index >= INPUT_BUFFER_LENGTH {
+    if charecter.input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {
         charecter.input_buffer.input_index=0
     }
 }
@@ -142,42 +141,56 @@ update_input_buffer :: proc(charecter:^Charecter) {
 
 INPUT_BUFFER_LENGTH :: 20
 // could we speed this up with a binary tree
-pick_state :: proc(buffer:[INPUT_BUFFER_LENGTH]Input,pattern_list:[dynamic]Pattern) -> ^Pattern {
+pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
     pattern_input_index := make([dynamic]int,len(pattern_list))
     defer delete(pattern_input_index)
-
-    for i:=0; i < INPUT_BUFFER_LENGTH;i+=1{
-        input := buffer[i]
+    i:= buffer.input_index-1
+    for i != buffer.input_index {
+        //
+        if(i <= 0) {
+            i=INPUT_BUFFER_LENGTH-1
+        } else if(i == INPUT_BUFFER_LENGTH-1) {
+            i=0
+        }
+        input := buffer.buffer[i]
         for j:=0;j< len(pattern_list);j+=1 {
             pattern := pattern_list[j]
-            check_index := pattern_input_index[i]
+            check_index := pattern_input_index[j]
             if check_index == len(pattern.inputs) || check_index == -1{
                 // we know this pattern is qalifed break the loop
                 continue
             }
             if pattern.inputs[check_index] == input {
                 // disqualify the pattern
-                pattern_input_index[i] +=1
+                pattern_input_index[j] +=1
             } else {
-                pattern_input_index[i] = -1
+                pattern_input_index[j] = -1
             }
         }
+        i-=1
     }
+    // log.debug(pattern_input_index)
     // find the highest priority move
     highest_priority:= 0
     highest_index :=   0
-    for i:=0;i<len(pattern_list);i+=1 {
+    for i=0;i<len(pattern_list);i+=1 {
         check_index := pattern_input_index[i]
         pattern := pattern_list[i]
         if check_index != len(pattern.inputs) {
+            // log.debug(pattern)
             // we know this pattern is qalifed break the loop
             continue
         }
-        if pattern.pritority > highest_priority {
+        if pattern.pritority >= highest_priority {
             highest_priority = pattern.pritority
             highest_index    =   i
         }
     }
-    return &pattern_list[highest_index]
+    // if highest_index == 1 {
+    //     //my guess is this happens when we reset?
+    //     log.debug(pattern_list[highest_index].state_index)
+    //     assert(false,"random forward state")
+    // }
+    return pattern_list[highest_index].state_index
 }

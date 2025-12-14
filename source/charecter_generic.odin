@@ -4,7 +4,32 @@ package game
 import "core:log"
 
 
-move_forward :: proc(char:^Charecter) {
+state_neutral :: proc(char:^Charecter) {
+
+    zero_frame := Frame {
+        frame_index=0,
+        frame_type=FrameType.Active,
+        hurtbox_list={
+            Hurt_box{
+                position=Vec2{0,0},
+                extent=Vec2{50.,100.},
+            },
+        },
+        hitbox_list={},
+        on_frame=proc(char:^Charecter) {
+            char.move_dir=Vec3{0,0,0}
+        },
+        check_exit=free_cancel,
+    }
+    move := State {
+        // model_ptr=model_prt,
+        // animation_ptr=animation_ptr,
+        frames={zero_frame},
+    }
+    setup_move_physics(&move)
+    append(&char.states,move)
+}
+state_forward :: proc(char:^Charecter) {
 
     zero_frame := Frame {
         frame_index=0,
@@ -20,19 +45,20 @@ move_forward :: proc(char:^Charecter) {
             if char.p1_side do char.move_dir=Vec3{1,0,0}
             if !char.p1_side do char.move_dir=Vec3{-1,0,0}
         },
+        check_exit=free_cancel,
     }
-    move := Move {
+    move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
     log.debug("in setting up physics")
     setup_move_physics(&move)
-    log.debugf("%x",&char.moves)
-    append(&char.moves,move)
+    log.debugf("%x",&char.states)
+    append(&char.states,move)
 }
 
-move_backward :: proc(char:^Charecter) {
+state_backward :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
@@ -47,17 +73,18 @@ move_backward :: proc(char:^Charecter) {
             if char.p1_side do char.move_dir=Vec3{-1,0,0}
             if !char.p1_side do char.move_dir=Vec3{1,0,0}
         },
+        check_exit=free_cancel,
     }
-    move := Move {
+    move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
 
     setup_move_physics(&move)
-    append(&char.moves,move)
+    append(&char.states,move)
 }
-move_jump :: proc(char:^Charecter) {
+state_jump :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
@@ -71,17 +98,18 @@ move_jump :: proc(char:^Charecter) {
         on_frame=proc(char:^Charecter) {
             char.move_dir=Vec3{0,1,0}
         },
+        check_exit=jump_state_cancel, // todo change me
     }
-    move := Move {
+    move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
 
     setup_move_physics(&move)
-    append(&char.moves,move)
+    append(&char.states,move)
 }
-move_jump_forward :: proc(char:^Charecter) {
+state_jump_forward :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
@@ -96,17 +124,18 @@ move_jump_forward :: proc(char:^Charecter) {
             if char.p1_side do char.move_dir=Vec3{1,1,0}
             if !char.p1_side do char.move_dir=Vec3{-1,1,0}
         },
+        check_exit=jump_state_cancel, // todo change me
     }
-    move := Move {
+    move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
 
     setup_move_physics(&move)
-    append(&char.moves,move)
+    append(&char.states,move)
 }
-move_jump_backward :: proc(char:^Charecter) {
+state_jump_backward :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
@@ -122,23 +151,34 @@ move_jump_backward :: proc(char:^Charecter) {
             if char.p1_side do char.move_dir=Vec3{-1,1,0}
             if !char.p1_side do char.move_dir=Vec3{1,1,0}
         },
+        check_exit=jump_state_cancel, // todo change me
     }
-    move := Move {
+    move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
     setup_move_physics(&move)
-    append(&char.moves,move)
+    append(&char.states,move)
 }
 
+pattern_neutral ::proc(char:^Charecter){
+    pattern := Pattern {
+        inputs = {
+            Input{dir=Direction.Neutral,attack=Attack.None},
+        },
+        pritority=0,
+        state_index=0,
+    }
+    append(&char.patterns,pattern)
+}
 pattern_forward ::proc(char:^Charecter){
     pattern := Pattern {
         inputs = {
             Input{dir=Direction.Forward,attack=Attack.None},
         },
         pritority=0,
-        move_index=0,
+        state_index=1,
     }
     append(&char.patterns,pattern)
 }
@@ -148,7 +188,7 @@ pattern_backward ::proc(char:^Charecter){
             Input{dir=Direction.Back,attack=Attack.None},
         },
         pritority=0,
-        move_index=1,
+        state_index=2,
     }
     append(&char.patterns,pattern)
 }
@@ -158,7 +198,7 @@ pattern_jump ::proc(char:^Charecter){
             Input{dir=Direction.Up,attack=Attack.None},
         },
         pritority=0,
-        move_index=2,
+        state_index=3,
     }
     append(&char.patterns,pattern)
 }
@@ -168,7 +208,7 @@ pattern_jump_forward ::proc(char:^Charecter){
             Input{dir=Direction.UpForward,attack=Attack.None},
         },
         pritority=0,
-        move_index=3,
+        state_index=4,
     }
     append(&char.patterns,pattern)
 }
@@ -178,21 +218,23 @@ pattern_jump_backward ::proc(char:^Charecter){
             Input{dir=Direction.UpBack,attack=Attack.None},
         },
         pritority=0,
-        move_index=4,
+        state_index=5,
     }
     append(&char.patterns,pattern)
 }
 
-add_move_movement :: proc(char:^Charecter) {
+add_state_movement :: proc(char:^Charecter) {
     log.debug("in add movement")
-    move_forward(char)
-    move_backward(char)
-    move_jump(char)
-    move_jump_forward(char)
-    move_jump_backward(char)
+    state_neutral(char)
+    state_forward(char)
+    state_backward(char)
+    state_jump(char)
+    state_jump_forward(char)
+    state_jump_backward(char)
     log.debug("done adding movement")
 
     //add the move patterns
+    pattern_neutral(char)
     pattern_forward(char)
     pattern_backward(char)
     pattern_jump(char)

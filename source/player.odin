@@ -24,16 +24,19 @@ Charecter :: struct {
 	air_drag:          f32,
 	controls:          Controls,
 	p1_side:           bool,
-	moves:             [dynamic]Move,
+	states:            [dynamic]State, // should this be state
 	patterns:          [dynamic]Pattern,
+	current_frame:     int,
+	current_state:     int, // this is an index
     model:             rl.Model,
     animation:         rl.ModelAnimation, // does this need to be an array check raylib examples
+    charecter_flags:   u128, // lots of flags for various states.. tuble extc
 }
 
 //which is slower waking or resizing
 
 setup_charecter :: proc(char:^Charecter, pm: ^Physics_Manager) {
-    char.moves = make([dynamic]Move)
+    char.states = make([dynamic]State)
 
     setup_charecter_collison(char,pm)
 }
@@ -119,15 +122,29 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 }
 
 charecter_update::proc(character:^Charecter) {
+    state := character.states[character.current_state]
     log.debug(poll_charecter_input(character))
-    character.jump_requested = false
-    if character.in_air == false {
-        character.move_dir = {}
-        if rl.IsKeyDown(.W) do character.jump_requested = true
-        // else if rl.IsKeyDown(.S) do g.character.move_input.y = 1 set this for crouch
-        if rl.IsKeyDown(.A) do character.move_dir.x = -1
-        else if rl.IsKeyDown(.D) do character.move_dir.x = 1
+    update_input_buffer(character)
+    proposed_state_index := pick_state(character.input_buffer,character.patterns)
+
+    if len(character.states[character.current_state].frames) >= character.current_frame {
+        character.current_state = proposed_state_index
+        character.current_frame = 0
+        //todo check this code it is stinky!!!!!!!!!!!
+    } else if frame := state.frames[character.current_frame]; frame.check_exit(character,proposed_state_index) {
+        character.current_state = proposed_state_index
+        character.current_frame = 0
     }
+    frame := state.frames[character.current_frame]
+    frame.on_frame(character) // run frame update
+    character.current_frame+=1 // incrment the fraem by 1
+    // if character.in_air == false {
+    //     character.move_dir = {}
+    //     if rl.IsKeyDown(.W) do character.jump_requested = true
+    //     // else if rl.IsKeyDown(.S) do g.character.move_input.y = 1 set this for crouch
+    //     if rl.IsKeyDown(.A) do character.move_dir.x = -1
+    //     else if rl.IsKeyDown(.D) do character.move_dir.x = 1
+    // }
 }
 
 charecter_physics_update :: proc(character: ^Charecter) {
@@ -227,11 +244,11 @@ charecter_physics_update :: proc(character: ^Charecter) {
 delete_charecter :: proc(char:^Charecter) {
     log.debug("delting charecers")
     // delete all moves
-    for &move in char.moves {
-        delete_move(&move)
+    for &state in char.states {
+        delete_state(&state)
     }
-    delete(char.moves)
-    log.debug(char.moves)
+    delete(char.states)
+    log.debug(char.states)
     for &pattern in char.patterns {
         delete_pattern(&pattern)
     }

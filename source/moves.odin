@@ -4,29 +4,53 @@ import "core:log"
 import rl "vendor:raylib"
 import "../libs/jolt"
 
-Move :: struct {
+State :: struct {
     frames:        [dynamic]Frame,
     hurtbox_bodys: [dynamic]jolt.BodyID,// all these bodys are precreated or alocated but asleep
     animation_ptr: ^rl.ModelAnimation,
     model_ptr:     ^rl.Model,
 }
 
-delete_move :: proc(move:^Move) {
+delete_state :: proc(move:^State) {
     for &frame in move.frames {
         delete(frame.hitbox_list)
         delete(frame.hurtbox_list)
+        delete(frame.cancel_states)
     }
     delete(move.frames)
     delete(move.hurtbox_bodys)
 }
 
+check_cancel_options :: proc(char:^Charecter,cancel_index:int) -> bool {
+    state := char.states[char.current_state]
+    frame := state.frames[char.current_frame]
+    for &cancel_option in frame.cancel_states {
+        if cancel_option == cancel_index {
+            return true
+        }
+    }
+    return false
+}
+
+jump_state_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
+    //todo make it so we only cansle jump state when we land or do a
+    // jump normal/special
+    assert(false,"not implmented")
+    return true
+}
+
+free_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
+    return true
+}
+
 Frame :: struct {
     frame_index:   int,
     frame_type:    FrameType,
+    cancel_states: [dynamic]int,
     hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static
     hitbox_list:   [dynamic]Hit_box,
     on_frame:      proc(^Charecter),
-
+    check_exit:    proc(^Charecter,int) -> bool, // takes char pointer and proposed state
 }
 
 Hurt_box :: struct {
@@ -51,7 +75,7 @@ FrameType :: enum {
 
 //todo we may want to replace this with code gen
 // man this sucks but we love it
-setup_move_physics :: proc(move:^Move) {
+setup_move_physics :: proc(move:^State) {
     move.hurtbox_bodys = make([dynamic]jolt.BodyID)
     past_hurtboxes := make([dynamic]^Hurt_box)
     defer delete(past_hurtboxes)
