@@ -57,6 +57,10 @@ Pattern :: struct {
     move_index:   int,
 }
 
+delete_pattern :: proc(pattern:^Pattern) {
+    delete(pattern.inputs)
+}
+
 InputBuffer ::struct {
     buffer:     [INPUT_BUFFER_LENGTH]Input,
     input_index:int,
@@ -84,6 +88,7 @@ poll_charecter_input ::proc (charecter:^Charecter) -> Input{
             move_vec.x += f32(-1 * side_mod)
         }
         dir:Direction
+        attack:Attack
         switch move_vec {
         case {0,0}:
             dir = Direction.Neutral
@@ -104,9 +109,19 @@ poll_charecter_input ::proc (charecter:^Charecter) -> Input{
         case {-1,-1}:
             dir = Direction.DownBack
         }
+        if rl.IsKeyPressed(controls.light_key) {
+            attack = Attack.Light
+        }
+        if rl.IsKeyPressed(controls.medium_key) {
+            attack = Attack.Medium
+        }
+        if rl.IsKeyPressed(controls.heavy_key) {
+            attack = Attack.Heavy
+
+        }
         return Input{
             dir=dir,
-            attack=Attack.None,
+            attack=attack,
         }
     case GamePad:
         assert(false,"not implemented")

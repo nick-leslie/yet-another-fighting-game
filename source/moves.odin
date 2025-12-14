@@ -1,5 +1,6 @@
 package game
 
+import "core:log"
 import rl "vendor:raylib"
 import "../libs/jolt"
 
@@ -11,6 +12,10 @@ Move :: struct {
 }
 
 delete_move :: proc(move:^Move) {
+    for &frame in move.frames {
+        delete(frame.hitbox_list)
+        delete(frame.hurtbox_list)
+    }
     delete(move.frames)
     delete(move.hurtbox_bodys)
 }
@@ -20,7 +25,7 @@ Frame :: struct {
     frame_type:    FrameType,
     hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static
     hitbox_list:   [dynamic]Hit_box,
-    on_frame:      ^proc(^Charecter),
+    on_frame:      proc(^Charecter),
 
 }
 
@@ -49,11 +54,12 @@ FrameType :: enum {
 setup_move_physics :: proc(move:^Move) {
     move.hurtbox_bodys = make([dynamic]jolt.BodyID)
     past_hurtboxes := make([dynamic]^Hurt_box)
-    delete(past_hurtboxes)
+    defer delete(past_hurtboxes)
     for &frame in move.frames {
         for &hurt_box in frame.hurtbox_list {
             if hurt_box.extent[0] == 0 || hurt_box.extent[1] == 0 {
                 // too check if in debug mode and assert fail
+                log.debug("we are faling")
                 assert(ODIN_DEBUG == false, "Hurtboxes should never have a 0 width or height")
                 continue
             }
@@ -73,20 +79,30 @@ setup_move_physics :: proc(move:^Move) {
                 continue // skip the rest of the loop
             }
             box := hurt_box
-
+            log.debug("past use previous")
             box_shape := jolt.BoxShape_Create(&{box.extent.x,box.extent.y,10}, 0)
-            defer jolt.Shape_Destroy(auto_cast box_shape)
+            log.debug("created box shape")
+            pos := Vec3{hurt_box.x,hurt_box.y,0}
             box_settings := jolt.BodyCreationSettings_Create3(
                 shape = auto_cast box_shape,
-                position = &{hurt_box.x,hurt_box.y,0},
-                rotation = &{},
+                position = &pos,
+                rotation = &QUAT_IDENTITY,
                 motionType = .Dynamic,
                 objectLayer = PHYS_LAYER_HURT_BOX,
             )
-            box.body_id = jolt.BodyInterface_CreateAndAddBody(g.physicsManager.bodyInterface, box_settings, .Activate)
+            log.debug("created created body")
+
+            box.body_id = jolt.BodyInterface_CreateAndAddBody(
+                g.physicsManager.bodyInterface,
+                box_settings,
+                .Activate,
+            )
+
+            log.debug("added body")
             jolt.BodyCreationSettings_Destroy(box_settings)
             append(&move.hurtbox_bodys,box.body_id)
             append(&past_hurtboxes,&hurt_box)
+            jolt.Shape_Destroy(auto_cast box_shape)
         }
     }
 }

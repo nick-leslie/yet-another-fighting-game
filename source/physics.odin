@@ -7,10 +7,12 @@ import "core:log"
 PHYS_LAYER_MOVING :: jolt.ObjectLayer(0)
 PHYS_LAYER_NON_MOVING :: jolt.ObjectLayer(1)
 PHYS_LAYER_HURT_BOX :: jolt.ObjectLayer(2)
+PHYS_LAYER_HIT_BOX :: jolt.ObjectLayer(3)
 
 PHYS_BROAD_LAYER_MOVING :: jolt.BroadPhaseLayer(0)
 PHYS_BROAD_LAYER_NON_MOVING :: jolt.BroadPhaseLayer(1)
 PHYS_BROAD_LAYER_HURT_BOX :: jolt.BroadPhaseLayer(2)
+PHYS_BROAD_LAYER_HIT_BOX :: jolt.BroadPhaseLayer(3)
 
 Physics_Manager :: struct {
 	jobSystem:                     ^jolt.JobSystem,
@@ -34,7 +36,7 @@ create_physics_mannager :: proc() -> Physics_Manager {
 	})
 	jobSystem := jolt.JobSystemThreadPool_Create(nil)
 
-	object_layer_pair_filter := jolt.ObjectLayerPairFilterTable_Create(2)
+	object_layer_pair_filter := jolt.ObjectLayerPairFilterTable_Create(4)
 	jolt.ObjectLayerPairFilterTable_EnableCollision(
 		object_layer_pair_filter,
 		PHYS_LAYER_MOVING,
@@ -45,8 +47,13 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		PHYS_LAYER_MOVING,
 		PHYS_LAYER_MOVING,
 	)
+	jolt.ObjectLayerPairFilterTable_EnableCollision(
+		object_layer_pair_filter,
+		PHYS_LAYER_HURT_BOX,
+		PHYS_LAYER_HIT_BOX,
+	)
 
-	broad_phase_layer_interface := jolt.BroadPhaseLayerInterfaceTable_Create(2, 2)
+	broad_phase_layer_interface := jolt.BroadPhaseLayerInterfaceTable_Create(4, 4)
 	jolt.BroadPhaseLayerInterfaceTable_MapObjectToBroadPhaseLayer(
 		broad_phase_layer_interface,
 		PHYS_LAYER_MOVING,
@@ -57,12 +64,22 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		PHYS_LAYER_NON_MOVING,
 		PHYS_BROAD_LAYER_NON_MOVING,
 	)
+	jolt.BroadPhaseLayerInterfaceTable_MapObjectToBroadPhaseLayer(
+		broad_phase_layer_interface,
+		PHYS_LAYER_HURT_BOX,
+		PHYS_BROAD_LAYER_HURT_BOX,
+	)
+	jolt.BroadPhaseLayerInterfaceTable_MapObjectToBroadPhaseLayer(
+		broad_phase_layer_interface,
+		PHYS_LAYER_HIT_BOX,
+		PHYS_BROAD_LAYER_HIT_BOX,
+	)
 
 	object_vs_broad_phase_layer_filter := jolt.ObjectVsBroadPhaseLayerFilterTable_Create(
 		broad_phase_layer_interface,
-		2,
+		4,
 		object_layer_pair_filter,
-		2,
+		4,
 	)
 	physics_system := jolt.PhysicsSystem_Create(
 		&{

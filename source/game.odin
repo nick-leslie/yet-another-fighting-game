@@ -177,8 +177,8 @@ game_init :: proc() {
 		    right_key=rl.KeyboardKey.D,
 		},
 	}
-
-	setup_charecter_collison(&char, &pm)
+	//TODO investigate why we cant move you below the setup of G
+	setup_charecter(&char, &pm)
 	g^ = Game_Memory {
 		run = true,
 		physicsManager = pm,
@@ -187,6 +187,7 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
+	add_move_movement(&char)// the nill is tmp
 
 	game_hot_reloaded(g)
 }

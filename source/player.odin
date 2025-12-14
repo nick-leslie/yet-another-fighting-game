@@ -25,11 +25,17 @@ Charecter :: struct {
 	controls:          Controls,
 	p1_side:           bool,
 	moves:             [dynamic]Move,
+	patterns:          [dynamic]Pattern,
+    model:             rl.Model,
+    animation:         rl.ModelAnimation, // does this need to be an array check raylib examples
 }
 
 //which is slower waking or resizing
 
-
+setup_charecter :: proc(char:^Charecter, pm: ^Physics_Manager) {
+    char.moves = make([dynamic]Move)
+    setup_charecter_collison(char,pm)
+}
 
 
 setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
@@ -221,5 +227,8 @@ delete_charecter :: proc(char:^Charecter) {
     // delete all moves
     for &moves in char.moves {
         delete_move(&moves)
+    }
+    for &pattern in char.patterns {
+        delete_pattern(&pattern)
     }
 }
