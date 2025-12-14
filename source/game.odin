@@ -187,7 +187,7 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
-	add_move_movement(&char)// the nill is tmp
+	add_move_movement(&g.p1)// the nill is tmp
 
 	game_hot_reloaded(g)
 }
@@ -227,7 +227,9 @@ add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
 
 @(export)
 game_shutdown :: proc() {
+    delete_charecter(&g.p1)
 	free(g)
+
 }
 
 @(export)

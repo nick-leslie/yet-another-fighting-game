@@ -34,6 +34,7 @@ Charecter :: struct {
 
 setup_charecter :: proc(char:^Charecter, pm: ^Physics_Manager) {
     char.moves = make([dynamic]Move)
+
     setup_charecter_collison(char,pm)
 }
 
@@ -224,11 +225,15 @@ charecter_physics_update :: proc(character: ^Charecter) {
 
 
 delete_charecter :: proc(char:^Charecter) {
+    log.debug("delting charecers")
     // delete all moves
-    for &moves in char.moves {
-        delete_move(&moves)
+    for &move in char.moves {
+        delete_move(&move)
     }
+    delete(char.moves)
+    log.debug(char.moves)
     for &pattern in char.patterns {
         delete_pattern(&pattern)
     }
+    delete(char.patterns)
 }

@@ -5,6 +5,7 @@ import "core:log"
 
 
 move_forward :: proc(char:^Charecter) {
+
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
@@ -27,6 +28,7 @@ move_forward :: proc(char:^Charecter) {
     }
     log.debug("in setting up physics")
     setup_move_physics(&move)
+    log.debugf("%x",&char.moves)
     append(&char.moves,move)
 }
 
@@ -108,6 +110,7 @@ move_jump_backward :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
+        //I think inline allocations of dynamics is causing leaks
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
