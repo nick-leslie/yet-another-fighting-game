@@ -142,7 +142,8 @@ charecter_update::proc(character:^Charecter) {
     if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
         character.current_state = proposed_state_index
         character.current_frame = 0
-        frame = state.frames[frame_to_pick]
+        state = character.states[character.current_state]
+        frame = state.frames[character.current_frame]
         character.jump_requested=false
         log.debug("new state needed")
         //todo check this code it is stinky!!!!!!!!!!!

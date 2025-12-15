@@ -160,41 +160,10 @@ state_jump_forward :: proc(char:^Charecter) {
         },
         check_exit=jump_state_cancel, // todo change me
     }
-    one_frame := Frame {
-        frame_index=0,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{50.,100.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-            char.jump_requested=true
-            if char.p1_side do char.move_dir=Vec3{1,1,0}
-            if !char.p1_side do char.move_dir=Vec3{-1,1,0}
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
-    two_frame := Frame {
-        frame_index=0,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{50.,100.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
     move := State {
         // model_ptr=model_prt,
         // animation_ptr=animation_ptr,
-        frames={zero_frame,one_frame,two_frame},
+        frames={zero_frame},
     }
 
     setup_move_physics(&move)
