@@ -22,8 +22,12 @@ delete_state :: proc(move:^State) {
 }
 
 check_cancel_options :: proc(char:^Charecter,cancel_index:int) -> bool {
+    log.debug("huhhhh")
     state := char.states[char.current_state]
     frame := state.frames[char.current_frame]
+    if len(frame.cancel_states)  == 0{
+        return true
+    }
     for &cancel_option in frame.cancel_states {
         if cancel_option == cancel_index {
             return true
@@ -35,8 +39,17 @@ check_cancel_options :: proc(char:^Charecter,cancel_index:int) -> bool {
 jump_state_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
     //todo make it so we only cansle jump state when we land or do a
     // jump normal/special
-    assert(false,"not implmented")
-    return true
+
+   	if char.in_air == false{
+        log.debug("krilling myself")
+        //this is bad we should not rest here
+        char.move_dir = {0,0,0}
+        char.jump_requested=false
+        log.debug(char.jump_requested)
+        return true
+    }
+    // assert(false,"not implmented")
+    return false
 }
 
 free_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
@@ -44,7 +57,7 @@ free_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
 }
 
 Frame :: struct {
-    frame_index:   int,
+    frame_index:   int, // we may want to remove this
     frame_type:    FrameType,
     cancel_states: [dynamic]int,
     hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static

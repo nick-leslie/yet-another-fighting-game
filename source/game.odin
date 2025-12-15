@@ -131,8 +131,8 @@ draw :: proc() {
 	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
-	rl.DrawText(fmt.ctprintf("player_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
-
+	rl.DrawText(fmt.ctprintf("p1_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p1_state: %d", g.p1.current_state), 5, 12, 8, rl.WHITE)
 	rl.EndMode2D()
 
 	rl.EndDrawing()

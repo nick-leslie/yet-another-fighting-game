@@ -120,22 +120,33 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	jolt.CharacterVirtual_SetListener(character, listener)
 	char.physics_character = character
 }
-
+//todo this is an ordering update. because we do pickstate -> physics_update
 charecter_update::proc(character:^Charecter) {
+    character.jump_requested=false
     state := character.states[character.current_state]
     log.debug(poll_charecter_input(character))
     update_input_buffer(character)
     proposed_state_index := pick_state(character.input_buffer,character.patterns)
-
-    if len(character.states[character.current_state].frames) >= character.current_frame {
-        character.current_state = proposed_state_index
-        character.current_frame = 0
-        //todo check this code it is stinky!!!!!!!!!!!
-    } else if frame := state.frames[character.current_frame]; frame.check_exit(character,proposed_state_index) {
-        character.current_state = proposed_state_index
-        character.current_frame = 0
+    state_frame_len := len(character.states[character.current_state].frames)
+    frame_to_pick := character.current_frame
+    if character.current_frame >= state_frame_len {
+        frame_to_pick=state_frame_len-1 // lock on the last frame if we can progress
     }
-    frame := state.frames[character.current_frame]
+    frame := state.frames[frame_to_pick]
+    exit_check := frame.check_exit(character,proposed_state_index)
+    // log.debug(exit_check)
+    // log.debug(state_frame_len)
+    // log.debug(character.current_frame)
+    // log.debug(state_frame_len >= character.current_frame)
+    //exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
+    if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
+        character.current_state = proposed_state_index
+        character.current_frame = 0
+        frame = state.frames[frame_to_pick]
+        character.jump_requested=false
+        log.debug("new state needed")
+        //todo check this code it is stinky!!!!!!!!!!!
+    }
     frame.on_frame(character) // run frame update
     character.current_frame+=1 // incrment the fraem by 1
     // if character.in_air == false {
@@ -150,7 +161,9 @@ charecter_update::proc(character:^Charecter) {
 charecter_physics_update :: proc(character: ^Charecter) {
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
-
+	if character.in_air && jump_pressed {
+        jump_pressed = false // there is a better way to do this
+	}
 	// get up vector (and update it in the character struct just in case)
 	// up_const := UP
 	// log.debug(up_const)
@@ -170,7 +183,10 @@ charecter_physics_update :: proc(character: ^Charecter) {
 
 		// Jump
 		moving_towards_ground := (current_vertical_velocity.y - ground_velocity.y) < 0.1
+		// log.debug(jump_pressed)
 		if jump_pressed && moving_towards_ground {
+		    log.debug(character.jump_requested)
+		    log.debug(character.move_dir)
 			new_velocity += character.jump_height * UP
 		}
 	} else {
@@ -186,7 +202,7 @@ charecter_physics_update :: proc(character: ^Charecter) {
 	input = linalg.normalize0(input)
 	if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
 		new_velocity += input * (character.move_speed)
-		character.in_air= false
+		character.in_air=false
 	} else {
 		// preserve horizontal velocity
 		character.in_air= true
