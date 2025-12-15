@@ -42,10 +42,6 @@ jump_state_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
 
    	if char.in_air == false{
         log.debug("krilling myself")
-        //this is bad we should not rest here
-        char.move_dir = {0,0,0}
-        char.jump_requested=false
-        log.debug(char.jump_requested)
         return true
     }
     // assert(false,"not implmented")

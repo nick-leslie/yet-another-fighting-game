@@ -122,7 +122,7 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 }
 //todo this is an ordering update. because we do pickstate -> physics_update
 charecter_update::proc(character:^Charecter) {
-    character.jump_requested=false
+    character.jump_requested=false // should this be reset here
     state := character.states[character.current_state]
     log.debug(poll_charecter_input(character))
     update_input_buffer(character)
@@ -134,10 +134,6 @@ charecter_update::proc(character:^Charecter) {
     }
     frame := state.frames[frame_to_pick]
     exit_check := frame.check_exit(character,proposed_state_index)
-    // log.debug(exit_check)
-    // log.debug(state_frame_len)
-    // log.debug(character.current_frame)
-    // log.debug(state_frame_len >= character.current_frame)
     //exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
     if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
         character.current_state = proposed_state_index
