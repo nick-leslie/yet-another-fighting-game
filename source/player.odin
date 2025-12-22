@@ -121,12 +121,14 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	char.physics_character = character
 }
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update::proc(character:^Charecter) {
+charecter_update::proc(character:^Charecter,input:Input) {
     character.jump_requested=false // should this be reset here
+    character.move_dir = {}
     state := character.states[character.current_state]
     log.debug(poll_charecter_input(character))
-    update_input_buffer(character)
+    update_input_buffer(character,input)
     proposed_state_index := pick_state(character.input_buffer,character.patterns)
+    // log.debug(proposed_state_index)
     state_frame_len := len(character.states[character.current_state].frames)
     frame_to_pick := character.current_frame
     if character.current_frame >= state_frame_len {
@@ -141,18 +143,10 @@ charecter_update::proc(character:^Charecter) {
         state = character.states[character.current_state]
         frame = state.frames[character.current_frame]
         character.jump_requested=false
-        log.debug("new state needed")
-        //todo check this code it is stinky!!!!!!!!!!!
+        // log.debug("new state needed")
     }
     frame.on_frame(character) // run frame update
     character.current_frame+=1 // incrment the fraem by 1
-    // if character.in_air == false {
-    //     character.move_dir = {}
-    //     if rl.IsKeyDown(.W) do character.jump_requested = true
-    //     // else if rl.IsKeyDown(.S) do g.character.move_input.y = 1 set this for crouch
-    //     if rl.IsKeyDown(.A) do character.move_dir.x = -1
-    //     else if rl.IsKeyDown(.D) do character.move_dir.x = 1
-    // }
 }
 
 charecter_physics_update :: proc(character: ^Charecter) {

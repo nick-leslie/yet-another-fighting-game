@@ -40,6 +40,7 @@ Game_Memory :: struct {
 	physicsManager: Physics_Manager,
 	stage:          Stage,
 	p1:             Charecter,
+	p2:             Charecter,
 }
 
 Stage :: struct {
@@ -83,7 +84,12 @@ ui_camera :: proc() -> rl.Camera2D {
 }
 
 update :: proc() {
-    charecter_update(&g.p1)
+    input := poll_charecter_input(&g.p1) // todo move this out for rollback
+    charecter_update(&g.p1,input)
+    input = Input {
+        dir=Direction.Neutral,
+    } // todo move this out for rollback
+    // charecter_update(&g.p2,input)
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
@@ -92,6 +98,7 @@ update :: proc() {
 
 physics_update :: proc() {
 	charecter_physics_update(&g.p1)
+	// charecter_physics_update(&g.p2)
 	// update normal physics
 	jolt.PhysicsSystem_Update(
 		g.physicsManager.physicsSystem,
@@ -121,18 +128,26 @@ draw :: proc() {
 		8,
 		rl.ORANGE,
 	)
+	rl.DrawCapsule(
+		g.p2.position,
+		g.p2.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
+		CHARACTER_CAPSULE_RADIUS,
+		16,
+		8,
+		rl.ORANGE,
+	)
 
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
 
 
 	rl.EndMode3D()
 	rl.BeginMode2D(ui_camera())
-
 	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
 	rl.DrawText(fmt.ctprintf("p1_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p1_state: %d", g.p1.current_state), 5, 12, 8, rl.WHITE)
+	rl.DrawFPS(5,18)
 	rl.EndMode2D()
 
 	rl.EndDrawing()
@@ -154,7 +169,7 @@ game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
 	rl.SetWindowPosition(200, 200)
-	rl.SetTargetFPS(500)
+	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
 }
 
@@ -164,9 +179,27 @@ game_init :: proc() {
 	pm := create_physics_mannager()
 	char := Charecter {
 		position       = {0, 10, 0},
-		move_speed     = 10,
+		move_speed     = 20,
 		air_drag       = 0.5,
-		air_move_speed = 5,
+		air_move_speed = 15,
+		jump_height = 50,
+		p1_side=true,
+		input_buffer={},
+		controls= Keyboard{
+		    up_key=rl.KeyboardKey.W,
+		    down_key=rl.KeyboardKey.S,
+		    left_key=rl.KeyboardKey.A,
+		    right_key=rl.KeyboardKey.D,
+			light_key=rl.KeyboardKey.J,
+			medium_key=rl.KeyboardKey.K,
+			heavy_key=rl.KeyboardKey.L,
+		},
+	}
+	char2 := Charecter {
+		position       = {10, 10, 0},
+		move_speed     = 50,
+		air_drag       = 0.5,
+		air_move_speed = 10,
 		jump_height = 20,
 		p1_side=true,
 		input_buffer={},
@@ -179,15 +212,19 @@ game_init :: proc() {
 	}
 	//TODO investigate why we cant move you below the setup of G
 	setup_charecter(&char, &pm)
+	setup_charecter(&char2, &pm)
 	g^ = Game_Memory {
 		run = true,
 		physicsManager = pm,
 		p1 = char,
+		p2 = char2,
 		stage = {floor_id = add_floor(&pm)},
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
 	add_state_movement(&g.p1)// the nill is tmp
+	add_state_light_attack(&g.p1)
+	add_state_movement(&g.p2)// the nill is tmp
 
 	game_hot_reloaded(g)
 }

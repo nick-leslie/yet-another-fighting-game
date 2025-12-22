@@ -129,8 +129,7 @@ poll_charecter_input ::proc (charecter:^Charecter) -> Input{
     return {}
 }
 
-update_input_buffer :: proc(charecter:^Charecter) {
-    input := poll_charecter_input(charecter)
+update_input_buffer :: proc(charecter:^Charecter,input:Input) {
     charecter.input_buffer.buffer[charecter.input_buffer.input_index] = input
     charecter.input_buffer.input_index +=1
     if charecter.input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {

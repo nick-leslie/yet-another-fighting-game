@@ -41,7 +41,6 @@ jump_state_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
     // jump normal/special
 
    	if char.in_air == false{
-        log.debug("krilling myself")
         return true
     }
     // assert(false,"not implmented")
@@ -50,6 +49,9 @@ jump_state_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
 
 free_cancel :: proc(char:^Charecter,cancel_index:int) -> bool {
     return true
+}
+no_cancel :: proc(char:^Charecter,cancel_index:int) -> bool{
+    return false
 }
 
 Frame :: struct {
@@ -69,8 +71,8 @@ Hurt_box :: struct {
     // todo properties
 }
 Hit_box :: struct {
-    pos:       Vec2,
-    extent:    Vec2, // width height extent will be static
+    using position:       Vec2,
+    extent:               Vec2, // width height extent will be static
     // todo properties
 }
 

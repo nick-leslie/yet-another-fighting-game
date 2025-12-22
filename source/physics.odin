@@ -104,6 +104,7 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		bodyInterface                 = g_body_iface,
 		physicsSystem                 = physics_system,
 	}
+	jolt.PhysicsSystem_SetGravity(physics_system,&Vec3{0,-100,0})
 	return manager
 }
 
