@@ -65,14 +65,14 @@ Frame :: struct {
 }
 
 Hurt_box :: struct {
-	using position: Vec2,
-	extent:         Vec2, // width height extent will be static
-	body:        ^jolt.Body, // all these bodys are precreated or alocated but asleep
+	using position: Vec3,
+	extent:         Vec3, // width height extent will be static
+	body:           ^jolt.Body, // all these bodys are precreated or alocated but asleep
 	// todo properties
 }
 Hit_box :: struct {
-	using position: Vec2,
-	extent:         Vec2, // width height extent will be static
+	using position: Vec3,
+	extent:         Vec3, // width height extent will be static
 	// todo properties
 }
 
@@ -105,7 +105,7 @@ setup_move_bodys :: proc(move: ^State) {
 				   hurt_box.extent.x == past_hurtboxes.extent.x &&
 				   hurt_box.extent.y == past_hurtboxes.extent.y { 	// we use a because its slot 3
 					//should we just use a pointer no probs more error prone
-					hurt_box.body: = past_hurtboxes.body:
+					hurt_box.body := past_hurtboxes.body
 					used_past = true
 					break
 				}
@@ -117,24 +117,20 @@ setup_move_bodys :: proc(move: ^State) {
 			log.debug("past use previous")
 			box_shape := jolt.BoxShape_Create(&{box.extent.x, box.extent.y, 10}, 0)
 			log.debug("created box shape")
-			pos := Vec3{hurt_box.x, hurt_box.y, 0}
 			box_settings := jolt.BodyCreationSettings_Create3(
 				shape = auto_cast box_shape,
-				position = &pos,
+				position = &hurt_box.position,
 				rotation = &QUAT_IDENTITY,
 				motionType = .Static, // check this
 				objectLayer = PHYS_LAYER_HURT_BOX,
 			)
 			log.debug("created created body")
 
-			box.body: = jolt.BodyInterface_CreateBody(
-				g.physicsManager.bodyInterface,
-				box_settings,
-			)
+			box.body := jolt.BodyInterface_CreateBody(g.physicsManager.bodyInterface, box_settings)
 
 			log.debug("added body")
 			jolt.BodyCreationSettings_Destroy(box_settings)
-			append(&move.hurtbox_bodys, box.body:)
+			append(&move.hurtbox_bodys, box.body)
 			append(&past_hurtboxes, &hurt_box)
 			jolt.Shape_Destroy(auto_cast box_shape)
 		}

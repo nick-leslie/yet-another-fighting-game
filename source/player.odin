@@ -152,10 +152,20 @@ charecter_update :: proc(character: ^Charecter, input: Input) {
 add_charecer_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
+	state_frame_len := len(state.frames)
 	if character.current_frame >= state_frame_len {
 		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
 	}
 	frame := state.frames[frame_to_pick]
+	for &hurt_box in frame.hurtbox_list {
+		id := jolt.Body_GetID(hurt_box.body)
+		jolt.BodyInterface_AddBody(pm.bodyInterface, id, .Activate)
+		jolt.BodyInterface_SetPosition(
+			pm.bodyInterface,
+			id,
+			character.position + ^hurt_box.position,
+		)
+	}
 	//todo add all the bodys to the simulation before searching for an attack.
 	// this nees to be done in lockstep seprate from the charecter update
 }
