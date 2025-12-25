@@ -21,6 +21,7 @@ Physics_Manager :: struct {
 	broadPhaseLayerFilter:         ^jolt.BroadPhaseLayerInterface,
 	objectVsBroadPhaseLayerFilter: ^jolt.ObjectVsBroadPhaseLayerFilter,
 	bodyInterface:                 ^jolt.BodyInterface,
+	debugRenderer:                 ^jolt.DebugRenderer,
 	fixed_update_accumulator:      f32,
 }
 
@@ -104,8 +105,38 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		bodyInterface                 = g_body_iface,
 		physicsSystem                 = physics_system,
 	}
-	jolt.PhysicsSystem_SetGravity(physics_system,&Vec3{0,-100,0})
+	jolt.PhysicsSystem_SetGravity(physics_system, &Vec3{0, -100, 0})
 	return manager
+}
+
+setup_debug_renderer :: proc() {
+	// using jolt // import the jolt types
+	// procs := jolt.DebugRenderer_Procs {
+	// 	DrawLine = proc "c" (userData: rawptr, from: ^[3]f32, to: ^[3]f32, color: jolt.Color) {
+
+	// 	},
+	// 	DrawTriangle = proc "c" (
+	// 		userData: rawptr,
+	// 		v1: ^RVec3,
+	// 		v2: ^RVec3,
+	// 		v3: ^RVec3,
+	// 		color: Color,
+	// 		castShadow: DebugRenderer_CastShadow,
+	// 	) {
+
+	// 	},
+	// 	DrawText3D = proc "c" (
+	// 		userData: rawptr,
+	// 		position: ^RVec3,
+	// 		str: cstring,
+	// 		color: Color,
+	// 		height: f32,
+	// 	) {
+	// 		context = runtime.default_context()
+	// 		assert(false, "Not implemented")
+	// 	},
+	// }
+
 }
 
 destroy_physics_mannager :: proc(physicsManager: ^Physics_Manager) {

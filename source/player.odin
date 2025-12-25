@@ -28,17 +28,17 @@ Charecter :: struct {
 	patterns:          [dynamic]Pattern,
 	current_frame:     int,
 	current_state:     int, // this is an index
-    model:             rl.Model,
-    animation:         rl.ModelAnimation, // does this need to be an array check raylib examples
-    charecter_flags:   u128, // lots of flags for various states.. tuble extc
+	model:             rl.Model,
+	animation:         rl.ModelAnimation, // does this need to be an array check raylib examples
+	charecter_flags:   u128, // lots of flags for various states.. tuble extc
 }
 
 //which is slower waking or resizing
 
-setup_charecter :: proc(char:^Charecter, pm: ^Physics_Manager) {
-    char.states = make([dynamic]State)
+setup_charecter :: proc(char: ^Charecter, pm: ^Physics_Manager) {
+	char.states = make([dynamic]State)
 
-    setup_charecter_collison(char,pm)
+	setup_charecter_collison(char, pm)
 }
 
 
@@ -148,39 +148,61 @@ charecter_draw :: proc(character:Charecter) {
 }
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update::proc(character:^Charecter,input:Input) {
-    character.jump_requested=false // should this be reset here
-    character.move_dir = {}
-    state := character.states[character.current_state]
-    log.debug(poll_charecter_input(character))
-    update_input_buffer(character,input)
-    proposed_state_index := pick_state(character.input_buffer,character.patterns)
-    // log.debug(proposed_state_index)
-    state_frame_len := len(character.states[character.current_state].frames)
-    frame_to_pick := character.current_frame
-    if character.current_frame >= state_frame_len {
-        frame_to_pick=state_frame_len-1 // lock on the last frame if we can progress
-    }
-    frame := state.frames[frame_to_pick]
-    exit_check := frame.check_exit(character,proposed_state_index)
-    //exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
-    if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
-        character.current_state = proposed_state_index
-        character.current_frame = 0
-        state = character.states[character.current_state]
-        frame = state.frames[character.current_frame]
-        character.jump_requested=false
-        // log.debug("new state needed")
-    }
-    frame.on_frame(character) // run frame update
-    character.current_frame+=1 // incrment the fraem by 1
+charecter_update :: proc(character: ^Charecter, input: Input) {
+	character.jump_requested = false // should this be reset here
+	character.move_dir = {}
+	state := character.states[character.current_state]
+	log.debug(poll_charecter_input(character))
+	update_input_buffer(character, input)
+	proposed_state_index := pick_state(character.input_buffer, character.patterns)
+	// log.debug(proposed_state_index)
+	state_frame_len := len(character.states[character.current_state].frames)
+	frame_to_pick := character.current_frame
+	if character.current_frame >= state_frame_len {
+		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
+	}
+	frame := state.frames[frame_to_pick]
+	exit_check := frame.check_exit(character, proposed_state_index)
+	//exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
+	if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
+		character.current_state = proposed_state_index
+		character.current_frame = 0
+		state = character.states[character.current_state]
+		frame = state.frames[character.current_frame]
+		character.jump_requested = false
+		// log.debug("new state needed")
+	}
+	frame.on_frame(character) // run frame update
+	character.current_frame += 1 // incrment the fraem by 1
 }
+
+add_charecer_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
+	state := character.states[character.current_state]
+	frame_to_pick := character.current_frame
+	state_frame_len := len(state.frames)
+	if character.current_frame >= state_frame_len {
+		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
+	}
+	frame := state.frames[frame_to_pick]
+	for &hurt_box in frame.hurtbox_list {
+		id := jolt.Body_GetID(hurt_box.body)
+		jolt.BodyInterface_AddBody(pm.bodyInterface, id, .Activate)
+		jolt.BodyInterface_SetPosition(
+			pm.bodyInterface,
+			id,
+			character.position + ^hurt_box.position,
+		)
+	}
+	//todo add all the bodys to the simulation before searching for an attack.
+	// this nees to be done in lockstep seprate from the charecter update
+}
+
 
 charecter_physics_update :: proc(character: ^Charecter) {
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
 	if character.in_air && jump_pressed {
-        jump_pressed = false // there is a better way to do this
+		jump_pressed = false // there is a better way to do this
 	}
 	// get up vector (and update it in the character struct just in case)
 	// up_const := UP
@@ -203,8 +225,8 @@ charecter_physics_update :: proc(character: ^Charecter) {
 		moving_towards_ground := (current_vertical_velocity.y - ground_velocity.y) < 0.1
 		// log.debug(jump_pressed)
 		if jump_pressed && moving_towards_ground {
-		    log.debug(character.jump_requested)
-		    log.debug(character.move_dir)
+			log.debug(character.jump_requested)
+			log.debug(character.move_dir)
 			new_velocity += character.jump_height * UP
 		}
 	} else {
@@ -220,10 +242,10 @@ charecter_physics_update :: proc(character: ^Charecter) {
 	input = linalg.normalize0(input)
 	if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
 		new_velocity += input * (character.move_speed)
-		character.in_air=false
+		character.in_air = false
 	} else {
 		// preserve horizontal velocity
-		character.in_air= true
+		character.in_air = true
 		current_horizontal_velocity := current_velocity - current_vertical_velocity
 		new_velocity += current_horizontal_velocity * character.air_drag
 		new_velocity += input * character.air_move_speed
@@ -274,17 +296,16 @@ charecter_physics_update :: proc(character: ^Charecter) {
 }
 
 
-
-delete_charecter :: proc(char:^Charecter) {
-    log.debug("delting charecers")
-    // delete all moves
-    for &state in char.states {
-        delete_state(&state)
-    }
-    delete(char.states)
-    log.debug(char.states)
-    for &pattern in char.patterns {
-        delete_pattern(&pattern)
-    }
-    delete(char.patterns)
+delete_charecter :: proc(char: ^Charecter) {
+	log.debug("delting charecers")
+	// delete all moves
+	for &state in char.states {
+		delete_state(&state)
+	}
+	delete(char.states)
+	log.debug(char.states)
+	for &pattern in char.patterns {
+		delete_pattern(&pattern)
+	}
+	delete(char.patterns)
 }
