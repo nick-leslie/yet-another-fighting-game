@@ -120,14 +120,15 @@ draw :: proc() {
 	// 	rl.DrawCubeV(0, 1 * 2, rl.RED)
 	// 	rlgl.PopMatrix()
 	// }
-	rl.DrawCapsule(
-		g.p1.position,
-		g.p1.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
-		CHARACTER_CAPSULE_RADIUS,
-		16,
-		8,
-		rl.ORANGE,
-	)
+	charecter_draw(g.p1)
+	// rl.DrawCapsule(
+	// 	g.p1.position,
+	// 	g.p1.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
+	// 	CHARACTER_CAPSULE_RADIUS,
+	// 	16,
+	// 	8,
+	// 	rl.ORANGE,
+	// )
 	rl.DrawCapsule(
 		g.p2.position,
 		g.p2.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,

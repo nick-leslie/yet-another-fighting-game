@@ -120,6 +120,33 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	jolt.CharacterVirtual_SetListener(character, listener)
 	char.physics_character = character
 }
+
+charecter_draw :: proc(character:Charecter) {
+    state := character.states[character.current_state]
+    frame_to_pick := character.current_frame
+    if character.current_frame >= len(state.frames) {
+        frame_to_pick=len(state.frames)-1 // lock on the last frame if we can progress
+    }
+    frame := state.frames[frame_to_pick]
+    rl.DrawCapsule(
+		character.position,
+		character.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
+		CHARACTER_CAPSULE_RADIUS,
+		16,
+		8,
+		rl.ORANGE,
+	)
+	for &hurt_box in frame.hurtbox_list {
+	    rl.DrawCube(
+			{hurt_box.x,hurt_box.y,0},
+			hurt_box.extent.x,
+			hurt_box.extent.y,
+			10.0,
+			rl.BLUE,
+		)
+	}
+}
+
 //todo this is an ordering update. because we do pickstate -> physics_update
 charecter_update::proc(character:^Charecter,input:Input) {
     character.jump_requested=false // should this be reset here

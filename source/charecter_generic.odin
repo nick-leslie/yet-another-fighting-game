@@ -12,7 +12,7 @@ state_neutral :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -37,7 +37,7 @@ state_forward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -65,7 +65,7 @@ state_backward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -91,7 +91,7 @@ state_jump :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -108,7 +108,7 @@ state_jump :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -149,7 +149,7 @@ state_jump_forward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -177,7 +177,7 @@ state_jump_backward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -195,7 +195,7 @@ state_jump_backward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -213,7 +213,7 @@ state_jump_backward :: proc(char:^Charecter) {
         hurtbox_list={
             Hurt_box{
                 position=Vec2{0,0},
-                extent=Vec2{50.,100.},
+                extent=Vec2{5.,10.},
             },
         },
         hitbox_list={},
@@ -324,7 +324,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -339,7 +339,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -354,7 +354,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -369,7 +369,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -384,13 +384,13 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
-                   Hit_box {
+                   Hit_box{
                        position=Vec2{0,0},
-                       extent=Vec2{100.,50.},
+                       extent=Vec2{5.,10.},
                    },
                },
                on_frame=proc(char:^Charecter) {},
@@ -403,7 +403,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -422,7 +422,26 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
+                   },
+               },
+               hitbox_list={
+                   Hit_box {
+                       position=Vec2{0,0},
+                       extent=Vec2{10.,5.},
+                   },
+               },
+               on_frame=proc(char:^Charecter) {},
+               check_exit=no_cancel, // todo change me
+           },
+            Frame {
+               frame_index=7,
+               frame_type=FrameType.Active,
+               //I think inline allocations of dynamics is causing leaks
+               hurtbox_list={
+                   Hurt_box{
+                       position=Vec2{0,0},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -435,463 +454,13 @@ state_light_attack :: proc(char:^Charecter)  {
                check_exit=no_cancel, // todo change me
            },
             Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
-               frame_index=7,
-               frame_type=FrameType.Recovery,
-               //I think inline allocations of dynamics is causing leaks
-               hurtbox_list={
-                   Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
-                   },
-               },
-               hitbox_list={
-               },
-               on_frame=proc(char:^Charecter) {},
-               check_exit=no_cancel, // todo change me
-           },
-            Frame {
                frame_index=8,
                frame_type=FrameType.Recovery,
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
@@ -906,7 +475,7 @@ state_light_attack :: proc(char:^Charecter)  {
                hurtbox_list={
                    Hurt_box{
                        position=Vec2{0,0},
-                       extent=Vec2{50.,100.},
+                       extent=Vec2{5.,10.},
                    },
                },
                hitbox_list={
