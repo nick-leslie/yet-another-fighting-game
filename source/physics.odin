@@ -3,6 +3,7 @@ package game
 import "../libs/jolt"
 import "base:runtime"
 import "core:log"
+import rl "vendor:raylib"
 
 PHYS_LAYER_MOVING :: jolt.ObjectLayer(0)
 PHYS_LAYER_NON_MOVING :: jolt.ObjectLayer(1)
@@ -11,7 +12,7 @@ PHYS_LAYER_HIT_BOX :: jolt.ObjectLayer(3)
 
 PHYS_BROAD_LAYER_MOVING :: jolt.BroadPhaseLayer(0)
 PHYS_BROAD_LAYER_NON_MOVING :: jolt.BroadPhaseLayer(1)
-PHYS_BROAD_LAYER_HURT_BOX :: jolt.BroadPhaseLayer(2)
+PHYS_BROAD_LAYER_HURT_BOX :: jolt.BroadPhaseLayer(2) //todo do we want to seplrate this to p1/p2
 PHYS_BROAD_LAYER_HIT_BOX :: jolt.BroadPhaseLayer(3)
 
 Physics_Manager :: struct {
@@ -104,39 +105,42 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		objectVsBroadPhaseLayerFilter = object_vs_broad_phase_layer_filter,
 		bodyInterface                 = g_body_iface,
 		physicsSystem                 = physics_system,
+		debugRenderer                 = setup_debug_renderer(),
 	}
 	jolt.PhysicsSystem_SetGravity(physics_system, &Vec3{0, -100, 0})
 	return manager
 }
 
-setup_debug_renderer :: proc() {
-	// using jolt // import the jolt types
-	// procs := jolt.DebugRenderer_Procs {
-	// 	DrawLine = proc "c" (userData: rawptr, from: ^[3]f32, to: ^[3]f32, color: jolt.Color) {
-
-	// 	},
-	// 	DrawTriangle = proc "c" (
-	// 		userData: rawptr,
-	// 		v1: ^RVec3,
-	// 		v2: ^RVec3,
-	// 		v3: ^RVec3,
-	// 		color: Color,
-	// 		castShadow: DebugRenderer_CastShadow,
-	// 	) {
-
-	// 	},
-	// 	DrawText3D = proc "c" (
-	// 		userData: rawptr,
-	// 		position: ^RVec3,
-	// 		str: cstring,
-	// 		color: Color,
-	// 		height: f32,
-	// 	) {
-	// 		context = runtime.default_context()
-	// 		assert(false, "Not implemented")
-	// 	},
-	// }
-
+setup_debug_renderer :: proc() -> ^jolt.DebugRenderer{
+	@(static) debug_procs: jolt.DebugRenderer_Procs
+	debug_procs = {
+		DrawLine = proc "c" (userData: rawptr, from: ^[3]f32, to: ^[3]f32, color: jolt.Color) {
+		    rl.DrawLine3D(to^,from^,rl.Color(color))
+		},
+		DrawTriangle = proc "c" (
+			userData: rawptr,
+			v1: ^jolt.RVec3,
+			v2: ^jolt.RVec3,
+			v3: ^jolt.RVec3,
+			color: jolt.Color,
+			castShadow: jolt.DebugRenderer_CastShadow,
+		) {
+		    rl.DrawTriangle3D(v1^,v2^,v3^,rl.Color(color))
+		},
+		DrawText3D = proc "c" (
+			userData: rawptr,
+			position: ^jolt.RVec3,
+			str: cstring,
+			color: jolt.Color,
+			height: f32,
+		) {
+			context = runtime.default_context()
+			assert(false, "Not implemented")
+		},
+	}
+	renderer := jolt.DebugRenderer_Create(nil) // idk what to pass here pros context
+	jolt.DebugRenderer_SetProcs(&debug_procs)
+	return renderer
 }
 
 destroy_physics_mannager :: proc(physicsManager: ^Physics_Manager) {

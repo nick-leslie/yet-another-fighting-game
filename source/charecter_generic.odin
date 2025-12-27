@@ -6,14 +6,13 @@ import "core:log"
 
 state_neutral :: proc(char: ^Charecter) {
 
-<<<<<<< HEAD
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
         hurtbox_list={
             Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
+                position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10.},
             },
         },
         hitbox_list={},
@@ -27,38 +26,18 @@ state_neutral :: proc(char: ^Charecter) {
         // animation_ptr=animation_ptr,
         frames={zero_frame},
     }
-    setup_move_physics(&move)
+    setup_move_bodys(&move)
     append(&char.states,move)
-=======
-	zero_frame := Frame {
-		frame_index = 0,
-		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-		hitbox_list = {},
-		on_frame = proc(char: ^Charecter) {
-			char.move_dir = Vec3{0, 0, 0}
-		},
-		check_exit = free_cancel,
-	}
-	move := State {
-		// model_ptr=model_prt,
-		// animation_ptr=animation_ptr,
-		frames = {zero_frame},
-	}
-	setup_move_bodys(&move)
-	append(&char.states, move)
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 }
 state_forward :: proc(char: ^Charecter) {
 
-<<<<<<< HEAD
     zero_frame := Frame {
         frame_index=0,
         frame_type=FrameType.Active,
         hurtbox_list={
             Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
+                position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10.},
             },
         },
         hitbox_list={},
@@ -74,61 +53,20 @@ state_forward :: proc(char: ^Charecter) {
         frames={zero_frame},
     }
     log.debug("in setting up physics")
-    setup_move_physics(&move)
+    setup_move_bodys(&move)
     log.debugf("%x",&char.states)
     append(&char.states,move)
 }
 
-state_backward :: proc(char:^Charecter) {
-    zero_frame := Frame {
-        frame_index=0,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-            if char.p1_side do char.move_dir=Vec3{-1,0,0}
-            if !char.p1_side do char.move_dir=Vec3{1,0,0}
-        },
-        check_exit=free_cancel,
-    }
-    move := State {
-        // model_ptr=model_prt,
-        // animation_ptr=animation_ptr,
-        frames={zero_frame},
-    }
-=======
-	zero_frame := Frame {
-		frame_index = 0,
-		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-		hitbox_list = {},
-		on_frame = proc(char: ^Charecter) {
-			if char.p1_side do char.move_dir = Vec3{1, 0, 0}
-			if !char.p1_side do char.move_dir = Vec3{-1, 0, 0}
-		},
-		check_exit = free_cancel,
-	}
-	move := State {
-		// model_ptr=model_prt,
-		// animation_ptr=animation_ptr,
-		frames = {zero_frame},
-	}
-	log.debug("in setting up physics")
-	setup_move_bodys(&move)
-	log.debugf("%x", &char.states)
-	append(&char.states, move)
-}
 
 state_backward :: proc(char: ^Charecter) {
 	zero_frame := Frame {
 		frame_index = 0,
 		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
+		hurtbox_list = {Hurt_box{
+            position=Vec3{0,0,0},
+            extent=Vec3{5.,10.,0.},
+		}},
 		hitbox_list = {},
 		on_frame = proc(char: ^Charecter) {
 			if char.p1_side do char.move_dir = Vec3{-1, 0, 0}
@@ -141,72 +79,18 @@ state_backward :: proc(char: ^Charecter) {
 		// animation_ptr=animation_ptr,
 		frames = {zero_frame},
 	}
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 
 	setup_move_bodys(&move)
 	append(&char.states, move)
 }
-<<<<<<< HEAD
-state_jump :: proc(char:^Charecter) {
-    zero_frame := Frame {
-        frame_index=0,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-            char.jump_requested=true
-            log.debug("are you running again")
-            char.move_dir=Vec3{0,1,0}
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
-    one_frame := Frame {
-        frame_index=1,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-            char.jump_requested=true
-            log.debug("are you running again")
-            char.move_dir=Vec3{0,1,0}
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
-    two_frame := Frame {
-        frame_index=1,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{50.,100.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
-    move := State {
-        // model_ptr=model_prt,
-        // animation_ptr=animation_ptr,
-        frames={zero_frame,one_frame,two_frame},
-    }
-=======
 state_jump :: proc(char: ^Charecter) {
 	zero_frame := Frame {
 		frame_index = 0,
 		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
+		hurtbox_list = {Hurt_box{
+		        position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10.},
+		}},
 		hitbox_list = {},
 		on_frame = proc(char: ^Charecter) {
 			char.jump_requested = true
@@ -218,7 +102,10 @@ state_jump :: proc(char: ^Charecter) {
 	one_frame := Frame {
 		frame_index = 1,
 		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
+		hurtbox_list = {Hurt_box{
+	        position=Vec3{0,0,0},
+            extent=Vec3{5.,10.,0.},
+		}},
 		hitbox_list = {},
 		on_frame = proc(char: ^Charecter) {
 			char.jump_requested = true
@@ -230,7 +117,12 @@ state_jump :: proc(char: ^Charecter) {
 	two_frame := Frame {
 		frame_index = 1,
 		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
+		hurtbox_list = {
+		    Hurt_box{
+		        position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10.},
+			},
+		},
 		hitbox_list = {},
 		on_frame = proc(char: ^Charecter) {
 		},
@@ -241,41 +133,18 @@ state_jump :: proc(char: ^Charecter) {
 		// animation_ptr=animation_ptr,
 		frames = {zero_frame, one_frame, two_frame},
 	}
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 
 	setup_move_bodys(&move)
 	append(&char.states, move)
 }
-<<<<<<< HEAD
-state_jump_forward :: proc(char:^Charecter) {
-    zero_frame := Frame {
-        frame_index=0,
-        frame_type=FrameType.Active,
-        hurtbox_list={
-            Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
-            },
-        },
-        hitbox_list={},
-        on_frame=proc(char:^Charecter) {
-            char.jump_requested=true
-            if char.p1_side do char.move_dir=Vec3{1,1,0}
-            if !char.p1_side do char.move_dir=Vec3{-1,1,0}
-        },
-        check_exit=jump_state_cancel, // todo change me
-    }
-    move := State {
-        // model_ptr=model_prt,
-        // animation_ptr=animation_ptr,
-        frames={zero_frame},
-    }
-=======
 state_jump_forward :: proc(char: ^Charecter) {
 	zero_frame := Frame {
 		frame_index = 0,
 		frame_type = FrameType.Active,
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
+		hurtbox_list = {Hurt_box{
+	        position=Vec3{0,0,0},
+            extent=Vec3{5.,10.,0.},
+		}},
 		hitbox_list = {},
 		on_frame = proc(char: ^Charecter) {
 			char.jump_requested = true
@@ -289,12 +158,10 @@ state_jump_forward :: proc(char: ^Charecter) {
 		// animation_ptr=animation_ptr,
 		frames = {zero_frame},
 	}
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 
 	setup_move_bodys(&move)
 	append(&char.states, move)
 }
-<<<<<<< HEAD
 state_jump_backward :: proc(char:^Charecter) {
     zero_frame := Frame {
         frame_index=0,
@@ -302,8 +169,8 @@ state_jump_backward :: proc(char:^Charecter) {
         //I think inline allocations of dynamics is causing leaks
         hurtbox_list={
             Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
+                position=Vec3{0,0,0.},
+                extent=Vec3{5.,10.,10.},
             },
         },
         hitbox_list={},
@@ -320,8 +187,8 @@ state_jump_backward :: proc(char:^Charecter) {
         //I think inline allocations of dynamics is causing leaks
         hurtbox_list={
             Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
+                position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10},
             },
         },
         hitbox_list={},
@@ -338,8 +205,8 @@ state_jump_backward :: proc(char:^Charecter) {
         //I think inline allocations of dynamics is causing leaks
         hurtbox_list={
             Hurt_box{
-                position=Vec2{0,0},
-                extent=Vec2{5.,10.},
+                position=Vec3{0,0,0},
+                extent=Vec3{5.,10.,10.},
             },
         },
         hitbox_list={},
@@ -352,56 +219,9 @@ state_jump_backward :: proc(char:^Charecter) {
         // animation_ptr=animation_ptr,
         frames={zero_frame,one_frame,two_frame},
     }
-    setup_move_physics(&move)
+    setup_move_bodys(&move)
     append(&char.states,move)
-=======
-state_jump_backward :: proc(char: ^Charecter) {
-	zero_frame := Frame {
-		frame_index = 0,
-		frame_type = FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-		hitbox_list = {},
-		on_frame = proc(char: ^Charecter) {
-			char.jump_requested = true
-			if char.p1_side do char.move_dir = Vec3{-1, 1, 0}
-			if !char.p1_side do char.move_dir = Vec3{1, 1, 0}
-		},
-		check_exit = jump_state_cancel, // todo change me
-	}
-	one_frame := Frame {
-		frame_index = 0,
-		frame_type = FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-		hitbox_list = {},
-		on_frame = proc(char: ^Charecter) {
-			char.jump_requested = true
-			if char.p1_side do char.move_dir = Vec3{-1, 1, 0}
-			if !char.p1_side do char.move_dir = Vec3{1, 1, 0}
-		},
-		check_exit = jump_state_cancel, // todo change me
-	}
-	two_frame := Frame {
-		frame_index = 0,
-		frame_type = FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-		hitbox_list = {},
-		on_frame = proc(char: ^Charecter) {
-		},
-		check_exit = jump_state_cancel, // todo change me
-	}
-	move := State {
-		// model_ptr=model_prt,
-		// animation_ptr=animation_ptr,
-		frames = {zero_frame, one_frame, two_frame},
-	}
-	setup_move_bodys(&move)
-	append(&char.states, move)
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 }
-
 
 pattern_neutral :: proc(char: ^Charecter) {
 	pattern := Pattern {
@@ -472,7 +292,6 @@ add_state_movement :: proc(char: ^Charecter) {
 	log.debug("done adding patterns")
 }
 
-<<<<<<< HEAD
 state_light_attack :: proc(char:^Charecter)  {
     move := State {
         // model_ptr=model_prt,
@@ -484,9 +303,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                },
@@ -499,9 +317,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                },
@@ -514,9 +331,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                },
@@ -529,9 +345,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                },
@@ -544,17 +359,17 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                    Hit_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
+                       position=Vec3{0,0,0},
+                       extent=Vec3{10.,5.,10.},
                    },
                },
-               on_frame=proc(char:^Charecter) {},
+               on_frame=proc(char:^Charecter) {
+               },
                check_exit=no_cancel, // todo change me
            },
             Frame {
@@ -563,14 +378,13 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
-                   Hit_box {
-                       position=Vec2{0,0},
-                       extent=Vec2{100.,50.},
+                   Hit_box{
+                       position=Vec3{0,0,0},
+                       extent=Vec3{10.,5.,10.},
                    },
                },
                on_frame=proc(char:^Charecter) {},
@@ -582,14 +396,13 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
-                   Hit_box {
-                       position=Vec2{0,0},
-                       extent=Vec2{10.,5.},
+                   Hit_box{
+                       position=Vec3{0,0,0},
+                       extent=Vec3{10.,5.,10.},
                    },
                },
                on_frame=proc(char:^Charecter) {},
@@ -601,14 +414,13 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
-                   Hit_box {
-                       position=Vec2{0,0},
-                       extent=Vec2{100.,50.},
+                   Hit_box{
+                       position=Vec3{0,0,0},
+                       extent=Vec3{10.,5.,10.},
                    },
                },
                on_frame=proc(char:^Charecter) {},
@@ -620,9 +432,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
-                   },
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.}                   },
                },
                hitbox_list={
                },
@@ -635,8 +446,8 @@ state_light_attack :: proc(char:^Charecter)  {
                //I think inline allocations of dynamics is causing leaks
                hurtbox_list={
                    Hurt_box{
-                       position=Vec2{0,0},
-                       extent=Vec2{5.,10.},
+                       position=Vec3{0,0,0},
+                       extent=Vec3{5.,10.,10.},
                    },
                },
                hitbox_list={
@@ -646,391 +457,35 @@ state_light_attack :: proc(char:^Charecter)  {
            },
         },
     }
-    setup_move_physics(&move)
+    setup_move_bodys(&move)
     append(&char.states,move)
-=======
-state_light_attack :: proc(char: ^Charecter) {
-	move := State {
-		// model_ptr=model_prt,
-		// animation_ptr=animation_ptr,
-		frames = {
-			Frame {
-				frame_index = 0,
-				frame_type = FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 1,
-				frame_type = FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 2,
-				frame_type = FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 3,
-				frame_type = FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 4,
-				frame_type = FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {Hit_box{position = Vec2{0, 0}, extent = Vec2{100., 50.}}},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 5,
-				frame_type = FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {Hit_box{position = Vec2{0, 0}, extent = Vec2{100., 50.}}},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 6,
-				frame_type = FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {Hit_box{position = Vec2{0, 0}, extent = Vec2{100., 50.}}},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 7,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 8,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = no_cancel, // todo change me
-			},
-			Frame {
-				frame_index = 9,
-				frame_type = FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {Hurt_box{position = Vec2{0, 0}, extent = Vec2{50., 100.}}},
-				hitbox_list = {},
-				on_frame = proc(char: ^Charecter) {},
-				check_exit = free_cancel, // todo change me
-			},
-		},
-	}
-	setup_move_bodys(&move)
-	append(&char.states, move)
->>>>>>> 89aa8a84ae918e6d694783f2b28f8d03dd189433
 }
 
-pattern_light_attack :: proc(char: ^Charecter) {
-	pattern := Pattern {
-		inputs      = {Input{dir = Direction.Forward, attack = Attack.Light}},
-		pritority   = 1,
-		state_index = 6,
-	}
-	pattern2 := Pattern {
-		inputs      = {Input{dir = Direction.Neutral, attack = Attack.Light}},
-		pritority   = 1,
-		state_index = 6,
-	}
-	pattern3 := Pattern {
-		inputs      = {Input{dir = Direction.Back, attack = Attack.Light}},
-		pritority   = 1,
-		state_index = 6,
-	}
-	append(&char.patterns, pattern)
-	append(&char.patterns, pattern2)
-	append(&char.patterns, pattern3)
+pattern_light_attack ::proc(char:^Charecter){
+    pattern := Pattern {
+        inputs = {
+            Input{dir=Direction.Forward,attack=Attack.Light},
+        },
+        pritority=1,
+        state_index=6,
+    }
+    pattern2 := Pattern {
+        inputs = {
+            Input{dir=Direction.Neutral,attack=Attack.Light},
+        },
+        pritority=1,
+        state_index=6,
+    }
+    pattern3 := Pattern {
+        inputs = {
+            Input{dir=Direction.Back,attack=Attack.Light},
+        },
+        pritority=1,
+        state_index=6,
+    }
+    append(&char.patterns,pattern)
+    append(&char.patterns,pattern2)
+    append(&char.patterns,pattern3)
 }
 
 add_state_light_attack :: proc(char: ^Charecter) {

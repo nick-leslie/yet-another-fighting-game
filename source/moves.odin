@@ -105,7 +105,7 @@ setup_move_bodys :: proc(move: ^State) {
 				   hurt_box.extent.x == past_hurtboxes.extent.x &&
 				   hurt_box.extent.y == past_hurtboxes.extent.y { 	// we use a because its slot 3
 					//should we just use a pointer no probs more error prone
-					hurt_box.body := past_hurtboxes.body
+					hurt_box.body = past_hurtboxes.body
 					used_past = true
 					break
 				}
@@ -113,9 +113,8 @@ setup_move_bodys :: proc(move: ^State) {
 			if used_past == true {
 				continue // skip the rest of the loop
 			}
-			box := hurt_box
 			log.debug("past use previous")
-			box_shape := jolt.BoxShape_Create(&{box.extent.x, box.extent.y, 10}, 0)
+			box_shape := jolt.BoxShape_Create(&hurt_box, 0)
 			log.debug("created box shape")
 			box_settings := jolt.BodyCreationSettings_Create3(
 				shape = auto_cast box_shape,
@@ -126,11 +125,11 @@ setup_move_bodys :: proc(move: ^State) {
 			)
 			log.debug("created created body")
 
-			box.body := jolt.BodyInterface_CreateBody(g.physicsManager.bodyInterface, box_settings)
 
-			log.debug("added body")
+			hurt_box.body = jolt.BodyInterface_CreateBody(g.physicsManager.bodyInterface, box_settings)
+			log.debug(jolt.Body_GetID(hurt_box.body))
 			jolt.BodyCreationSettings_Destroy(box_settings)
-			append(&move.hurtbox_bodys, box.body)
+			append(&move.hurtbox_bodys, hurt_box.body)
 			append(&past_hurtboxes, &hurt_box)
 			jolt.Shape_Destroy(auto_cast box_shape)
 		}

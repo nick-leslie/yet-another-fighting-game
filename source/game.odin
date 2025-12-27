@@ -89,16 +89,19 @@ update :: proc() {
     input = Input {
         dir=Direction.Neutral,
     } // todo move this out for rollback
-    // charecter_update(&g.p2,input)
+    charecter_update(&g.p2,input)
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-
+	character_add_hurt_boxes(g.p1,g.physicsManager)
+	character_add_hurt_boxes(g.p2,g.physicsManager)
+	character_check_hit(&g.p1,g.physicsManager)
+	//tood check hits
 }
 
 physics_update :: proc() {
-	charecter_physics_update(&g.p1)
-	// charecter_physics_update(&g.p2)
+	charecter_physics_update(&g.p1,g.physicsManager)
+	charecter_physics_update(&g.p2,g.physicsManager)
 	// update normal physics
 	jolt.PhysicsSystem_Update(
 		g.physicsManager.physicsSystem,
@@ -114,29 +117,9 @@ draw :: proc() {
 	rl.ClearBackground(rl.BLACK)
 
 	rl.BeginMode3D(game_camera())
-	// {
-	// 	rlgl.PushMatrix()
 
-	// 	rl.DrawCubeV(0, 1 * 2, rl.RED)
-	// 	rlgl.PopMatrix()
-	// }
 	charecter_draw(g.p1)
-	// rl.DrawCapsule(
-	// 	g.p1.position,
-	// 	g.p1.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
-	// 	CHARACTER_CAPSULE_RADIUS,
-	// 	16,
-	// 	8,
-	// 	rl.ORANGE,
-	// )
-	rl.DrawCapsule(
-		g.p2.position,
-		g.p2.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
-		CHARACTER_CAPSULE_RADIUS,
-		16,
-		8,
-		rl.ORANGE,
-	)
+	charecter_draw(g.p2)
 
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
 
