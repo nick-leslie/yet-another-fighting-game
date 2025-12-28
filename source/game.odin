@@ -27,6 +27,8 @@ created.
 
 package game
 
+import "core:log"
+import "base:runtime"
 import "../libs/jolt"
 import "core:fmt"
 import "core:math/linalg"
@@ -68,6 +70,8 @@ FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in th
 
 g: ^Game_Memory
 
+g_context: runtime.Context
+
 game_camera :: proc() -> rl.Camera3D {
 	look_target: Vec3 = {}
 	return rl.Camera3D {
@@ -93,9 +97,9 @@ update :: proc() {
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-	character_add_hurt_boxes(g.p1,g.physicsManager)
+	character_add_hurt_boxes(g.p1,g.physicsManager) // investigate why comenting this out breaks things
 	character_add_hurt_boxes(g.p2,g.physicsManager)
-	character_check_hit(&g.p1,g.physicsManager)
+	character_check_hit(&{&g.p1,&g.p2},g.physicsManager)
 	//tood check hits
 }
 
@@ -159,6 +163,7 @@ game_init_window :: proc() {
 
 @(export)
 game_init :: proc() {
+    g_context = context
 	g = new(Game_Memory)
 	pm := create_physics_mannager()
 	char := Charecter {
@@ -197,12 +202,14 @@ game_init :: proc() {
 	//TODO investigate why we cant move you below the setup of G
 	setup_charecter(&char, &pm)
 	setup_charecter(&char2, &pm)
+	floor_id := add_floor(&pm)
+	log.debug(floor_id)
 	g^ = Game_Memory {
 		run = true,
 		physicsManager = pm,
 		p1 = char,
 		p2 = char2,
-		stage = {floor_id = add_floor(&pm)},
+		stage = {floor_id = floor_id},
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
@@ -271,7 +278,7 @@ game_memory_size :: proc() -> int {
 @(export)
 game_hot_reloaded :: proc(mem: rawptr) {
 	g = (^Game_Memory)(mem)
-
+	g_context = context
 	// Here you can also set your own global variables. A good idea is to make
 	// your global variables into pointers that point to something inside `g`.
 }

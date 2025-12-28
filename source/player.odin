@@ -78,7 +78,7 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 			contact_normal: ^Vec3,
 			contact_settings: ^jolt.CharacterContactSettings,
 		) {
-			if other_body_id == g.stage.floor_id do return
+			// if other_body_id == g.stage.floor_id do return
 
 			// context = (cast(^runtime.Context)context_ptr)^
 
@@ -160,7 +160,6 @@ charecter_draw :: proc(character:Charecter) {
 charecter_update :: proc(character: ^Charecter, input: Input) {
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
-	log.debug(poll_charecter_input(character))
 	update_input_buffer(character, input)
 
 	// get current state this  is exposed because we need some of the vars
@@ -225,9 +224,10 @@ character_remove_hurt_boxes :: proc(character:Charecter, pm: Physics_Manager) {
 	}
 }
 
+CharPtrArr :: ^[2]^Charecter
 //bruh this shit about to get funky
-character_check_hit :: proc(character:^Charecter,pm:Physics_Manager) {
-    _,frame := get_current_state_frame(character^)
+character_check_hit :: proc(character:CharPtrArr,pm:Physics_Manager) {
+    _,frame := get_current_state_frame(character[0]^)
     for &hit_box in frame.hitbox_list {
         narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(pm.physicsSystem)
         extent := hit_box.extent * 0.5
@@ -237,15 +237,16 @@ character_check_hit :: proc(character:^Charecter,pm:Physics_Manager) {
         ) // make sure this works
         defer jolt.Shape_Destroy(auto_cast box_shape)
         //todo we figured out the issue it was the offset
-        pos := hit_box.position + character.position
+        pos := hit_box.position + character[0].position
         transform := jolt.RMat4{
             1.,0.,0.,pos.x,
             0.,1.,0.,pos.y,
             0.,0.,1.,pos.z,
             0,0,0,1.,
         }
-        log.debug(transform)
-        // jolt.BroadPhaseLayerFilter_Create()
+        // log.debug(transform)
+        bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(character[0])
+
         jolt.NarrowPhaseQuery_CastShape2(
             query=narrow_phase_query,
             shape=auto_cast box_shape,
@@ -265,12 +266,33 @@ character_check_hit :: proc(character:^Charecter,pm:Physics_Manager) {
             }, // shape cast settings
             baseOffset=&{},
             collectorType=.AllHit,
-            callback=proc "c" (_context: rawptr, result: ^jolt.ShapeCastResult) {
-                 context = runtime.default_context()
-                 log.debug(result)
+            callback=proc "c" (playrs_arr_ptr: rawptr, result: ^jolt.ShapeCastResult) {
+                context = g_context
+                self := CharPtrArr(playrs_arr_ptr)[0]
+                other := CharPtrArr(playrs_arr_ptr)[1]
+                _,frameSelf := get_current_state_frame(self^)
+                _,frameOther := get_current_state_frame(other^)
+                // we may want to speed this up later by seperating to a p1 layer
+                for &hurt_box in frameSelf.hurtbox_list {
+                    id := jolt.Body_GetID(hurt_box.body)
+                    if id == result.bodyID2 do return
+                }
+                if g.stage.floor_id == result.bodyID2 do return // use layers to filter
+                self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
+                other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
+                if self_id == result.bodyID2 do return
+                if other_id == result.bodyID2 do return
+                // log.debug(result)
+                for &hurt_box in frameOther.hurtbox_list {
+                    id := jolt.Body_GetID(hurt_box.body)
+                    if id == result.bodyID2 {
+                        log.debug(hurt_box)
+                        //check if blocking and set to block or hit_stun
+                    }
+                }
             },
-            userData=nil,
-            broadPhaseLayerFilter=nil,
+            userData=character,
+            broadPhaseLayerFilter=bround_phase_filter,
             objectLayerFilter=nil,
             bodyFilter=nil,
             shapeFilter=nil,
