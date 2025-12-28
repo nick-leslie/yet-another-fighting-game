@@ -223,7 +223,7 @@ character_remove_hurt_boxes :: proc(character:Charecter, pm: Physics_Manager) {
 		jolt.BodyInterface_RemoveBody(pm.bodyInterface, id)
 	}
 }
-
+// may want to put this in moves
 CharPtrArr :: ^[2]^Charecter
 //bruh this shit about to get funky
 character_check_hit :: proc(character:CharPtrArr,pm:Physics_Manager) {
@@ -298,7 +298,6 @@ character_check_hit :: proc(character:CharPtrArr,pm:Physics_Manager) {
             shapeFilter=nil,
         )
     }
-
 }
 
 charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {

@@ -9,6 +9,23 @@ State :: struct {
 	hurtbox_bodys: [dynamic]^jolt.Body, // all these bodys are precreated or alocated but asleep
 	animation_ptr: ^rl.ModelAnimation,
 	model_ptr:     ^rl.Model,
+	// should all this be in a seprate struct
+	canBlock:       bool,
+   	isAttack:       bool,
+	attackinfo: struct{
+    	hitstun:        u32,
+    	blockstun:      u32,
+    	dammage:        u32,
+    	attackDir:      AttackDir,
+    	hitPushback:    Vec3,
+    	blockPushback:  Vec3,
+    }
+}
+
+AttackDir :: enum {
+    Mid,
+    High,
+    Low,
 }
 
 delete_state :: proc(move: ^State) {
@@ -134,23 +151,4 @@ setup_move_bodys :: proc(move: ^State) {
 			jolt.Shape_Destroy(auto_cast box_shape)
 		}
 	}
-}
-
-// we need to have a pool of hit and hurt boxes that we resize every frame so that we can save state
-scan_for_hits :: proc() {
-	// NarrowPhaseQuery_CastShape2 :: proc(
-	//     query: ^NarrowPhaseQuery,
-	//     shape: ^Shape,
-	//     worldTransform: ^RMat4,
-	//     direction: ^Vec3,
-	//     settings: ^ShapeCastSettings,
-	//     baseOffset: ^RVec3,
-	//     collectorType: CollisionCollectorType,
-	//     callback: CastShapeResultCallback,
-	//     userData: rawptr, // this should be context
-	//     broadPhaseLayerFilter: ^BroadPhaseLayerFilter,
-	//     objectLayerFilter: ^ObjectLayerFilter,
-	//     bodyFilter: ^BodyFilter,
-	//     shapeFilter: ^ShapeFilter
-	// ) -> bool
 }
