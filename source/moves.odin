@@ -10,22 +10,17 @@ State :: struct {
 	animation_ptr: ^rl.ModelAnimation,
 	model_ptr:     ^rl.Model,
 	// should all this be in a seprate struct
-	canBlock:       bool,
-   	isAttack:       bool,
-	attackinfo: struct{
-    	hitstun:        u32,
-    	blockstun:      u32,
-    	dammage:        u32,
-    	attackDir:      AttackDir,
-    	hitPushback:    Vec3,
-    	blockPushback:  Vec3,
-    }
+	canBlock:      bool,
+	isAttack:      bool,
+	hitstun:       u32,
+	blockstun:     u32,
+	damage:        u32,
 }
 
 AttackDir :: enum {
-    Mid,
-    High,
-    Low,
+	Mid,
+	High,
+	Low,
 }
 
 delete_state :: proc(move: ^State) {
@@ -90,6 +85,9 @@ Hurt_box :: struct {
 Hit_box :: struct {
 	using position: Vec3,
 	extent:         Vec3, // width height extent will be static
+	hitPushback:    Vec3,
+	blockPushback:  Vec3,
+	attackDir:      AttackDir,
 	// todo properties
 }
 
@@ -143,7 +141,10 @@ setup_move_bodys :: proc(move: ^State) {
 			log.debug("created created body")
 
 
-			hurt_box.body = jolt.BodyInterface_CreateBody(g.physicsManager.bodyInterface, box_settings)
+			hurt_box.body = jolt.BodyInterface_CreateBody(
+				g.physicsManager.bodyInterface,
+				box_settings,
+			)
 			log.debug(jolt.Body_GetID(hurt_box.body))
 			jolt.BodyCreationSettings_Destroy(box_settings)
 			append(&move.hurtbox_bodys, hurt_box.body)

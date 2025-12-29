@@ -27,10 +27,10 @@ created.
 
 package game
 
-import "core:log"
-import "base:runtime"
 import "../libs/jolt"
+import "base:runtime"
 import "core:fmt"
+import "core:log"
 import "core:math/linalg"
 import rl "vendor:raylib"
 // import "vendor:raylib/rlgl"
@@ -88,24 +88,24 @@ ui_camera :: proc() -> rl.Camera2D {
 }
 
 update :: proc() {
-    input := poll_charecter_input(&g.p1) // todo move this out for rollback
-    charecter_update(&g.p1,input)
-    input = Input {
-        dir=Direction.Neutral,
-    } // todo move this out for rollback
-    charecter_update(&g.p2,input)
+	input := poll_charecter_input(&g.p1) // todo move this out for rollback
+	charecter_update(&g.p1, input)
+	input = Input {
+		dir = Direction.Neutral,
+	} // todo move this out for rollback
+	charecter_update(&g.p2, input)
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-	character_add_hurt_boxes(g.p1,g.physicsManager) // investigate why comenting this out breaks things
-	character_add_hurt_boxes(g.p2,g.physicsManager)
-	character_check_hit(&{&g.p1,&g.p2},g.physicsManager)
+	character_add_hurt_boxes(g.p1, g.physicsManager) // investigate why comenting this out breaks things
+	character_add_hurt_boxes(g.p2, g.physicsManager)
+	character_check_hit(&{&g.p1, &g.p2}, g.physicsManager)
 	//tood check hits
 }
 
 physics_update :: proc() {
-	charecter_physics_update(&g.p1,g.physicsManager)
-	charecter_physics_update(&g.p2,g.physicsManager)
+	charecter_physics_update(&g.p1, g.physicsManager)
+	charecter_physics_update(&g.p2, g.physicsManager)
 	// update normal physics
 	jolt.PhysicsSystem_Update(
 		g.physicsManager.physicsSystem,
@@ -135,7 +135,7 @@ draw :: proc() {
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
 	rl.DrawText(fmt.ctprintf("p1_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p1_state: %d", g.p1.current_state), 5, 12, 8, rl.WHITE)
-	rl.DrawFPS(5,18)
+	rl.DrawFPS(5, 18)
 	rl.EndMode2D()
 
 	rl.EndDrawing()
@@ -163,40 +163,40 @@ game_init_window :: proc() {
 
 @(export)
 game_init :: proc() {
-    g_context = context
+	g_context = context
 	g = new(Game_Memory)
 	pm := create_physics_mannager()
 	char := Charecter {
-		position       = {0, 10, 0},
-		move_speed     = 20,
-		air_drag       = 0.5,
+		position = {0, 10, 0},
+		move_speed = 20,
+		air_drag = 0.5,
 		air_move_speed = 15,
 		jump_height = 50,
-		p1_side=true,
-		input_buffer={},
-		controls= Keyboard{
-		    up_key=rl.KeyboardKey.W,
-		    down_key=rl.KeyboardKey.S,
-		    left_key=rl.KeyboardKey.A,
-		    right_key=rl.KeyboardKey.D,
-			light_key=rl.KeyboardKey.J,
-			medium_key=rl.KeyboardKey.K,
-			heavy_key=rl.KeyboardKey.L,
+		p1_side = true,
+		input_buffer = {},
+		controls = Keyboard {
+			up_key = rl.KeyboardKey.W,
+			down_key = rl.KeyboardKey.S,
+			left_key = rl.KeyboardKey.A,
+			right_key = rl.KeyboardKey.D,
+			light_key = rl.KeyboardKey.J,
+			medium_key = rl.KeyboardKey.K,
+			heavy_key = rl.KeyboardKey.L,
 		},
 	}
 	char2 := Charecter {
-		position       = {10, 10, 0},
-		move_speed     = 50,
-		air_drag       = 0.5,
+		position = {10, 10, 0},
+		move_speed = 50,
+		air_drag = 0.5,
 		air_move_speed = 10,
 		jump_height = 20,
-		p1_side=true,
-		input_buffer={},
-		controls= Keyboard{
-		    up_key=rl.KeyboardKey.W,
-		    down_key=rl.KeyboardKey.S,
-		    left_key=rl.KeyboardKey.A,
-		    right_key=rl.KeyboardKey.D,
+		p1_side = false,
+		input_buffer = {},
+		controls = Keyboard {
+			up_key = rl.KeyboardKey.W,
+			down_key = rl.KeyboardKey.S,
+			left_key = rl.KeyboardKey.A,
+			right_key = rl.KeyboardKey.D,
 		},
 	}
 	//TODO investigate why we cant move you below the setup of G
@@ -213,9 +213,9 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 	}
-	add_state_movement(&g.p1)// the nill is tmp
+	add_state_movement(&g.p1) // the nill is tmp
 	add_state_light_attack(&g.p1)
-	add_state_movement(&g.p2)// the nill is tmp
+	add_state_movement(&g.p2) // the nill is tmp
 
 	game_hot_reloaded(g)
 }
@@ -255,7 +255,8 @@ add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
 
 @(export)
 game_shutdown :: proc() {
-    delete_charecter(&g.p1)
+	delete_charecter(&g.p1)
+	delete_charecter(&g.p2)
 	free(g)
 
 }

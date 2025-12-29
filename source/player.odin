@@ -22,6 +22,7 @@ Charecter :: struct {
 	move_speed:        f32,
 	air_move_speed:    f32,
 	air_drag:          f32,
+	addional_velocity: Vec3,
 	controls:          Controls,
 	p1_side:           bool,
 	states:            [dynamic]State, // should this be state
@@ -121,14 +122,14 @@ setup_charecter_collison :: proc(char: ^Charecter, pm: ^Physics_Manager) {
 	char.physics_character = character
 }
 
-charecter_draw :: proc(character:Charecter) {
-    state := character.states[character.current_state]
-    frame_to_pick := character.current_frame
-    if character.current_frame >= len(state.frames) {
-        frame_to_pick=len(state.frames)-1 // lock on the last frame if we can progress
-    }
-    frame := state.frames[frame_to_pick]
-    rl.DrawCapsule(
+charecter_draw :: proc(character: Charecter) {
+	state := character.states[character.current_state]
+	frame_to_pick := character.current_frame
+	if character.current_frame >= len(state.frames) {
+		frame_to_pick = len(state.frames) - 1 // lock on the last frame if we can progress
+	}
+	frame := state.frames[frame_to_pick]
+	rl.DrawCapsule(
 		character.position,
 		character.position + UP * CHARACTER_CAPSULE_HALF_HEIGHT * 2,
 		CHARACTER_CAPSULE_RADIUS,
@@ -137,7 +138,7 @@ charecter_draw :: proc(character:Charecter) {
 		rl.ORANGE,
 	)
 	for &hurt_box in frame.hurtbox_list {
-	    rl.DrawCube(
+		rl.DrawCube(
 			character.position + hurt_box.position,
 			hurt_box.extent.x,
 			hurt_box.extent.y,
@@ -146,7 +147,7 @@ charecter_draw :: proc(character:Charecter) {
 		)
 	}
 	for &hitbox in frame.hitbox_list {
-	    rl.DrawCube(
+		rl.DrawCube(
 			character.position + hitbox.position,
 			hitbox.extent.x,
 			hitbox.extent.y,
@@ -160,6 +161,7 @@ charecter_draw :: proc(character:Charecter) {
 charecter_update :: proc(character: ^Charecter, input: Input) {
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
+	character.addional_velocity = {} // do we want to reset this here
 	update_input_buffer(character, input)
 
 	// get current state this  is exposed because we need some of the vars
@@ -187,37 +189,32 @@ charecter_update :: proc(character: ^Charecter, input: Input) {
 	character.current_frame += 1 // incrment the fraem by 1
 }
 
-get_current_state_frame :: proc(character: Charecter) -> (State,Frame ){
-   	state := character.states[character.current_state]
+get_current_state_frame :: proc(character: Charecter) -> (State, Frame) {
+	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
 	state_frame_len := len(state.frames)
 	if character.current_frame >= state_frame_len {
 		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
 	}
 	frame := state.frames[frame_to_pick]
-	return state,frame
+	return state, frame
 }
 
 //adds hurt and hit boxes
 character_add_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
-    _,frame := get_current_state_frame(character)
+	_, frame := get_current_state_frame(character)
 	for &hurt_box in frame.hurtbox_list {
 		id := jolt.Body_GetID(hurt_box.body)
-	    position:Vec3 = character.position + hurt_box.position
+		position: Vec3 = character.position + hurt_box.position
 		jolt.BodyInterface_AddBody(pm.bodyInterface, id, .Activate)
-		jolt.BodyInterface_SetPosition(
-			pm.bodyInterface,
-			id,
-			&position,
-			.Activate,
-		)
+		jolt.BodyInterface_SetPosition(pm.bodyInterface, id, &position, .Activate)
 	}
 	//todo add all the bodys to the simulation before searching for an attack.
 	// this nees to be done in lockstep seprate from the charecter update
 }
 
-character_remove_hurt_boxes :: proc(character:Charecter, pm: Physics_Manager) {
-    _,frame := get_current_state_frame(character)
+character_remove_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
+	_, frame := get_current_state_frame(character)
 	for &hurt_box in frame.hurtbox_list {
 		id := jolt.Body_GetID(hurt_box.body)
 		jolt.BodyInterface_RemoveBody(pm.bodyInterface, id)
@@ -225,83 +222,111 @@ character_remove_hurt_boxes :: proc(character:Charecter, pm: Physics_Manager) {
 }
 // may want to put this in moves
 CharPtrArr :: ^[2]^Charecter
+HitBoxCtx :: struct {
+	charecters: CharPtrArr,
+	hitbox:     ^Hit_box,
+}
 //bruh this shit about to get funky
-character_check_hit :: proc(character:CharPtrArr,pm:Physics_Manager) {
-    _,frame := get_current_state_frame(character[0]^)
-    for &hit_box in frame.hitbox_list {
-        narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(pm.physicsSystem)
-        extent := hit_box.extent * 0.5
-        box_shape := jolt.BoxShape_Create(
-            &extent,
-            0,
-        ) // make sure this works
-        defer jolt.Shape_Destroy(auto_cast box_shape)
-        //todo we figured out the issue it was the offset
-        pos := hit_box.position + character[0].position
-        transform := jolt.RMat4{
-            1.,0.,0.,pos.x,
-            0.,1.,0.,pos.y,
-            0.,0.,1.,pos.z,
-            0,0,0,1.,
-        }
-        // log.debug(transform)
-        bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(character[0])
+character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
+	_, frame := get_current_state_frame(characters[0]^)
+	for &hit_box in frame.hitbox_list {
+		narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(pm.physicsSystem)
+		extent := hit_box.extent * 0.5
+		box_shape := jolt.BoxShape_Create(&extent, 0) // make sure this works
+		defer jolt.Shape_Destroy(auto_cast box_shape)
+		//todo we figured out the issue it was the offset
+		pos := hit_box.position + characters[0].position
+		transform := jolt.RMat4 {
+			1.,
+			0.,
+			0.,
+			pos.x,
+			0.,
+			1.,
+			0.,
+			pos.y,
+			0.,
+			0.,
+			1.,
+			pos.z,
+			0,
+			0,
+			0,
+			1.,
+		}
+		// log.debug(transform)
+		bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(characters[0])
 
-        jolt.NarrowPhaseQuery_CastShape2(
-            query=narrow_phase_query,
-            shape=auto_cast box_shape,
-            worldTransform=&transform,
-            direction=&{0,0,0},
-            settings=&{
-                base={
-                    activeEdgeMode=.CollideWithAll,
-                    collectFacesMode=.CollectFaces, // check this
-                    collisionTolerance=1, // to tweek this
-                    penetrationTolerance=1,
-                },
-                backFaceModeTriangles=.CollideWithBackFaces, // tood check this
-                backFaceModeConvex=.CollideWithBackFaces,
-                useShrunkenShapeAndConvexRadius=true,// tood check this
-                returnDeepestPoint=false, // we dont need the deepst point an it costs
-            }, // shape cast settings
-            baseOffset=&{},
-            collectorType=.AllHit,
-            callback=proc "c" (playrs_arr_ptr: rawptr, result: ^jolt.ShapeCastResult) {
-                context = g_context
-                self := CharPtrArr(playrs_arr_ptr)[0]
-                other := CharPtrArr(playrs_arr_ptr)[1]
-                _,frameSelf := get_current_state_frame(self^)
-                _,frameOther := get_current_state_frame(other^)
-                // we may want to speed this up later by seperating to a p1 layer
-                for &hurt_box in frameSelf.hurtbox_list {
-                    id := jolt.Body_GetID(hurt_box.body)
-                    if id == result.bodyID2 do return
-                }
-                if g.stage.floor_id == result.bodyID2 do return // use layers to filter
-                self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
-                other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
-                if self_id == result.bodyID2 do return
-                if other_id == result.bodyID2 do return
-                // log.debug(result)
-                for &hurt_box in frameOther.hurtbox_list {
-                    id := jolt.Body_GetID(hurt_box.body)
-                    if id == result.bodyID2 {
-                        log.debug(hurt_box)
-                        //check if blocking and set to block or hit_stun
-                    }
-                }
-            },
-            userData=character,
-            broadPhaseLayerFilter=bround_phase_filter,
-            objectLayerFilter=nil,
-            bodyFilter=nil,
-            shapeFilter=nil,
-        )
-    }
+		hit_box_context := HitBoxCtx {
+			charecters = characters,
+			hitbox     = &hit_box,
+		}
+
+		jolt.NarrowPhaseQuery_CastShape2(
+			query = narrow_phase_query,
+			shape = auto_cast box_shape,
+			worldTransform = &transform,
+			direction = &{0, 0, 0},
+			settings = &{
+				base = {
+					activeEdgeMode       = .CollideWithAll,
+					collectFacesMode     = .CollectFaces, // check this
+					collisionTolerance   = 1, // to tweek this
+					penetrationTolerance = 1,
+				},
+				backFaceModeTriangles = .CollideWithBackFaces, // tood check this
+				backFaceModeConvex = .CollideWithBackFaces,
+				useShrunkenShapeAndConvexRadius = true, // tood check this
+				returnDeepestPoint = false, // we dont need the deepst point an it costs
+			}, // shape cast settings
+			baseOffset = &{},
+			collectorType = .AllHit,
+			callback = proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
+				context = g_context
+				hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
+				self := CharPtrArr(hit_ctx.charecters)[0]
+				other := CharPtrArr(hit_ctx.charecters)[1]
+				_, frameSelf := get_current_state_frame(self^)
+				_, frameOther := get_current_state_frame(other^)
+				// we may want to speed this up later by seperating to a p1 layer
+				for &hurt_box in frameSelf.hurtbox_list {
+					id := jolt.Body_GetID(hurt_box.body)
+					if id == result.bodyID2 do return
+				}
+				if g.stage.floor_id == result.bodyID2 do return // use layers to filter
+				self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
+				other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
+				if self_id == result.bodyID2 do return
+				if other_id == result.bodyID2 do return
+				// log.debug(result)
+				for &hurt_box in frameOther.hurtbox_list {
+					id := jolt.Body_GetID(hurt_box.body)
+					if id == result.bodyID2 {
+						log.debug(hurt_box)
+						hit := true
+						if hit {
+							log.debug("gaming")
+							side_mod: f32 = 1.
+							if other.p1_side == false do side_mod = -1.
+							pushback := hit_ctx.hitbox.hitPushback
+							pushback.x *= side_mod
+							other.addional_velocity += (pushback)
+						}
+						//check if blocking and set to block or hit_stun
+					}
+				}
+			},
+			userData = &hit_box_context,
+			broadPhaseLayerFilter = bround_phase_filter,
+			objectLayerFilter = nil,
+			bodyFilter = nil,
+			shapeFilter = nil,
+		)
+	}
 }
 
 charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {
-    character_remove_hurt_boxes(character^,pm) // remove the hurt boxes before running physics
+	character_remove_hurt_boxes(character^, pm) // remove the hurt boxes before running physics
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
 	if character.in_air && jump_pressed {
@@ -353,6 +378,7 @@ charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {
 		new_velocity += current_horizontal_velocity * character.air_drag
 		new_velocity += input * character.air_move_speed
 	}
+	new_velocity += character.addional_velocity
 	// set the velocity to the character
 	jolt.CharacterVirtual_SetLinearVelocity(character.physics_character, &new_velocity)
 
