@@ -124,7 +124,8 @@ draw :: proc() {
 
 	charecter_draw(g.p1)
 	charecter_draw(g.p2)
-
+	charecter_draw_hit_boxes(g.p1)
+	charecter_draw_hit_boxes(g.p2)
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
 
 

@@ -129,7 +129,8 @@ setup_move_bodys :: proc(move: ^State) {
 				continue // skip the rest of the loop
 			}
 			log.debug("past use previous")
-			box_shape := jolt.BoxShape_Create(&hurt_box, 0)
+			hurt_box_extent := hurt_box.extent * 0.5
+			box_shape := jolt.BoxShape_Create(&hurt_box_extent, 0)
 			log.debug("created box shape")
 			box_settings := jolt.BodyCreationSettings_Create3(
 				shape = auto_cast box_shape,

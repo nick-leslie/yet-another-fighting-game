@@ -142,16 +142,20 @@ charecter_draw :: proc(character: Charecter) {
 			character.position + hurt_box.position,
 			hurt_box.extent.x,
 			hurt_box.extent.y,
-			hurt_box.extent.z,
+			0.0,
 			rl.BLUE,
 		)
 	}
+}
+
+charecter_draw_hit_boxes :: proc(character:Charecter) {
+	_,frame := charecter_get_current_state_frame(character)
 	for &hitbox in frame.hitbox_list {
 		rl.DrawCube(
 			character.position + hitbox.position,
 			hitbox.extent.x,
 			hitbox.extent.y,
-			hitbox.extent.z,
+			0.0,
 			rl.RED,
 		)
 	}
@@ -189,7 +193,7 @@ charecter_update :: proc(character: ^Charecter, input: Input) {
 	character.current_frame += 1 // incrment the fraem by 1
 }
 
-get_current_state_frame :: proc(character: Charecter) -> (State, Frame) {
+charecter_get_current_state_frame :: proc(character: Charecter) -> (State, Frame) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
 	state_frame_len := len(state.frames)
@@ -202,7 +206,7 @@ get_current_state_frame :: proc(character: Charecter) -> (State, Frame) {
 
 //adds hurt and hit boxes
 character_add_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
-	_, frame := get_current_state_frame(character)
+	_, frame := charecter_get_current_state_frame(character)
 	for &hurt_box in frame.hurtbox_list {
 		id := jolt.Body_GetID(hurt_box.body)
 		position: Vec3 = character.position + hurt_box.position
@@ -214,7 +218,7 @@ character_add_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
 }
 
 character_remove_hurt_boxes :: proc(character: Charecter, pm: Physics_Manager) {
-	_, frame := get_current_state_frame(character)
+	_, frame := charecter_get_current_state_frame(character)
 	for &hurt_box in frame.hurtbox_list {
 		id := jolt.Body_GetID(hurt_box.body)
 		jolt.BodyInterface_RemoveBody(pm.bodyInterface, id)
@@ -228,7 +232,7 @@ HitBoxCtx :: struct {
 }
 //bruh this shit about to get funky
 character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
-	_, frame := get_current_state_frame(characters[0]^)
+	_, frame := charecter_get_current_state_frame(characters[0]^)
 	for &hit_box in frame.hitbox_list {
 		narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(pm.physicsSystem)
 		extent := hit_box.extent * 0.5
@@ -286,8 +290,8 @@ character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
 				hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
 				self := CharPtrArr(hit_ctx.charecters)[0]
 				other := CharPtrArr(hit_ctx.charecters)[1]
-				_, frameSelf := get_current_state_frame(self^)
-				_, frameOther := get_current_state_frame(other^)
+				_, frameSelf := charecter_get_current_state_frame(self^)
+				_, frameOther := charecter_get_current_state_frame(other^)
 				// we may want to speed this up later by seperating to a p1 layer
 				for &hurt_box in frameSelf.hurtbox_list {
 					id := jolt.Body_GetID(hurt_box.body)
