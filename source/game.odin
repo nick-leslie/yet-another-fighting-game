@@ -136,7 +136,12 @@ draw :: proc() {
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
 	rl.DrawText(fmt.ctprintf("p1_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p1_state: %d", g.p1.current_state), 5, 12, 8, rl.WHITE)
-	rl.DrawFPS(5, 18)
+	rl.DrawFPS(5, 23)
+
+	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.p2.position), 170, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p2_state: %d", g.p2.current_state), 170, 12, 8, rl.WHITE)
+
+
 	rl.EndMode2D()
 
 	rl.EndDrawing()
@@ -216,7 +221,9 @@ game_init :: proc() {
 	}
 	add_state_movement(&g.p1) // the nill is tmp
 	add_state_light_attack(&g.p1)
+	add_state_stun(&g.p1)
 	add_state_movement(&g.p2) // the nill is tmp
+	add_state_stun(&g.p2)
 
 	game_hot_reloaded(g)
 }

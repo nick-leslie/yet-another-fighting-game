@@ -10,6 +10,8 @@ import rl "vendor:raylib"
 CHARACTER_CAPSULE_HALF_HEIGHT: f32 : 1
 CHARACTER_CAPSULE_RADIUS: f32 : 0.3
 
+
+
 Charecter :: struct {
 	physics_character: ^jolt.CharacterVirtual,
 	using position:    Vec3,
@@ -29,6 +31,10 @@ Charecter :: struct {
 	patterns:          [dynamic]Pattern,
 	current_frame:     int,
 	current_state:     int, // this is an index
+	hit_stun_frames:   u32,
+	hit_stun_index:    int, // we may replace this with a constent
+	block_stun_frames: u32,
+	block_stun_index:  int,
 	model:             rl.Model,
 	animation:         rl.ModelAnimation, // does this need to be an array check raylib examples
 	charecter_flags:   u128, // lots of flags for various states.. tuble extc
@@ -163,6 +169,7 @@ charecter_draw_hit_boxes :: proc(character:Charecter) {
 
 //todo this is an ordering update. because we do pickstate -> physics_update
 charecter_update :: proc(character: ^Charecter, input: Input) {
+	log.debug("in update")
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
 	character.addional_velocity = {} // do we want to reset this here
@@ -189,6 +196,20 @@ charecter_update :: proc(character: ^Charecter, input: Input) {
 		character.jump_requested = false
 		// log.debug("new state needed")
 	}
+	if character.hit_stun_frames > 0 {
+		//todo make this a function
+		character.current_state = character.hit_stun_index
+		character.current_frame = 0
+		state = character.states[character.current_state]
+		frame = state.frames[character.current_frame]
+	} else if character.block_stun_frames > 0 {
+		character.current_state = character.block_stun_index
+		character.current_frame = 0
+		state = character.states[character.current_state]
+		frame = state.frames[character.current_frame]
+	}
+
+
 	frame.on_frame(character) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
 }
@@ -290,7 +311,7 @@ character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
 				hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
 				self := CharPtrArr(hit_ctx.charecters)[0]
 				other := CharPtrArr(hit_ctx.charecters)[1]
-				_, frameSelf := charecter_get_current_state_frame(self^)
+				self_state, frameSelf := charecter_get_current_state_frame(self^)
 				_, frameOther := charecter_get_current_state_frame(other^)
 				// we may want to speed this up later by seperating to a p1 layer
 				for &hurt_box in frameSelf.hurtbox_list {
@@ -309,12 +330,15 @@ character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
 						log.debug(hurt_box)
 						hit := true
 						if hit {
-							log.debug("gaming")
+
 							side_mod: f32 = 1.
 							if other.p1_side == false do side_mod = -1.
 							pushback := hit_ctx.hitbox.hitPushback
 							pushback.x *= side_mod
 							other.addional_velocity += (pushback)
+							other.hit_stun_frames = self_state.hitstun
+							other.block_stun_frames=0
+							//set in hit_stun
 						}
 						//check if blocking and set to block or hit_stun
 					}
@@ -330,6 +354,7 @@ character_check_hit :: proc(characters: CharPtrArr, pm: Physics_Manager) {
 }
 
 charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {
+	log.debug("in physics update")
 	character_remove_hurt_boxes(character^, pm) // remove the hurt boxes before running physics
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
@@ -349,6 +374,7 @@ charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {
 	current_vertical_velocity := linalg.dot(current_velocity, UP) * UP
 
 	new_velocity: Vec3
+	log.debug("got linnar velocity")
 	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
 		// Assume velocity of ground when on ground
 		new_velocity = ground_velocity
@@ -394,7 +420,7 @@ charecter_physics_update :: proc(character: ^Charecter, pm: Physics_Manager) {
 		walkStairsCosAngleForwardContact = math.cos(math.to_radians_f32(75.0)),
 		walkStairsStepDownExtra          = {},
 	}
-
+	log.debug("running physics update")
 	// update the character physics (btw there's also CharacterVirtual_ExtendedUpdate with stairs support)
 	jolt.CharacterVirtual_ExtendedUpdate(
 		character.physics_character,

@@ -66,8 +66,22 @@ no_cancel :: proc(char: ^Charecter, cancel_index: int) -> bool {
 	return false
 }
 
+exit_block_stun :: proc(char: ^Charecter, cancel_index: int) -> bool{
+	if char.block_stun_frames <= 0 {
+		return true
+	}
+	return false
+}
+
+exit_hit_stun :: proc(char: ^Charecter, cancel_index: int) -> bool {
+	// also check if we hit the ground post launch
+	if char.hit_stun_frames <= 0 {
+		return true
+	}
+	return false
+}
+
 Frame :: struct {
-	frame_index:   int, // we may want to remove this
 	frame_type:    FrameType,
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static
