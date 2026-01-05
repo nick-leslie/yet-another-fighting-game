@@ -257,7 +257,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 	hit_box := Hit_box {
 		position    = Vec3{0, 0, 0},
 		extent      = Vec3{10., 5., 10.},
-		hitPushback = Vec3{-10, 0, 0},
+		hitPushback = Vec3{-10, 5, 0},
 	}
 	move := gk.State {
 		// model_ptr=model_prt,

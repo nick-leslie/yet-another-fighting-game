@@ -94,11 +94,12 @@ Hurt_box :: struct {
 	// todo properties
 }
 Hit_box :: struct {
-	using position: Vec3,
-	extent:         Vec3, // width height extent will be static
-	hitPushback:    Vec3,
-	blockPushback:  Vec3,
-	attackDir:      AttackDir,
+	using position:   Vec3,
+	extent:           Vec3, // width height extent will be static
+	hitPushback:      Vec3,
+	hitPushbackDecay: Vec3,
+	blockPushback:    Vec3,
+	attackDir:        AttackDir,
 	// todo properties
 }
 

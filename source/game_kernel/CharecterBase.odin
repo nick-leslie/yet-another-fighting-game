@@ -25,7 +25,6 @@ CharecterBase :: struct {
 	move_speed:        f32,
 	air_move_speed:    f32,
 	air_drag:          f32,
-	addional_velocity: Vec3,
 	p1_side:           bool,
 	states:            [dynamic]State, // should this be state
 	patterns:          [dynamic]Pattern,
@@ -41,6 +40,9 @@ CharecterBase :: struct {
 //which is slower waking or resizing
 
 setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
+	for &state in char.states {
+		setup_move_bodys(&state,pm^)
+	}
 	setup_charecter_collison(char, pm)
 }
 
@@ -126,16 +128,16 @@ setup_charecter_collison :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
 
 //todo this is an ordering update. because we do pickstate -> physics_update
 charecter_update :: proc(character: ^CharecterBase, input: Input) {
-	log.debug("in charecter update")
+	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
-	character.addional_velocity = {} // do we want to reset this here
+	// character.addional_velocity = {} // do we want to reset this here
 	update_input_buffer(character, input)
 
-	log.debug("getting current state")
+	// log.debug("getting current state")
 	state,frame := charecter_get_current_state_frame(character^)
 	proposed_state_index := pick_state(character.input_buffer, character.patterns)
-	log.debug("done getting state")
+	// log.debug("done getting state")
 
 	state_frame_len := len(state.frames)
 
@@ -146,7 +148,7 @@ charecter_update :: proc(character: ^CharecterBase, input: Input) {
 		// log.debug("new state needed")
 	}
 
-	log.debug("finished picking state")
+	// log.debug("finished picking state")
 	if character.hit_stun_frames > 0 && character.current_state != character.hit_stun_index {
 		state,frame =  charecer_change_state(character,character.hit_stun_index)
 	} else if character.block_stun_frames > 0 && character.current_state != character.block_stun_index{
@@ -156,7 +158,7 @@ charecter_update :: proc(character: ^CharecterBase, input: Input) {
 
 	frame.on_frame(character) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
-	log.debug("done with charecter update")
+	// log.debug("done with charecter update")
 }
 
 charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State,Frame) {
@@ -185,15 +187,13 @@ character_add_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manager) 
 	_, frame := charecter_get_current_state_frame(character)
 
 	for &hurt_box in frame.hurtbox_list {
-		log.debug(hurt_box)
 		id := jolt.Body_GetID(hurt_box.body)
-		log.debug(id)
 		position: Vec3 = character.position + hurt_box.position
 		jolt.BodyInterface_AddBody(pm.bodyInterface, id, .Activate)
 		jolt.BodyInterface_SetPosition(pm.bodyInterface, id, &position, .Activate)
 	}
-	log.debug("done adding hurt boxes")
-	//todo add all the bodys to the simulation before searching for an attack.
+	// log.debug("done adding hurt boxes")
+	// todo add all the bodys to the simulation before searching for an attack.
 	// this nees to be done in lockstep seprate from the charecter update
 }
 
@@ -299,10 +299,15 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 					if id == result.bodyID2 {
 						// log.debug(hurt_box)
 						block := charecter_check_block(other)
+						current_velocity :=Vec3{}
+
+						jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &current_velocity)
+						log.debug(current_velocity)
 						if block == false && other.hit_stun_frames == 0 && other.block_stun_frames == 0{
 							pushback := hit_ctx.hitbox.hitPushback
 							pushback.x *= side_mod
-							other.addional_velocity += pushback
+
+							current_velocity += pushback
 							other.hit_stun_frames = self_state.hitstun
 							other.block_stun_frames=0
 							//set in hit_stun
@@ -310,11 +315,16 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 							// log.debug("blocking")
 							pushback := hit_ctx.hitbox.blockPushback
 							pushback.x *= side_mod
-							other.addional_velocity += pushback
+							current_velocity += pushback
 							other.block_stun_frames = self_state.blockstun
 
 							other.hit_stun_index=0
 						}
+						log.debug(current_velocity)
+						jolt.CharacterVirtual_SetLinearVelocity(other.physics_character,&current_velocity)
+						log_velocity := Vec3{}
+						jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &log_velocity)
+						log.debug(log_velocity)
 						//check if blocking and set to block or hit_stun
 					}
 				}
@@ -342,9 +352,7 @@ charecter_check_block ::proc(charecter:  ^CharecterBase) -> bool {
 }
 
 charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
-	log.debug("removing hurt boxes")
 	character_remove_hurt_boxes(character^, w.physicsManager) // remove the hurt boxes before running physics
-	log.debug("done removing hurt boxes")
 	character.prev_position = character.position
 	jump_pressed := character.jump_requested
 	if character.in_air && jump_pressed {
@@ -355,18 +363,16 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	// log.debug(up_const)
 	// up: Vec3; jolt.CharacterBase_GetUp(auto_cast character.physics_character, &up_const)
 
-	log.debug("updating grounded velocity")
-	log.debug(character.physics_character)
 	// A cheaper way to update the character's ground velocity, the platforms that the character is standing on may have changed velocity
 	jolt.CharacterVirtual_UpdateGroundVelocity(character.physics_character)
-	log.debug("end update grounded velocity")
+	// log.debug("end update grounded velocity")
 	ground_velocity: Vec3; jolt.CharacterBase_GetGroundVelocity(auto_cast character.physics_character, &ground_velocity)
 
 	current_velocity: Vec3; jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &current_velocity)
 	current_vertical_velocity := linalg.dot(current_velocity, UP) * UP
 
 	new_velocity: Vec3
-	log.debug("got grounded state")
+
 	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
 		// Assume velocity of ground when on ground
 		new_velocity = ground_velocity
@@ -374,15 +380,12 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 		// Jump
 		moving_towards_ground := (current_vertical_velocity.y - ground_velocity.y) < 0.1
 		// log.debug(jump_pressed)
-		if jump_pressed && moving_towards_ground {
-			log.debug(character.jump_requested)
-			log.debug(character.move_dir)
+		if jump_pressed && moving_towards_ground && character.hit_stun_frames <= 0 && character.block_stun_frames <= 0{
 			new_velocity += character.jump_height * UP
 		}
 	} else {
 		new_velocity = current_vertical_velocity
 	}
-	log.debug("middle of function")
 	// Add gravity
 	gravity: Vec3; jolt.PhysicsSystem_GetGravity(w.physicsManager.physicsSystem, &gravity)
 	new_velocity += gravity * FIXED_STEP
@@ -390,7 +393,13 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 	input.y = 0
 	input = linalg.normalize0(input)
-	if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
+
+	if character.hit_stun_frames > 0 {
+		// overwrite velocity when hit or blocked
+		new_velocity = current_velocity
+	} else if character.block_stun_frames > 0 {
+		new_velocity =current_velocity
+	} else if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
 		new_velocity += input * (character.move_speed)
 		character.in_air = false
 	} else {
@@ -400,7 +409,7 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 		new_velocity += current_horizontal_velocity * character.air_drag
 		new_velocity += input * character.air_move_speed
 	}
-	new_velocity += character.addional_velocity
+	// new_velocity += character.addional_velocity
 	// set the velocity to the character
 	jolt.CharacterVirtual_SetLinearVelocity(character.physics_character, &new_velocity)
 
@@ -413,7 +422,6 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 		walkStairsStepDownExtra          = {},
 	}
 	// update the character physics (btw there's also CharacterVirtual_ExtendedUpdate with stairs support)
-	log.debug("charecter virtual extened update")
 	jolt.CharacterVirtual_ExtendedUpdate(
 		character.physics_character,
 		FIXED_STEP,
@@ -427,7 +435,6 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	// read the new position into our structure
 	jolt.CharacterVirtual_GetPosition(character.physics_character, &character.position)
 
-	log.debug("push contatcts")
 	// if we're on the ground, try pushing currect contacts away
 	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
 		for i in 0 ..< jolt.CharacterVirtual_GetNumActiveContacts(character.physics_character) {

@@ -41,18 +41,13 @@ World :: struct {
 g_context: runtime.Context
 
 world_init :: proc(p1:CharecterBase,p2:CharecterBase) -> World {
+	log.info("creating world")
 	g_context = context
 	p1 := p1 //todo figure out this
 	p2 := p2
 	pm := create_physics_mannager()
 	floor_id := add_floor(&pm)
 	world := World{}
-	for &state in p1.states {
-		setup_move_bodys(&state,pm)
-	}
-	for &state in p2.states {
-		setup_move_bodys(&state,pm)
-	}
 	world.p1=p1
 	world.p2=p2
 	world.stage= {
@@ -74,16 +69,14 @@ destroy_world :: proc(w:World) {
 FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
 
 world_tic ::proc(w:^World,p1_input:Input) {
-	log.debug("starting p1 update")
 	charecter_update(&w.p1, p1_input)
 
 	//todo take me as an input
 	p2_input := Input {
-		dir = Direction.DownBack,
+		dir = Direction.Neutral,
 	} // todo move this out for rollback
 	charecter_update(&w.p2, p2_input)
 
-	log.debug("starting to add hurt boxes")
 	character_add_hurt_boxes(w.p1, w.physicsManager) // investigate why comenting this out breaks things
 	character_add_hurt_boxes(w.p2, w.physicsManager)
 	character_check_hit(&{&w.p1, &w.p2}, w)
@@ -92,11 +85,8 @@ world_tic ::proc(w:^World,p1_input:Input) {
 
 world_physics_tic ::proc(w:^World) {
 	//move me out
-	log.debug("charecter physics update 1")
 	charecter_physics_update(&w.p1, w)
-	log.debug("charecter physics update 2")
 	charecter_physics_update(&w.p2, w)
-	log.debug("jolt physics update 2")
 	// update normal physics
 	jolt.PhysicsSystem_Update(
 		w.physicsManager.physicsSystem,

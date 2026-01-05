@@ -87,18 +87,13 @@ update :: proc() {
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-	log.debug("update starting to run")
 	input := poll_charecter_input(g.p1_controls,true)
-	log.debug("read input")
 	gk.world_tic(&g.world,input)
-	log.debug("update tic finished")
 	//tood check hits
 }
 
 physics_update :: proc() {
-	log.debug("physics update started")
 	gk.world_physics_tic(&g.world)
-	log.debug("physics update ended")
 }
 
 
@@ -150,7 +145,7 @@ game_update :: proc() {
 game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
-	rl.ToggleFullscreen()
+	// rl.ToggleFullscreen()
 	rl.SetWindowPosition(200, 200)
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
