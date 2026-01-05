@@ -27,58 +27,52 @@ created.
 
 package game
 
-import "../libs/jolt"
-import "base:runtime"
 import "core:fmt"
 import "core:log"
-import "core:math/linalg"
+import "base:runtime"
+// import "core:fmt"
+// import "core:math/linalg"
 import rl "vendor:raylib"
+import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 
 PIXEL_WINDOW_HEIGHT :: 180
 
 Game_Memory :: struct {
 	run:            bool,
-	physicsManager: Physics_Manager,
-	stage:          Stage,
-	p1:             Charecter,
-	p2:             Charecter,
+	world: 		gk.World,
+	p1_controls: 	Controls,
+	p2_controls: 	Controls,
+	model_tmp: 		rl.Model,
 }
 
-Stage :: struct {
-	floor_id:   jolt.BodyID,
-	left_wall:  jolt.BodyID,
-	right_wall: jolt.BodyID,
-	// todo add wall
-}
-
-CAMERA_DISTANCE :: 50
-
+CAMERA_DISTANCE :: 60
+CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
+CAMERA_TARGET   :: Vec3 {0,25,0}
 Vec3 :: [3]f32
 Vec2 :: [2]f32
 Vec4 :: [4]f32
 
 Quat :: quaternion128
 
-FLOOR_POSITION: Vec3 = {0, -10, 0}
+FLOOR_POSITION: Vec3 = {0, 0, 0}
 QUAT_IDENTITY: Quat = 1
 VEC3_ZERO: Vec3 = 0
 UP :: Vec3{0, 1, 0}
-
-FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
+FLOOR_EXTENT: Vec3={100, 0.05, 10}
 
 
 g: ^Game_Memory
 
 g_context: runtime.Context
 
-game_camera :: proc() -> rl.Camera3D {
-	look_target: Vec3 = {}
+game_camera :: proc() ->rl.Camera3D {
+
 	return rl.Camera3D {
-		position   = look_target + linalg.mul(QUAT_IDENTITY, Vec3{0, 0, CAMERA_DISTANCE}),
-		target     = look_target, // target 0,0
+		position   = CAMERA_POSITION,
+		target     = CAMERA_TARGET, // target 0,0
 		up         = UP,
-		fovy       = 45.0,
+		fovy       = 60.0,
 		projection = rl.CameraProjection.PERSPECTIVE,
 	}
 }
@@ -87,32 +81,24 @@ ui_camera :: proc() -> rl.Camera2D {
 	return {zoom = f32(rl.GetScreenHeight()) / PIXEL_WINDOW_HEIGHT}
 }
 
+// all of this needs to go in world
 update :: proc() {
-	input := poll_charecter_input(&g.p1) // todo move this out for rollback
-	charecter_update(&g.p1, input)
-	input = Input {
-		dir = Direction.Neutral,
-	} // todo move this out for rollback
-	charecter_update(&g.p2, input)
+	//move me out
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-	character_add_hurt_boxes(g.p1, g.physicsManager) // investigate why comenting this out breaks things
-	character_add_hurt_boxes(g.p2, g.physicsManager)
-	character_check_hit(&{&g.p1, &g.p2}, g.physicsManager)
+	log.debug("update starting to run")
+	input := poll_charecter_input(g.p1_controls,true)
+	log.debug("read input")
+	gk.world_tic(&g.world,input)
+	log.debug("update tic finished")
 	//tood check hits
 }
 
 physics_update :: proc() {
-	charecter_physics_update(&g.p1, g.physicsManager)
-	charecter_physics_update(&g.p2, g.physicsManager)
-	// update normal physics
-	jolt.PhysicsSystem_Update(
-		g.physicsManager.physicsSystem,
-		FIXED_STEP,
-		1,
-		g.physicsManager.jobSystem,
-	)
+	log.debug("physics update started")
+	gk.world_physics_tic(&g.world)
+	log.debug("physics update ended")
 }
 
 
@@ -122,24 +108,26 @@ draw :: proc() {
 
 	rl.BeginMode3D(game_camera())
 
-	charecter_draw(g.p1)
-	charecter_draw(g.p2)
-	charecter_draw_hit_boxes(g.p1)
-	charecter_draw_hit_boxes(g.p2)
+	charecter_draw(g.world.p1)
+	charecter_draw(g.world.p2)
+	charecter_draw_hit_boxes(g.world.p1)
+	charecter_draw_hit_boxes(g.world.p2)
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
+	rl.DrawModel(g.model_tmp,{0,0,0},1,rl.WHITE)
 
+	rl.DrawCircle3D(CAMERA_TARGET,1,{},0,rl.BLUE)
 
 	rl.EndMode3D()
 	rl.BeginMode2D(ui_camera())
 	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
-	rl.DrawText(fmt.ctprintf("p1_pos: %v", g.p1.position), 5, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p1_state: %d", g.p1.current_state), 5, 12, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p1_pos: %v",   g.world.p1.position), 5, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p1_state: %d", g.world.p1.current_state), 5, 12, 8, rl.WHITE)
 	rl.DrawFPS(5, 23)
 
-	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.p2.position), 170, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p2_state: %d", g.p2.current_state), 170, 12, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.position), 170, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p2_state: %d", g.world.p2.current_state), 170, 12, 8, rl.WHITE)
 
 
 	rl.EndMode2D()
@@ -162,6 +150,7 @@ game_update :: proc() {
 game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
+	rl.ToggleFullscreen()
 	rl.SetWindowPosition(200, 200)
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
@@ -171,8 +160,18 @@ game_init_window :: proc() {
 game_init :: proc() {
 	g_context = context
 	g = new(Game_Memory)
-	pm := create_physics_mannager()
-	char := Charecter {
+	//TODO investigate why we cant move you below the setup of G
+	p1_controls := Keyboard {
+		up_key = rl.KeyboardKey.W,
+		down_key = rl.KeyboardKey.S,
+		left_key = rl.KeyboardKey.A,
+		right_key = rl.KeyboardKey.D,
+		light_key = rl.KeyboardKey.J,
+		medium_key = rl.KeyboardKey.K,
+		heavy_key = rl.KeyboardKey.L,
+	}
+
+	p1 := gk.CharecterBase {
 		position = {0, 10, 0},
 		move_speed = 20,
 		air_drag = 0.5,
@@ -180,17 +179,10 @@ game_init :: proc() {
 		jump_height = 50,
 		p1_side = true,
 		input_buffer = {},
-		controls = Keyboard {
-			up_key = rl.KeyboardKey.W,
-			down_key = rl.KeyboardKey.S,
-			left_key = rl.KeyboardKey.A,
-			right_key = rl.KeyboardKey.D,
-			light_key = rl.KeyboardKey.J,
-			medium_key = rl.KeyboardKey.K,
-			heavy_key = rl.KeyboardKey.L,
-		},
+		states = make([dynamic]gk.State),
+		patterns = make([dynamic]gk.Pattern),
 	}
-	char2 := Charecter {
+	p2 := gk.CharecterBase {
 		position = {10, 10, 0},
 		move_speed = 50,
 		air_drag = 0.5,
@@ -198,33 +190,23 @@ game_init :: proc() {
 		jump_height = 20,
 		p1_side = false,
 		input_buffer = {},
-		controls = Keyboard {
-			up_key = rl.KeyboardKey.W,
-			down_key = rl.KeyboardKey.S,
-			left_key = rl.KeyboardKey.A,
-			right_key = rl.KeyboardKey.D,
-		},
+		states = make([dynamic]gk.State),
+		patterns = make([dynamic]gk.Pattern),
 	}
-	//TODO investigate why we cant move you below the setup of G
-	setup_charecter(&char, &pm)
-	setup_charecter(&char2, &pm)
-	floor_id := add_floor(&pm)
-	log.debug(floor_id)
+	add_state_movement(&p1) // the nill is tmp
+	add_state_light_attack(&p1)
+	add_state_stun(&p1)
+	add_state_movement(&p2) // the nill is tmp
+	add_state_stun(&p2)
+	log.debug(p1.states[:])
 	g^ = Game_Memory {
 		run = true,
-		physicsManager = pm,
-		p1 = char,
-		p2 = char2,
-		stage = {floor_id = floor_id},
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
+		world=	gk.world_init(p1,p2),
+		p1_controls=p1_controls,
+		model_tmp=rl.LoadModel("assets/tmp/psx_humanoid_female.glb"),
 	}
-	add_state_movement(&g.p1) // the nill is tmp
-	add_state_light_attack(&g.p1)
-	add_state_stun(&g.p1)
-	add_state_movement(&g.p2) // the nill is tmp
-	add_state_stun(&g.p2)
-
 	game_hot_reloaded(g)
 }
 
@@ -240,31 +222,13 @@ game_should_run :: proc() -> bool {
 	return g.run
 }
 
-add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
-	floor_extent := Vec3{100, 0.05, 10}
-	floor_shape := jolt.BoxShape_Create(&floor_extent, 0)
-	defer jolt.Shape_Destroy(auto_cast floor_shape)
-	floor_settings := jolt.BodyCreationSettings_Create3(
-		shape = auto_cast floor_shape,
-		position = &FLOOR_POSITION,
-		rotation = &QUAT_IDENTITY,
-		motionType = .Static,
-		objectLayer = PHYS_LAYER_NON_MOVING,
-	)
-	floor_body_id := jolt.BodyInterface_CreateAndAddBody(
-		pm.bodyInterface,
-		floor_settings,
-		.Activate,
-	)
-	jolt.BodyCreationSettings_Destroy(floor_settings)
-	return floor_body_id
-}
-
 
 @(export)
 game_shutdown :: proc() {
-	delete_charecter(&g.p1)
-	delete_charecter(&g.p2)
+	// delete_charecter(&g.p1)
+	// delete_charecter(&g.p2)
+	gk.destroy_world(g.world) // we may want to pass world
+	rl.UnloadModel(g.model_tmp)
 	free(g)
 
 }

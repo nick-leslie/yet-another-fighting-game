@@ -1,6 +1,6 @@
-package game
+package game_kernel
 
-import "../libs/jolt"
+import "../../libs/jolt"
 import "base:runtime"
 import "core:log"
 import rl "vendor:raylib"
@@ -147,4 +147,25 @@ destroy_physics_mannager :: proc(physicsManager: ^Physics_Manager) {
 	jolt.JobSystem_Destroy(physicsManager.jobSystem)
 	jolt.PhysicsSystem_Destroy(physicsManager.physicsSystem)
 	jolt.Shutdown()
+}
+
+
+add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
+
+	floor_shape := jolt.BoxShape_Create(&FLOOR_EXTENT, 0)
+	defer jolt.Shape_Destroy(auto_cast floor_shape)
+	floor_settings := jolt.BodyCreationSettings_Create3(
+		shape = auto_cast floor_shape,
+		position = &FLOOR_POSITION,
+		rotation = &QUAT_IDENTITY,
+		motionType = .Static,
+		objectLayer = PHYS_LAYER_NON_MOVING,
+	)
+	floor_body_id := jolt.BodyInterface_CreateAndAddBody(
+		pm.bodyInterface,
+		floor_settings,
+		.Activate,
+	)
+	jolt.BodyCreationSettings_Destroy(floor_settings)
+	return floor_body_id
 }

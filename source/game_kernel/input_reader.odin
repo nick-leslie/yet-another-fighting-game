@@ -1,5 +1,4 @@
-package game
-import rl "vendor:raylib"
+package game_kernel
 
 
 Direction :: enum {
@@ -26,26 +25,6 @@ Input :: struct {
     attack:Attack,
 }
 
-Controls :: union {
-    Keyboard,
-    GamePad,
-}
-
-Keyboard :: struct {
- up_key:rl.KeyboardKey,
- down_key:rl.KeyboardKey,
- left_key:rl.KeyboardKey,
- right_key:rl.KeyboardKey,
- light_key:rl.KeyboardKey,
- medium_key:rl.KeyboardKey,
- heavy_key:rl.KeyboardKey,
-}
-
-GamePad :: struct {
-    light_key:rl.GamepadButton,
-    medium_key:rl.GamepadButton,
-    heavy_key:rl.GamepadButton,
-}
 
 MAX_PATTERN_LEN :: 7 // we set this to be the length of 6321456 (strive super input)
 Pattern :: struct {
@@ -64,72 +43,11 @@ InputBuffer ::struct {
     buffer:     [INPUT_BUFFER_LENGTH]Input,
     input_index:int,
 }
-
+// seperate this out to another layer
 // gets the controls for the player that frame
-poll_charecter_input ::proc (charecter:^Charecter) -> Input{
-    switch &controls in charecter.controls {
-    case Keyboard:
-        move_vec := Vec2{}
-        side_mod := 1
-        if charecter.p1_side == false {
-            side_mod =-1
-        }
-        if rl.IsKeyDown(controls.up_key) {
-            move_vec.y += 1
-        }
-        if rl.IsKeyDown(controls.down_key) {
-            move_vec.y += -1
-        }
-        if rl.IsKeyDown(controls.right_key) {
-            move_vec.x += f32(1 * side_mod)
-        }
-        if rl.IsKeyDown(controls.left_key) {
-            move_vec.x += f32(-1 * side_mod)
-        }
-        dir:Direction
-        attack:Attack
-        switch move_vec {
-        case {0,0}:
-            dir = Direction.Neutral
-        case {1,0}:
-            dir = Direction.Forward
-        case {-1,0}:
-            dir = Direction.Back
-        case {0,-1}:
-            dir = Direction.Down
-        case {0,1}:
-            dir = Direction.Up
-        case {1,1}:
-            dir = Direction.UpForward
-        case {-1,1}:
-            dir = Direction.UpBack
-        case {1,-1}:
-            dir = Direction.DownForward
-        case {-1,-1}:
-            dir = Direction.DownBack
-        }
-        if rl.IsKeyPressed(controls.light_key) {
-            attack = Attack.Light
-        }
-        if rl.IsKeyPressed(controls.medium_key) {
-            attack = Attack.Medium
-        }
-        if rl.IsKeyPressed(controls.heavy_key) {
-            attack = Attack.Heavy
 
-        }
-        return Input{
-            dir=dir,
-            attack=attack,
-        }
-    case GamePad:
-        assert(false,"not implemented")
-        return {}
-    }
-    return {}
-}
 
-update_input_buffer :: proc(charecter:^Charecter,input:Input) {
+update_input_buffer :: proc(charecter:^CharecterBase,input:Input) {
     charecter.input_buffer.buffer[charecter.input_buffer.input_index] = input
     charecter.input_buffer.input_index +=1
     if charecter.input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {

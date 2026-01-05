@@ -1,14 +1,11 @@
-package game
+package game_kernel
 
-import "../libs/jolt"
+import "../../libs/jolt"
 import "core:log"
-import rl "vendor:raylib"
 
 State :: struct {
 	frames:        [dynamic]Frame,
 	hurtbox_bodys: [dynamic]^jolt.Body, // all these bodys are precreated or alocated but asleep
-	animation_ptr: ^rl.ModelAnimation,
-	model_ptr:     ^rl.Model,
 	// should all this be in a seprate struct
 	canBlock:      bool,
 	isAttack:      bool,
@@ -33,7 +30,7 @@ delete_state :: proc(move: ^State) {
 	delete(move.hurtbox_bodys)
 }
 
-check_cancel_options :: proc(char: ^Charecter, cancel_index: int) -> bool {
+check_cancel_options :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	log.debug("huhhhh")
 	state := char.states[char.current_state]
 	frame := state.frames[char.current_frame]
@@ -48,7 +45,7 @@ check_cancel_options :: proc(char: ^Charecter, cancel_index: int) -> bool {
 	return false
 }
 
-jump_state_cancel :: proc(char: ^Charecter, cancel_index: int) -> bool {
+jump_state_cancel :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
 
@@ -59,21 +56,21 @@ jump_state_cancel :: proc(char: ^Charecter, cancel_index: int) -> bool {
 	return false
 }
 
-free_cancel :: proc(char: ^Charecter, cancel_index: int) -> bool {
+free_cancel :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	return true
 }
-no_cancel :: proc(char: ^Charecter, cancel_index: int) -> bool {
+no_cancel :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	return false
 }
 
-exit_block_stun :: proc(char: ^Charecter, cancel_index: int) -> bool{
+exit_block_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool{
 	if char.block_stun_frames <= 0 {
 		return true
 	}
 	return false
 }
 
-exit_hit_stun :: proc(char: ^Charecter, cancel_index: int) -> bool {
+exit_hit_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	// also check if we hit the ground post launch
 	if char.hit_stun_frames <= 0 {
 		return true
@@ -86,8 +83,8 @@ Frame :: struct {
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static
 	hitbox_list:   [dynamic]Hit_box,
-	on_frame:      proc(_: ^Charecter),
-	check_exit:    proc(_: ^Charecter, _: int) -> bool, // takes char pointer and proposed state
+	on_frame:      proc(_: ^CharecterBase),
+	check_exit:    proc(_: ^CharecterBase, _: int) -> bool, // takes char pointer and proposed state
 }
 
 Hurt_box :: struct {
@@ -115,7 +112,7 @@ FrameType :: enum {
 
 //todo we may want to replace this with code gen
 // man this sucks but we love it
-setup_move_bodys :: proc(move: ^State) {
+setup_move_bodys :: proc(move: ^State,pm:Physics_Manager) {
 	move.hurtbox_bodys = make([dynamic]^jolt.Body)
 	past_hurtboxes := make([dynamic]^Hurt_box)
 	defer delete(past_hurtboxes)
@@ -157,7 +154,7 @@ setup_move_bodys :: proc(move: ^State) {
 
 
 			hurt_box.body = jolt.BodyInterface_CreateBody(
-				g.physicsManager.bodyInterface,
+				pm.bodyInterface,
 				box_settings,
 			)
 			log.debug(jolt.Body_GetID(hurt_box.body))
