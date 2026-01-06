@@ -151,8 +151,8 @@ destroy_physics_mannager :: proc(physicsManager: ^Physics_Manager) {
 
 
 add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
-
-	floor_shape := jolt.BoxShape_Create(&FLOOR_EXTENT, 0)
+	extent := FLOOR_EXTENT *0.5
+	floor_shape := jolt.BoxShape_Create(&extent, 0)
 	defer jolt.Shape_Destroy(auto_cast floor_shape)
 	floor_settings := jolt.BodyCreationSettings_Create3(
 		shape = auto_cast floor_shape,

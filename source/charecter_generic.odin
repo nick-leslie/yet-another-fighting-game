@@ -262,6 +262,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 	move := gk.State {
 		// model_ptr=model_prt,
 		// animation_ptr=animation_ptr,
+		hit_boxes = {hit_box},
 		frames    = {
 			Frame {
 				frame_type = gk.FrameType.Startup,
@@ -298,7 +299,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
-				hitbox_list = {hit_box},
+				hitbox_list = {0},
 				on_frame = proc(char: ^gk.CharecterBase) {
 				},
 				check_exit = no_cancel, // todo change me
@@ -307,7 +308,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
-				hitbox_list = {hit_box},
+				hitbox_list = {0},
 				on_frame = proc(char: ^gk.CharecterBase) {},
 				check_exit = no_cancel, // todo change me
 			},
@@ -315,7 +316,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
-				hitbox_list = {hit_box},
+				hitbox_list = {0},
 				on_frame = proc(char: ^gk.CharecterBase) {},
 				check_exit = no_cancel, // todo change me
 			},
@@ -323,7 +324,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
-				hitbox_list = {hit_box},
+				hitbox_list = {0},
 				on_frame = proc(char: ^gk.CharecterBase) {},
 				check_exit = no_cancel, // todo change me
 			},

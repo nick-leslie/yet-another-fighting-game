@@ -59,7 +59,7 @@ FLOOR_POSITION: Vec3 = {0, 0, 0}
 QUAT_IDENTITY: Quat = 1
 VEC3_ZERO: Vec3 = 0
 UP :: Vec3{0, 1, 0}
-FLOOR_EXTENT: Vec3={100, 0.05, 10}
+FLOOR_EXTENT: Vec3={150, 0.05, 10}
 
 
 g: ^Game_Memory

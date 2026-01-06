@@ -25,8 +25,9 @@ charecter_draw :: proc(character: gk.CharecterBase) {
 }
 
 charecter_draw_hit_boxes :: proc(character:gk.CharecterBase) {
-	_,frame := gk.charecter_get_current_state_frame(character)
-	for &hitbox in frame.hitbox_list {
+	state,frame := gk.charecter_get_current_state_frame(character)
+	for &hitbox_index in frame.hitbox_list {
+		hitbox := state.hit_boxes[hitbox_index]
 		rl.DrawCube(
 			character.position + hitbox.position,
 			hitbox.extent.x,

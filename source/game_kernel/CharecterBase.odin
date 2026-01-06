@@ -11,6 +11,7 @@ import "core:math/linalg"
 CHARACTER_CAPSULE_HALF_HEIGHT: f32 : 2
 CHARACTER_CAPSULE_RADIUS: f32 : 1
 
+HIT_BOX_MAX :: 64 // we may want to change this
 
 //rename to charecter base
 CharecterBase :: struct {
@@ -30,6 +31,9 @@ CharecterBase :: struct {
 	patterns:          [dynamic]Pattern,
 	current_frame:     int,
 	current_state:     int, // this is an index
+	current_state_flags: struct {
+		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
+	},
 	hit_stun_frames:   u32,
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_frames: u32,
@@ -145,14 +149,23 @@ charecter_update :: proc(character: ^CharecterBase, input: Input) {
 	//exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
 	if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
 		state,frame = charecer_change_state(character,proposed_state_index)
+		for i:=0;i<63;i+=1 {
+			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+		}
 		// log.debug("new state needed")
 	}
 
 	// log.debug("finished picking state")
 	if character.hit_stun_frames > 0 && character.current_state != character.hit_stun_index {
 		state,frame =  charecer_change_state(character,character.hit_stun_index)
+		for i:=0;i<63;i+=1 {
+			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+		}
 	} else if character.block_stun_frames > 0 && character.current_state != character.block_stun_index{
 		state,frame = charecer_change_state(character,character.block_stun_index)
+		for i:=0;i<63;i+=1 {
+			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+		}
 	}
 
 
@@ -207,14 +220,16 @@ character_remove_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manage
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
 HitBoxCtx :: struct {
-	charecters: CharPtrArr,
-	hitbox:     ^Hit_box,
-	world: 		^World,
+	charecters:   CharPtrArr,
+	hitbox_index: int,
+	hitbox:       ^Hit_box,
+	world: 		  ^World,
 }
 //bruh this shit about to get funky
 character_check_hit :: proc(characters: CharPtrArr, w:^World) {
-	_, frame := charecter_get_current_state_frame(characters[0]^)
-	for &hit_box in frame.hitbox_list {
+	state, frame := charecter_get_current_state_frame(characters[0]^)
+	for &hit_box_index in frame.hitbox_list {
+		hit_box := state.hit_boxes[hit_box_index]
 		narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(w.physicsManager.physicsSystem)
 		extent := hit_box.extent * 0.5
 		box_shape := jolt.BoxShape_Create(&extent, 0) // make sure this works
@@ -243,9 +258,10 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 		bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(characters[0])
 
 		hit_box_context := HitBoxCtx {
-			charecters = characters,
-			hitbox     = &hit_box,
-			world 	   = w,
+			charecters   = characters,
+			hitbox       = &hit_box,
+			hitbox_index = hit_box_index,
+			world 	   	 = w,
 		}
 
 		jolt.NarrowPhaseQuery_CastShape2(
@@ -274,8 +290,6 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 				self := CharPtrArr(hit_ctx.charecters)[0]
 				other := CharPtrArr(hit_ctx.charecters)[1]
 
-
-
 				self_state, frameSelf := charecter_get_current_state_frame(self^)
 				_, frameOther := charecter_get_current_state_frame(other^)
 				// we may want to speed this up later by seperating to a p1 layer
@@ -300,22 +314,29 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 						// log.debug(hurt_box)
 						block := charecter_check_block(other)
 						current_velocity :=Vec3{}
-
+						//todo dont make a hurt box apply more than once durring a moves duration
 						jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &current_velocity)
 						log.debug(current_velocity)
-						if block == false && other.hit_stun_frames == 0 && other.block_stun_frames == 0{
+						//todo fix me
+						log.debug(self.current_state_flags.hit_box_tracker_bit_mask)
+						if block == false && hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false { // the in is checking if its set
 							pushback := hit_ctx.hitbox.hitPushback
 							pushback.x *= side_mod
+							//this sets it so we dont hit with the same hitbox for multiple frames
+							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
+
 
 							current_velocity += pushback
 							other.hit_stun_frames = self_state.hitstun
 							other.block_stun_frames=0
 							//set in hit_stun
-						} else if other.hit_stun_frames == 0 && other.block_stun_frames == 0 {
+						} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
 							// log.debug("blocking")
 							pushback := hit_ctx.hitbox.blockPushback
 							pushback.x *= side_mod
 							current_velocity += pushback
+							//this sets it so we dont hit with the same hitbox for multiple frames
+							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
 							other.block_stun_frames = self_state.blockstun
 
 							other.hit_stun_index=0
