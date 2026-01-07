@@ -35,6 +35,7 @@ World :: struct {
 	stage:          Stage,
 	p1:             CharecterBase, // these should be charecters
 	p2:             CharecterBase,
+	combo_counter: 	   int, // this needs to check when the enemy recovers
 }
 
 
@@ -69,13 +70,13 @@ destroy_world :: proc(w:World) {
 FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
 
 world_tic ::proc(w:^World,p1_input:Input) {
-	charecter_update(&w.p1, p1_input)
+	charecter_update(&w.p1, p1_input,w)
 
 	//todo take me as an input
 	p2_input := Input {
 		dir = Direction.Neutral,
 	} // todo move this out for rollback
-	charecter_update(&w.p2, p2_input)
+	charecter_update(&w.p2, p2_input,w)
 
 	character_add_hurt_boxes(w.p1, w.physicsManager) // investigate why comenting this out breaks things
 	character_add_hurt_boxes(w.p2, w.physicsManager)

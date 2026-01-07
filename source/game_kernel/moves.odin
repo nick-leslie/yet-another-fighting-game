@@ -75,8 +75,16 @@ exit_block_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool{
 	return false
 }
 
+on_hit_stun :: proc(char: ^CharecterBase) {
+	char.hit_stun_frames-=1
+}
+on_block_stun :: proc(char: ^CharecterBase) {
+	char.hit_stun_frames-=1
+}
+
 exit_hit_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	// also check if we hit the ground post launch
+	log.debug(char.hit_stun_frames)
 	if char.hit_stun_frames <= 0 {
 		return true
 	}

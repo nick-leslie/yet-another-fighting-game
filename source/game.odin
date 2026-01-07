@@ -40,7 +40,7 @@ PIXEL_WINDOW_HEIGHT :: 180
 
 Game_Memory :: struct {
 	run:            bool,
-	world: 		gk.World,
+	world: 		    gk.World,
 	p1_controls: 	Controls,
 	p2_controls: 	Controls,
 	model_tmp: 		rl.Model,
@@ -118,11 +118,14 @@ draw :: proc() {
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
 	rl.DrawText(fmt.ctprintf("p1_pos: %v",   g.world.p1.position), 5, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p1_state: %d", g.world.p1.current_state), 5, 12, 8, rl.WHITE)
-	rl.DrawFPS(5, 23)
+	rl.DrawText(fmt.ctprintf("p1_state: %d", g.world.p1.current_state), 5, 13, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p1_hitstun: %d", g.world.p1.hit_stun_frames), 5, 20, 8, rl.WHITE)
+	rl.DrawFPS(5, 30)
+	rl.DrawText(fmt.ctprintf("Combo Counter: %d", g.world.combo_counter), 5, 50, 8, rl.WHITE)
 
 	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.position), 170, 5, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p2_state: %d", g.world.p2.current_state), 170, 12, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p2_hitstun: %d", g.world.p2.hit_stun_frames), 170, 20, 8, rl.WHITE)
 
 
 	rl.EndMode2D()

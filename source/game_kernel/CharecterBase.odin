@@ -16,6 +16,7 @@ HIT_BOX_MAX :: 64 // we may want to change this
 //rename to charecter base
 CharecterBase :: struct {
 	physics_character: ^jolt.CharacterVirtual, // should we sperate
+	//do I want to add an arena here
 	using position:    Vec3,
 	input_buffer:      InputBuffer,
 	move_dir:          Vec3,
@@ -31,14 +32,17 @@ CharecterBase :: struct {
 	patterns:          [dynamic]Pattern,
 	current_frame:     int,
 	current_state:     int, // this is an index
-	current_state_flags: struct {
+	current_state_flags: struct { // we may want to remove this
 		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	},
 	hit_stun_frames:   u32,
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_frames: u32,
 	block_stun_index:  int,
-	charecter_flags:   u128, // lots of flags for various states.. tuble extc
+	charecter_flags: bit_field u64 {
+
+	}, // lots of flags for various states.. tuble extc
+
 }
 
 //which is slower waking or resizing
@@ -131,7 +135,7 @@ setup_charecter_collison :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase, input: Input) {
+charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
 	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
@@ -148,6 +152,11 @@ charecter_update :: proc(character: ^CharecterBase, input: Input) {
 	exit_check := frame.check_exit(character, proposed_state_index)
 	//exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
 	if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
+		if(character.current_state == character.hit_stun_index) {
+			//this is the recovery point
+			w.combo_counter = 0
+
+		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
 			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
@@ -171,6 +180,13 @@ charecter_update :: proc(character: ^CharecterBase, input: Input) {
 
 	frame.on_frame(character) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
+	//reduce hit and block stun frames
+	if character.hit_stun_frames > 0 {
+		character.hit_stun_frames -= 1
+	}
+	if character.block_stun_frames > 0 {
+		character.block_stun_frames -= 1
+	}
 	// log.debug("done with charecter update")
 }
 
@@ -325,16 +341,16 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 							//this sets it so we dont hit with the same hitbox for multiple frames
 							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
 
-
-							current_velocity += pushback
+							current_velocity = pushback
 							other.hit_stun_frames = self_state.hitstun
 							other.block_stun_frames=0
+							hit_ctx.world.combo_counter += 1
 							//set in hit_stun
 						} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
 							// log.debug("blocking")
 							pushback := hit_ctx.hitbox.blockPushback
 							pushback.x *= side_mod
-							current_velocity += pushback
+							current_velocity = pushback
 							//this sets it so we dont hit with the same hitbox for multiple frames
 							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
 							other.block_stun_frames = self_state.blockstun
