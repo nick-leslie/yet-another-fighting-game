@@ -2,6 +2,7 @@ package game_kernel
 
 import "../../libs/jolt"
 import "core:log"
+import vmem "core:mem/virtual"
 
 
 
@@ -127,12 +128,14 @@ FrameType :: enum {
 
 //todo we may want to replace this with code gen
 // man this sucks but we love it
-setup_move_bodys :: proc(move: ^State,pm:Physics_Manager) {
+setup_move_bodys :: proc(move: ^State,pm:Physics_Manager,char:^CharecterBase) {
 	if len(move.hit_boxes) > HIT_BOX_MAX {
 		assert(false,"we have more hit boxes than tracking flags please reduce the number of hit boxes 64 should be more than enough")
 	}
-	move.hurtbox_bodys = make([dynamic]^jolt.Body)
-	past_hurtboxes := make([dynamic]^Hurt_box)
+	arena_alocator := vmem.arena_allocator(&char.charecter_arena)
+
+	move.hurtbox_bodys = make([dynamic]^jolt.Body,arena_alocator)
+	past_hurtboxes := make([dynamic]^Hurt_box,arena_alocator)
 	defer delete(past_hurtboxes)
 	for &frame in move.frames {
 		for &hurt_box in frame.hurtbox_list {

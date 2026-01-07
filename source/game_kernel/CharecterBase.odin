@@ -4,7 +4,7 @@ import "base:runtime"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
-
+import vmem "core:mem/virtual"
 // this is just a type alieas so I can define it in multiple places
 
 
@@ -16,6 +16,7 @@ HIT_BOX_MAX :: 64 // we may want to change this
 //rename to charecter base
 CharecterBase :: struct {
 	physics_character: ^jolt.CharacterVirtual, // should we sperate
+	charecter_arena:   vmem.Arena,
 	//do I want to add an arena here
 	using position:    Vec3,
 	input_buffer:      InputBuffer,
@@ -47,9 +48,15 @@ CharecterBase :: struct {
 
 //which is slower waking or resizing
 
+initilize_charecter_memory :: proc(char: ^CharecterBase) {
+	arena_alocator := vmem.arena_allocator(&char.charecter_arena)
+	char.patterns = make([dynamic]Pattern,arena_alocator)
+	char.states = make([dynamic]State,arena_alocator)
+}
+
 setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
 	for &state in char.states {
-		setup_move_bodys(&state,pm^)
+		setup_move_bodys(&state,pm^,char)
 	}
 	setup_charecter_collison(char, pm)
 }
@@ -494,13 +501,5 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 delete_charecter :: proc(char: ^CharecterBase) {
 	log.debug("delting charecers")
-	// delete all moves
-	for &state in char.states {
-		delete_state(&state)
-	}
-	delete(char.states)
-	for &pattern in char.patterns {
-		delete_pattern(&pattern)
-	}
-	delete(char.patterns)
+	vmem.arena_destroy(&char.charecter_arena)
 }

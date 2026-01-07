@@ -177,8 +177,6 @@ game_init :: proc() {
 		jump_height = 50,
 		p1_side = true,
 		input_buffer = {},
-		states = make([dynamic]gk.State),
-		patterns = make([dynamic]gk.Pattern),
 	}
 	p2 := gk.CharecterBase {
 		position = {10, 10, 0},
@@ -188,9 +186,9 @@ game_init :: proc() {
 		jump_height = 20,
 		p1_side = false,
 		input_buffer = {},
-		states = make([dynamic]gk.State),
-		patterns = make([dynamic]gk.Pattern),
 	}
+	gk.initilize_charecter_memory(&p1)
+	gk.initilize_charecter_memory(&p2)
 	add_state_movement(&p1) // the nill is tmp
 	add_state_light_attack(&p1)
 	add_state_stun(&p1)
