@@ -3,7 +3,6 @@ import "../../libs/jolt"
 import "base:runtime"
 import "core:log"
 import "core:math"
-import "core:math/linalg"
 import vmem "core:mem/virtual"
 // this is just a type alieas so I can define it in multiple places
 
@@ -19,11 +18,13 @@ CharecterBase :: struct {
 	charecter_arena:   vmem.Arena,
 	//do I want to add an arena here
 	using position:    Vec3,
+	velocity:          Vec3,
+	prev_position:     Vec3,
+	prev_velocity:	   Vec3,
 	input_buffer:      InputBuffer,
 	move_dir:          Vec3,
 	jump_requested:    bool,
 	in_air:            bool,
-	prev_position:     Vec3,
 	jump_height:       f32,
 	move_speed:        f32,
 	air_move_speed:    f32,
@@ -162,7 +163,6 @@ charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
 		if(character.current_state == character.hit_stun_index) {
 			//this is the recovery point
 			w.combo_counter = 0
-
 		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
@@ -306,79 +306,81 @@ character_check_hit :: proc(characters: CharPtrArr, w:^World) {
 			}, // shape cast settings
 			baseOffset = &{},
 			collectorType = .AllHit,
-			callback = proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
-
-				context = g_context // todo fix me
-				hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
-				self := CharPtrArr(hit_ctx.charecters)[0]
-				other := CharPtrArr(hit_ctx.charecters)[1]
-
-				self_state, frameSelf := charecter_get_current_state_frame(self^)
-				_, frameOther := charecter_get_current_state_frame(other^)
-				// we may want to speed this up later by seperating to a p1 layer
-				for &hurt_box in frameSelf.hurtbox_list {
-					id := jolt.Body_GetID(hurt_box.body)
-					if id == result.bodyID2 do return
-				}
-
-				if hit_ctx.world.stage.floor_id == result.bodyID2 do return // use layers to filter
-
-				self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
-				other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
-				if self_id == result.bodyID2 do return
-				if other_id == result.bodyID2 do return
-
-				side_mod: f32 = 1.
-				if other.p1_side == false do side_mod = -1.
-
-				for &hurt_box in frameOther.hurtbox_list {
-					id := jolt.Body_GetID(hurt_box.body)
-					if id == result.bodyID2 {
-						// log.debug(hurt_box)
-						block := charecter_check_block(other)
-						current_velocity :=Vec3{}
-						//todo dont make a hurt box apply more than once durring a moves duration
-						jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &current_velocity)
-						log.debug(current_velocity)
-						//todo fix me
-						log.debug(self.current_state_flags.hit_box_tracker_bit_mask)
-						if block == false && hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false { // the in is checking if its set
-							pushback := hit_ctx.hitbox.hitPushback
-							pushback.x *= side_mod
-							//this sets it so we dont hit with the same hitbox for multiple frames
-							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
-
-							current_velocity = pushback
-							other.hit_stun_frames = self_state.hitstun
-							other.block_stun_frames=0
-							hit_ctx.world.combo_counter += 1
-							//set in hit_stun
-						} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
-							// log.debug("blocking")
-							pushback := hit_ctx.hitbox.blockPushback
-							pushback.x *= side_mod
-							current_velocity = pushback
-							//this sets it so we dont hit with the same hitbox for multiple frames
-							self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
-							other.block_stun_frames = self_state.blockstun
-
-							other.hit_stun_index=0
-						}
-						log.debug(current_velocity)
-						jolt.CharacterVirtual_SetLinearVelocity(other.physics_character,&current_velocity)
-						log_velocity := Vec3{}
-						jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &log_velocity)
-						log.debug(log_velocity)
-						//check if blocking and set to block or hit_stun
-					}
-				}
-			},
+			callback = charecter_on_hit_other,
 			userData = &hit_box_context,
 			broadPhaseLayerFilter = bround_phase_filter,
 			objectLayerFilter = nil,
 			bodyFilter = nil,
 			shapeFilter = nil,
 		)
+	}
+}
+
+charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
+	context = g_context // todo fix me
+	hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
+	self := CharPtrArr(hit_ctx.charecters)[0]
+	other := CharPtrArr(hit_ctx.charecters)[1]
+
+	self_state, frameSelf := charecter_get_current_state_frame(self^)
+	_, frameOther := charecter_get_current_state_frame(other^)
+	// we may want to speed this up later by seperating to a p1 layer
+	for &hurt_box in frameSelf.hurtbox_list {
+		id := jolt.Body_GetID(hurt_box.body)
+		if id == result.bodyID2 do return
+	}
+
+	if hit_ctx.world.stage.floor_id == result.bodyID2 do return // use layers to filter
+
+	self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
+	other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
+	if self_id == result.bodyID2 do return
+	if other_id == result.bodyID2 do return
+
+	side_mod: f32 = 1.
+	if other.p1_side == false do side_mod = -1.
+
+	for &hurt_box in frameOther.hurtbox_list {
+		id := jolt.Body_GetID(hurt_box.body)
+		if id == result.bodyID2 {
+			// log.debug(hurt_box)
+			block := charecter_check_block(other)
+			other_current_velocity :=Vec3{}
+			//todo dont make a hurt box apply more than once durring a moves duration
+			jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &other_current_velocity)
+			log.debug(other_current_velocity)
+			//todo fix me
+			log.debug(self.current_state_flags.hit_box_tracker_bit_mask)
+			if block == false && hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false { // the in is checking if its set
+				pushback := hit_ctx.hitbox.hitKnockback
+				pushback.x *= side_mod
+				//this sets it so we dont hit with the same hitbox for multiple frames
+				self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
+
+				other_current_velocity = pushback
+				//todo set self current velocity
+				other.hit_stun_frames = self_state.hitstun
+				other.block_stun_frames=0
+				hit_ctx.world.combo_counter += 1
+				//set in hit_stun
+			} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
+				// log.debug("blocking")
+				pushback := hit_ctx.hitbox.blockPushback
+				pushback.x *= side_mod
+				other_current_velocity = pushback
+				//this sets it so we dont hit with the same hitbox for multiple frames
+				self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
+				other.block_stun_frames = self_state.blockstun
+
+				other.hit_stun_index=0
+			}
+			log.debug(other_current_velocity)
+			jolt.CharacterVirtual_SetLinearVelocity(other.physics_character,&other_current_velocity)
+			log_velocity := Vec3{}
+			jolt.CharacterVirtual_GetLinearVelocity(other.physics_character, &log_velocity)
+			log.debug(log_velocity)
+			//check if blocking and set to block or hit_stun
+		}
 	}
 }
 
@@ -395,67 +397,27 @@ charecter_check_block ::proc(charecter:  ^CharecterBase) -> bool {
 	}
 }
 
+
+
+
+//todo fully move the velocity control to the moves
 charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	character_remove_hurt_boxes(character^, w.physicsManager) // remove the hurt boxes before running physics
 	character.prev_position = character.position
+	character.prev_velocity = character.velocity
 	jump_pressed := character.jump_requested
 	if character.in_air && jump_pressed {
 		jump_pressed = false // there is a better way to do this
 	}
-	// get up vector (and update it in the character struct just in case)
-	// up_const := UP
-	// log.debug(up_const)
-	// up: Vec3; jolt.CharacterBase_GetUp(auto_cast character.physics_character, &up_const)
 
-	// A cheaper way to update the character's ground velocity, the platforms that the character is standing on may have changed velocity
-	jolt.CharacterVirtual_UpdateGroundVelocity(character.physics_character)
-	// log.debug("end update grounded velocity")
-	ground_velocity: Vec3; jolt.CharacterBase_GetGroundVelocity(auto_cast character.physics_character, &ground_velocity)
-
-	current_velocity: Vec3; jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &current_velocity)
-	current_vertical_velocity := linalg.dot(current_velocity, UP) * UP
-
-	new_velocity: Vec3
-
-	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
-		// Assume velocity of ground when on ground
-		new_velocity = ground_velocity
-
-		// Jump
-		moving_towards_ground := (current_vertical_velocity.y - ground_velocity.y) < 0.1
-		// log.debug(jump_pressed)
-		if jump_pressed && moving_towards_ground && character.hit_stun_frames <= 0 && character.block_stun_frames <= 0{
-			new_velocity += character.jump_height * UP
-		}
-	} else {
-		new_velocity = current_vertical_velocity
-	}
 	// Add gravity
 	gravity: Vec3; jolt.PhysicsSystem_GetGravity(w.physicsManager.physicsSystem, &gravity)
-	new_velocity += gravity * FIXED_STEP
-	input := character.move_dir
+	character.velocity += gravity * FIXED_STEP
 
-	input.y = 0
-	input = linalg.normalize0(input)
 
-	if character.hit_stun_frames > 0 {
-		// overwrite velocity when hit or blocked
-		new_velocity = current_velocity
-	} else if character.block_stun_frames > 0 {
-		new_velocity =current_velocity
-	} else if jolt.CharacterBase_IsSupported(auto_cast character.physics_character) == true {
-		new_velocity += input * (character.move_speed)
-		character.in_air = false
-	} else {
-		// preserve horizontal velocity
-		character.in_air = true
-		current_horizontal_velocity := current_velocity - current_vertical_velocity
-		new_velocity += current_horizontal_velocity * character.air_drag
-		new_velocity += input * character.air_move_speed
-	}
 	// new_velocity += character.addional_velocity
 	// set the velocity to the character
-	jolt.CharacterVirtual_SetLinearVelocity(character.physics_character, &new_velocity)
+	jolt.CharacterVirtual_SetLinearVelocity(character.physics_character, &character.velocity)
 
 	extended_settings := jolt.ExtendedUpdateSettings {
 		stickToFloorStepDown             = {0, -0.5, 0},
@@ -478,24 +440,7 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 	// read the new position into our structure
 	jolt.CharacterVirtual_GetPosition(character.physics_character, &character.position)
-
-	// if we're on the ground, try pushing currect contacts away
-	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
-		for i in 0 ..< jolt.CharacterVirtual_GetNumActiveContacts(character.physics_character) {
-			contact: jolt.CharacterVirtualContact; jolt.CharacterVirtual_GetActiveContact(character.physics_character, i, &contact)
-			if contact.bodyB == w.stage.floor_id do continue
-			if contact.motionTypeB == .Dynamic {
-				PUSH_FORCE :: 100
-				push_vector := -contact.contactNormal * PUSH_FORCE
-				jolt.BodyInterface_AddImpulse2(
-					w.physicsManager.bodyInterface,
-					contact.bodyB,
-					&push_vector,
-					&contact.position,
-				)
-			}
-		}
-	}
+	jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &character.velocity)
 }
 
 

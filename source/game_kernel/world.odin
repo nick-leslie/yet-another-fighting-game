@@ -35,7 +35,8 @@ World :: struct {
 	stage:          Stage,
 	p1:             CharecterBase, // these should be charecters
 	p2:             CharecterBase,
-	combo_counter: 	   int, // this needs to check when the enemy recovers
+	//todo we may need to make this go to the charecters
+	combo_counter: 	   int, // this needs to check when the enemy recovers   trades will make this goto 2
 }
 
 

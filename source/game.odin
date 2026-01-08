@@ -118,12 +118,14 @@ draw :: proc() {
 	// cleared at the end of the frame by the main application, meaning inside
 	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
 	rl.DrawText(fmt.ctprintf("p1_pos: %v",   g.world.p1.position), 5, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p1_velocity: %v",   g.world.p1.velocity), 5, 30, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p1_state: %d", g.world.p1.current_state), 5, 13, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p1_hitstun: %d", g.world.p1.hit_stun_frames), 5, 20, 8, rl.WHITE)
-	rl.DrawFPS(5, 30)
-	rl.DrawText(fmt.ctprintf("Combo Counter: %d", g.world.combo_counter), 5, 50, 8, rl.WHITE)
+	rl.DrawFPS(5, 50)
+	rl.DrawText(fmt.ctprintf("Combo Counter: %d", g.world.combo_counter), 5, 90, 8, rl.WHITE)
 
 	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.position), 170, 5, 8, rl.WHITE)
+	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.velocity), 250, 5, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p2_state: %d", g.world.p2.current_state), 170, 12, 8, rl.WHITE)
 	rl.DrawText(fmt.ctprintf("p2_hitstun: %d", g.world.p2.hit_stun_frames), 170, 20, 8, rl.WHITE)
 

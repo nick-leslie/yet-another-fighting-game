@@ -18,6 +18,7 @@ state_neutral :: proc(char: ^gk.CharecterBase) {
 		hitbox_list = {},
 		on_frame = proc(char: ^gk.CharecterBase) {
 			char.move_dir = Vec3{0, 0, 0}
+			char.velocity = Vec3{0, 0, 0}
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -36,8 +37,8 @@ state_forward :: proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
 		on_frame = proc(char: ^gk.CharecterBase) {
-			if char.p1_side do char.move_dir = Vec3{1, 0, 0}
-			if !char.p1_side do char.move_dir = Vec3{-1, 0, 0}
+			if char.p1_side do char.velocity.x  = 	1 * char.move_speed
+			if !char.p1_side do char.velocity.x =  -1 * char.move_speed
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -60,8 +61,8 @@ state_backward :: proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 		hitbox_list = {},
 		on_frame = proc(char: ^gk.CharecterBase) {
-			if char.p1_side do char.move_dir = Vec3{-1, 0, 0}
-			if !char.p1_side do char.move_dir = Vec3{1, 0, 0}
+			if char.p1_side do char.velocity.x  = -1 * char.move_speed
+			if !char.p1_side do char.velocity.x =  1 * char.move_speed
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -280,7 +281,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 	hit_box := Hit_box {
 		position    = Vec3{0, 0, 0},
 		extent      = Vec3{10., 5., 10.},
-		hitPushback = Vec3{-10, 0, 0},
+		hitKnockback = Vec3{-10, 0, 0},
 	}
 	move := gk.State {
 		hit_boxes = {hit_box},
