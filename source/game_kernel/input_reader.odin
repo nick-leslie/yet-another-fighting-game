@@ -60,8 +60,8 @@ INPUT_BUFFER_LENGTH :: 20
 // could we speed this up with a binary tree
 pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
-    pattern_input_index := make([dynamic]int,len(pattern_list))
-    defer delete(pattern_input_index)
+    // we use the tmp alocator so that we can delete it at the end of each frame
+    pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
     i:= buffer.input_index-1
     for i != buffer.input_index {
         //

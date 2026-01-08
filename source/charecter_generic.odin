@@ -18,7 +18,8 @@ state_neutral :: proc(char: ^gk.CharecterBase) {
 		hitbox_list = {},
 		on_frame = proc(char: ^gk.CharecterBase) {
 			char.move_dir = Vec3{0, 0, 0}
-			char.velocity = Vec3{0, 0, 0}
+			//todo if should we check if grounded?
+			char.velocity = Vec3{0, char.velocity.y, 0}
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -282,6 +283,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 		position    = Vec3{0, 0, 0},
 		extent      = Vec3{10., 5., 10.},
 		hitKnockback = Vec3{-10, 0, 0},
+		hitPushback = Vec3{10,0,0},
 	}
 	move := gk.State {
 		hit_boxes = {hit_box},
