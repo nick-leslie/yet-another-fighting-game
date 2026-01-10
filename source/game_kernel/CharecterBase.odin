@@ -16,6 +16,7 @@ HIT_BOX_MAX :: 64 // we may want to change this
 CharecterBase :: struct {
 	physics_character: ^jolt.CharacterVirtual, // should we sperate
 	charecter_arena:   vmem.Arena,
+	health: 		   u32,
 	//do I want to add an arena here
 	using position:    Vec3,
 	velocity:          Vec3,
@@ -364,6 +365,7 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 				other.block_stun_frames=0
 				hit_ctx.world.combo_counter += 1
 				//set in hit_stun
+				other.health-= self_state.damage
 			} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
 				// log.debug("blocking")
 				knockback := hit_ctx.hitbox.blockKnockback

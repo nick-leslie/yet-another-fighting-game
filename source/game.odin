@@ -35,6 +35,7 @@ import "base:runtime"
 import rl "vendor:raylib"
 import gk "game_kernel"
 // import "vendor:raylib/rlgl"
+import clay "../libs/clay-odin"
 
 PIXEL_WINDOW_HEIGHT :: 180
 
@@ -44,6 +45,7 @@ Game_Memory :: struct {
 	p1_controls: 	Controls,
 	p2_controls: 	Controls,
 	model_tmp: 		rl.Model,
+	clay_arena:     clay.Arena,
 }
 
 CAMERA_DISTANCE :: 60
@@ -172,6 +174,7 @@ game_init :: proc() {
 	}
 
 	p1 := gk.CharecterBase {
+		health=100,
 		position = {0, 10, 0},
 		move_speed = 20,
 		air_drag = 0.5,
@@ -181,6 +184,7 @@ game_init :: proc() {
 		input_buffer = {},
 	}
 	p2 := gk.CharecterBase {
+		health=100,
 		position = {10, 10, 0},
 		move_speed = 50,
 		air_drag = 0.5,
@@ -197,10 +201,12 @@ game_init :: proc() {
 	add_state_movement(&p2) // the nill is tmp
 	add_state_stun(&p2)
 	log.debug(p1.states[:])
+	clay_arena := initalise_memory({1280, 720})
 	g^ = Game_Memory {
 		run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
+		clay_arena=clay_arena,
 		world=	gk.world_init(p1,p2),
 		p1_controls=p1_controls,
 		model_tmp=rl.LoadModel("assets/tmp/psx_humanoid_female.glb"),
@@ -227,6 +233,7 @@ game_shutdown :: proc() {
 	// delete_charecter(&g.p2)
 	gk.destroy_world(g.world) // we may want to pass world
 	rl.UnloadModel(g.model_tmp)
+	free(g.clay_arena.memory) // we may want to put this in its own arena
 	free(g)
 
 }

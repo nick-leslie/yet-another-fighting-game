@@ -16,15 +16,15 @@ CharecterHooks :: struct {
 	onSelfStateChange:proc(self:^CharecterBase,world:^World),
 }
 
-RenderHooks :: struct {
-	// on tic
-	onTic:HOOK_FUNCTION,
-	// onBlocks
-	onSelfBlock:HOOK_FUNCTION,
-	// onHit
-	onSelfHit:HOOK_FUNCTION,
-	// spawn projectile?
-	spawnProjectile:HOOK_FUNCTION,
-	// onState change
-	onStateChange:HOOK_FUNCTION,
-}
+// RenderHooks :: struct {
+// 	// on tic
+// 	onTic:HOOK_FUNCTION,
+// 	// onBlocks
+// 	onSelfBlock:HOOK_FUNCTION,
+// 	// onHit
+// 	onSelfHit:HOOK_FUNCTION,
+// 	// spawn projectile?
+// 	spawnProjectile:HOOK_FUNCTION,
+// 	// onState change
+// 	onStateChange:HOOK_FUNCTION,
+// }
