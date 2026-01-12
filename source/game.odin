@@ -209,10 +209,11 @@ game_init :: proc() {
 	gk.initilize_charecter_memory(&p2)
 	add_state_movement(&p1) // the nill is tmp
 	add_state_light_attack(&p1)
+	add_state_light_fireball(&p1)
+	log.debug(p1.states[7])
 	add_state_stun(&p1)
 	add_state_movement(&p2) // the nill is tmp
 	add_state_stun(&p2)
-	log.debug(p1.states[:])
 	clay_arena := setup_clay({
 		1280,
 		720,

@@ -1,5 +1,8 @@
+#+feature dynamic-literals
 package game_kernel
 
+import "core:testing"
+import "core:log"
 
 Direction :: enum {
     Neutral,
@@ -47,30 +50,32 @@ InputBuffer ::struct {
 // gets the controls for the player that frame
 
 
-update_input_buffer :: proc(charecter:^CharecterBase,input:Input) {
-    charecter.input_buffer.buffer[charecter.input_buffer.input_index] = input
-    charecter.input_buffer.input_index +=1
-    if charecter.input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {
-        charecter.input_buffer.input_index=0
+update_input_buffer :: proc(input_buffer:^InputBuffer,input:Input) {
+    input_buffer.buffer[input_buffer.input_index] = input
+    input_buffer.input_index +=1
+    if input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {
+        input_buffer.input_index=0
     }
 }
 
-
+//todo test this becca
 INPUT_BUFFER_LENGTH :: 20
 // could we speed this up with a binary tree
 pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
+    defer delete(pattern_input_index)
     i:= buffer.input_index-1
     for i != buffer.input_index {
         //
-        if(i <= 0) {
+        if(i < 0) {
             i=INPUT_BUFFER_LENGTH-1
         } else if(i == INPUT_BUFFER_LENGTH-1) {
             i=0
         }
         input := buffer.buffer[i]
+        // log.info(input)
         for j:=0;j< len(pattern_list);j+=1 {
             pattern := pattern_list[j]
             check_index := pattern_input_index[j]
@@ -79,15 +84,18 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
                 continue
             }
             if pattern.inputs[check_index] == input {
-                // disqualify the pattern
                 pattern_input_index[j] +=1
             } else {
+            	if check_index > 0 && pattern.inputs[check_index-1] == input {
+           			continue // dont mark for extra inputs
+             	}
+                // disqualify the pattern
                 pattern_input_index[j] = -1
             }
         }
         i-=1
     }
-    // log.debug(pattern_input_index)
+    log.info(pattern_input_index)
     // find the highest priority move
     highest_priority:= 0
     highest_index :=   0
@@ -101,7 +109,7 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
         }
         if pattern.pritority >= highest_priority {
             highest_priority = pattern.pritority
-            highest_index    =   i
+            highest_index =  i
         }
     }
     // if highest_index == 1 {
@@ -110,4 +118,67 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     //     assert(false,"random forward state")
     // }
     return pattern_list[highest_index].state_index
+}
+
+
+
+@(test)
+test_quarter_circle :: proc(t: ^testing.T) {
+	patterns := make([dynamic]Pattern)
+	pattern_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Forward, attack = Attack.Light}},
+		pritority   = 1,
+		state_index = 6,
+	}
+	pattern2_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Neutral, attack = Attack.Light}},
+		pritority   = 1,
+		state_index = 6,
+	}
+	pattern3_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Back, attack = Attack.Light}},
+		pritority   = 1,
+		state_index = 6,
+	}
+
+	append(&patterns,pattern_light_attack)
+	append(&patterns,pattern2_light_attack)
+	append(&patterns,pattern3_light_attack)
+
+	pattern_quarter_circle := Pattern {
+		inputs      = {
+			Input{dir = Direction.Forward, attack = Attack.Light},
+			Input{dir = Direction.DownForward, attack = Attack.None},
+			Input{dir = Direction.Down, attack = Attack.None},
+		},
+		pritority   = 2,
+		state_index = 7,
+	}
+	pattern_2_quarter_circle := Pattern {
+		inputs  = {
+			Input{dir = Direction.Forward, attack = Attack.Light},
+			Input{dir = Direction.Neutral, attack = Attack.None},
+			Input{dir = Direction.DownForward, attack = Attack.None},
+			Input{dir = Direction.Down, attack = Attack.None},
+		},
+		pritority   = 2,
+		state_index = 7,
+	}
+	append(&patterns,pattern_quarter_circle)
+	append(&patterns,pattern_2_quarter_circle)
+
+	input_buffer := InputBuffer {}
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = Attack.Light})
+
+	out_state := pick_state(input_buffer,patterns)
+	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")
+	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
 }

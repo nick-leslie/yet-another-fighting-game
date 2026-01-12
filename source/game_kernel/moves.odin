@@ -7,6 +7,7 @@ import vmem "core:mem/virtual"
 
 
 State :: struct {
+	name:		   string,
 	frames:        [dynamic]Frame,
 	hurtbox_bodys: [dynamic]^jolt.Body, // all these bodys are precreated or alocated but asleep
 	hit_boxes: 	   [dynamic]Hit_box,

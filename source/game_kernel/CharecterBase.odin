@@ -149,7 +149,7 @@ charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
 	// character.addional_velocity = {} // do we want to reset this here
-	update_input_buffer(character, input)
+	update_input_buffer(&character.input_buffer, input)
 
 	// log.debug("getting current state")
 	state,frame := charecter_get_current_state_frame(character^)

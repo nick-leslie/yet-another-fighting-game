@@ -59,12 +59,17 @@ charecter_debug_ui :: proc(charecter:gk.CharecterBase) {
 			fmt.tprintfln("Pos:%v",charecter.velocity),
 			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255},wrapMode=.None}),
 		)
+		state,_ := gk.charecter_get_current_state_frame(charecter)
 		clay.TextDynamic(
-			fmt.tprintfln("State:%d",charecter.current_state),
+			fmt.tprintfln("State: %s",state.name),
 			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
 		)
 		clay.TextDynamic(
 			fmt.tprintfln("hit_stun:%d",charecter.hit_stun_frames),
+			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
+		)
+		clay.TextDynamic(
+			fmt.tprintfln("block_stun:%d",charecter.block_stun_frames),
 			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
 		)
 	}
