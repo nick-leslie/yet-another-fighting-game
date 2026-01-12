@@ -414,7 +414,7 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	// Add gravity
 	gravity: Vec3; jolt.PhysicsSystem_GetGravity(w.physicsManager.physicsSystem, &gravity)
 	character.velocity += gravity * FIXED_STEP
-	log.debug(character.velocity)
+	// log.debug(character.velocity)
 
 	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
 		character.velocity.y=0

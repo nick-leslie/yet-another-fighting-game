@@ -27,7 +27,8 @@ created.
 
 package game
 
-import "core:fmt"
+import "core:sync"
+// import "core:fmt"
 import "core:log"
 import "base:runtime"
 // import "core:fmt"
@@ -36,6 +37,7 @@ import rl "vendor:raylib"
 import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
+import "core:prof/spall"
 
 PIXEL_WINDOW_HEIGHT :: 180
 
@@ -62,11 +64,13 @@ QUAT_IDENTITY: Quat = 1
 VEC3_ZERO: Vec3 = 0
 UP :: Vec3{0, 1, 0}
 FLOOR_EXTENT: Vec3={150, 0.05, 10}
-
+debugModeEnabled := false
 
 g: ^Game_Memory
 
 g_context: runtime.Context
+
+default_font:rl.Font
 
 game_camera :: proc() ->rl.Camera3D {
 
@@ -115,24 +119,19 @@ draw :: proc() {
 	rl.DrawCircle3D(CAMERA_TARGET,1,{},0,rl.BLUE)
 
 	rl.EndMode3D()
-	rl.BeginMode2D(ui_camera())
-	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
-	// cleared at the end of the frame by the main application, meaning inside
-	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
-	rl.DrawText(fmt.ctprintf("p1_pos: %v",   g.world.p1.position), 5, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p1_velocity: %v",   g.world.p1.velocity), 5, 30, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p1_state: %d", g.world.p1.current_state), 5, 13, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p1_hitstun: %d", g.world.p1.hit_stun_frames), 5, 20, 8, rl.WHITE)
-	rl.DrawFPS(5, 50)
-	rl.DrawText(fmt.ctprintf("Combo Counter: %d", g.world.combo_counter), 5, 90, 8, rl.WHITE)
 
-	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.position), 170, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p2_pos: %v", g.world.p2.velocity), 250, 5, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p2_state: %d", g.world.p2.current_state), 170, 12, 8, rl.WHITE)
-	rl.DrawText(fmt.ctprintf("p2_hitstun: %d", g.world.p2.hit_stun_frames), 170, 20, 8, rl.WHITE)
+	clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(rl.MouseButton.LEFT))
+    clay.UpdateScrollContainers(false, rl.GetMouseWheelMoveV(), rl.GetFrameTime())
+    clay.SetLayoutDimensions({cast(f32)rl.GetRenderWidth(), cast(f32)rl.GetRenderHeight() })
+	if (rl.IsKeyPressed(.C)) {
+        debugModeEnabled = !debugModeEnabled
+        clay.SetDebugModeEnabled(debugModeEnabled)
+    }
+	commands := create_ui_layout()
 
-
-	rl.EndMode2D()
+	//something is going wrong with the interactions between the cam and clay
+	clay_raylib_render(&commands,context.temp_allocator)
+	// rl.DrawFPS(5, 50)
 
 	rl.EndDrawing()
 }
@@ -153,13 +152,26 @@ game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
 	// rl.ToggleFullscreen()
-	rl.SetWindowPosition(200, 200)
+	// rl.SetWindowPosition(200, 200)
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
 }
 
 @(export)
 game_init :: proc() {
+	spall_ctx = spall.context_create("profile.spall")  // Creates the .spall file
+
+    buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
+    spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
+
+
+    default_font = rl.GetFontDefault()
+    append(&raylib_fonts,Raylib_Font{
+	    fontId=0,
+	    font=default_font,
+	})
+	log.debug(raylib_fonts)
+
 	g_context = context
 	g = new(Game_Memory)
 	//TODO investigate why we cant move you below the setup of G
@@ -201,7 +213,10 @@ game_init :: proc() {
 	add_state_movement(&p2) // the nill is tmp
 	add_state_stun(&p2)
 	log.debug(p1.states[:])
-	clay_arena := initalise_memory({1280, 720})
+	clay_arena := setup_clay({
+		1280,
+		720,
+	})
 	g^ = Game_Memory {
 		run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
@@ -235,6 +250,11 @@ game_shutdown :: proc() {
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
 	free(g)
+	delete(raylib_fonts)
+	//destroy spall
+ 	spall.context_destroy(&spall_ctx)             // Flushes and closes file
+    delete(buffer_backing)
+    spall.buffer_destroy(&spall_ctx, &spall_buffer)  // Writes buffer to file
 
 }
 
@@ -275,4 +295,21 @@ game_force_restart :: proc() -> bool {
 // `rl.SetWindowSize` call if you don't want a resizable game.
 game_parent_window_size_changed :: proc(w, h: int) {
 	rl.SetWindowSize(i32(w), i32(h))
+}
+
+
+
+spall_ctx: spall.Context
+buffer_backing: []u8
+@(thread_local) spall_buffer: spall.Buffer  // thread_local if using multiple threads
+
+@(instrumentation_enter)
+spall_enter :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
+}
+
+
+@(instrumentation_exit)
+spall_exit :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+	spall._buffer_end(&spall_ctx, &spall_buffer)
 }
