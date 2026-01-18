@@ -2,7 +2,7 @@
 package game_kernel
 
 import "core:testing"
-import "core:log"
+// import "core:log"
 
 Direction :: enum {
     Neutral,
@@ -57,7 +57,7 @@ update_input_buffer :: proc(input_buffer:^InputBuffer,input:Input) {
         input_buffer.input_index=0
     }
 }
-
+// this is still too buggy
 //todo test this becca
 INPUT_BUFFER_LENGTH :: 20
 // could we speed this up with a binary tree
@@ -65,15 +65,13 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
-    defer delete(pattern_input_index)
     i:= buffer.input_index-1
     for i != buffer.input_index {
         //
         if(i < 0) {
             i=INPUT_BUFFER_LENGTH-1
-        } else if(i == INPUT_BUFFER_LENGTH-1) {
-            i=0
         }
+
         input := buffer.buffer[i]
         // log.info(input)
         for j:=0;j< len(pattern_list);j+=1 {
@@ -95,7 +93,7 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
         }
         i-=1
     }
-    log.info(pattern_input_index)
+    // log.info(pattern_input_index)
     // find the highest priority move
     highest_priority:= 0
     highest_index :=   0

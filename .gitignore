@@ -11,3 +11,4 @@ joltc
 *.so
 *.bin
 assets/tmp
+*.spall

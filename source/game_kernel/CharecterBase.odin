@@ -15,14 +15,13 @@ HIT_BOX_MAX :: 64 // we may want to change this
 //rename to charecter base
 CharecterBase :: struct {
 	physics_character: ^jolt.CharacterVirtual, // should we sperate
-	charecter_arena:   vmem.Arena,
+	arena:   vmem.Arena,
 	health: 		   u32,
 	//do I want to add an arena here
 	using position:    Vec3,
 	velocity:          Vec3,
 	prev_position:     Vec3,
 	prev_velocity:	   Vec3,
-	input_buffer:      InputBuffer,
 	move_dir:          Vec3,
 	jump_requested:    bool,
 	in_air:            bool,
@@ -33,11 +32,10 @@ CharecterBase :: struct {
 	p1_side:           bool,
 	states:            [dynamic]State, // should this be state
 	patterns:          [dynamic]Pattern,
+	entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
 	current_frame:     int,
 	current_state:     int, // this is an index
-	current_state_flags: struct { // we may want to remove this
-		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
-	},
+	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	hit_stun_frames:   u32,
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_frames: u32,
@@ -48,17 +46,17 @@ CharecterBase :: struct {
 
 }
 
-//which is slower waking or resizing
 
 initilize_charecter_memory :: proc(char: ^CharecterBase) {
-	arena_alocator := vmem.arena_allocator(&char.charecter_arena)
+	arena_alocator := vmem.arena_allocator(&char.arena)
 	char.patterns = make([dynamic]Pattern,arena_alocator)
 	char.states = make([dynamic]State,arena_alocator)
 }
 
 setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
+	arena_alocator := vmem.arena_allocator(&char.arena)
 	for &state in char.states {
-		setup_move_bodys(&state,pm^,char)
+		setup_move_bodys(&state,pm^,arena_alocator)
 	}
 	setup_charecter_collison(char, pm)
 }
@@ -144,16 +142,15 @@ setup_charecter_collison :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
+charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^World) {
 	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
 	// character.addional_velocity = {} // do we want to reset this here
-	update_input_buffer(&character.input_buffer, input)
 
 	// log.debug("getting current state")
 	state,frame := charecter_get_current_state_frame(character^)
-	proposed_state_index := pick_state(character.input_buffer, character.patterns)
+	proposed_state_index := pick_state(input_buffer, character.patterns)
 	// log.debug("done getting state")
 
 	state_frame_len := len(state.frames)
@@ -167,7 +164,7 @@ charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
 		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
-			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+			character.hit_box_tracker_bit_mask -= {i} // All bits set to 0
 		}
 		// log.debug("new state needed")
 	}
@@ -176,18 +173,23 @@ charecter_update :: proc(character: ^CharecterBase, input: Input,w:^World) {
 	if character.hit_stun_frames > 0 && character.current_state != character.hit_stun_index {
 		state,frame =  charecer_change_state(character,character.hit_stun_index)
 		for i:=0;i<63;i+=1 {
-			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+			character.hit_box_tracker_bit_mask -= {i} // All bits set to 0
 		}
 	} else if character.block_stun_frames > 0 && character.current_state != character.block_stun_index{
 		state,frame = charecer_change_state(character,character.block_stun_index)
 		for i:=0;i<63;i+=1 {
-			character.current_state_flags.hit_box_tracker_bit_mask -= {i} // All bits set to 0
+			character.hit_box_tracker_bit_mask -= {i} // All bits set to 0
 		}
 	}
 
 
 	frame.on_frame(character) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
+	for entity in character.entity_pool {
+		if entity.active == true {
+			entity.update(character,w)
+		}
+	}
 	//reduce hit and block stun frames
 	if character.hit_stun_frames > 0 {
 		character.hit_stun_frames -= 1
@@ -243,78 +245,98 @@ character_remove_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manage
 }
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
+InputBfrPtrArr :: ^[2]^InputBuffer
 HitBoxCtx :: struct {
 	charecters:   CharPtrArr,
+	input_buffers:InputBfrPtrArr, // todo this may be bad
+	hitbox_tracker_ptr: ^bit_set[0..<64; u64],
 	hitbox_index: int,
 	hitbox:       ^Hit_box,
 	world: 		  ^World,
 }
 //bruh this shit about to get funky
-character_check_hit :: proc(characters: CharPtrArr, w:^World) {
+character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr, w:^World) {
 	state, frame := charecter_get_current_state_frame(characters[0]^)
-	for &hit_box_index in frame.hitbox_list {
-		hit_box := state.hit_boxes[hit_box_index]
-		narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(w.physicsManager.physicsSystem)
-		extent := hit_box.extent * 0.5
-		box_shape := jolt.BoxShape_Create(&extent, 0) // make sure this works
-		defer jolt.Shape_Destroy(auto_cast box_shape)
-		//todo we figured out the issue it was the offset
-		pos := hit_box.position + characters[0].position
-		transform := jolt.RMat4 {
-			1.,
-			0.,
-			0.,
-			pos.x,
-			0.,
-			1.,
-			0.,
-			pos.y,
-			0.,
-			0.,
-			1.,
-			pos.z,
-			0,
-			0,
-			0,
-			1.,
-		}
-		// log.debug(transform)
-		bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(characters[0])
-
-		hit_box_context := HitBoxCtx {
+	for &hitbox_index in frame.hitbox_list {
+		//todo make me a function once we unify
+		hit_box := state.hit_boxes[hitbox_index]
+		position := characters[0].position
+		hitbox_context := HitBoxCtx {
 			charecters   = characters,
 			hitbox       = &hit_box,
-			hitbox_index = hit_box_index,
+			hitbox_index = hitbox_index,
+			hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
+			input_buffers = input_buffers,
 			world 	   	 = w,
 		}
-
-		jolt.NarrowPhaseQuery_CastShape2(
-			query = narrow_phase_query,
-			shape = auto_cast box_shape,
-			worldTransform = &transform,
-			direction = &{0, 0, 0},
-			settings = &{
-				base = {
-					activeEdgeMode       = .CollideWithAll,
-					collectFacesMode     = .CollectFaces, // check this
-					collisionTolerance   = 1, // to tweek this
-					penetrationTolerance = 1,
-				},
-				backFaceModeTriangles = .CollideWithBackFaces, // tood check this
-				backFaceModeConvex = .CollideWithBackFaces,
-				useShrunkenShapeAndConvexRadius = true, // tood check this
-				returnDeepestPoint = false, // we dont need the deepst point an it costs
-			}, // shape cast settings
-			baseOffset = &{},
-			collectorType = .AllHit,
-			callback = charecter_on_hit_other,
-			userData = &hit_box_context,
-			broadPhaseLayerFilter = bround_phase_filter,
-			objectLayerFilter = nil,
-			bodyFilter = nil,
-			shapeFilter = nil,
-		)
+		setup_hitbox_and_ctx(&hit_box,&hitbox_context,position)
 	}
+	for &entity in characters[0].entity_pool {
+		if entity.active {
+			// state := entity.states[entity.current_state]
+			// frame := state.frames[entity.current_frame]
+
+			//todo check for hit
+		}
+	}
+}
+
+setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx,position:Vec3) {
+	extent := hit_box.extent * 0.5
+	box_shape := jolt.BoxShape_Create(&extent, 0) // make sure this works
+	defer jolt.Shape_Destroy(auto_cast box_shape)
+	//todo we figured out the issue it was the offset
+	pos := hit_box.position + position
+	transform := jolt.RMat4 {
+		1.,
+		0.,
+		0.,
+		pos.x,
+		0.,
+		1.,
+		0.,
+		pos.y,
+		0.,
+		0.,
+		1.,
+		pos.z,
+		0,
+		0,
+		0,
+		1.,
+	}
+	// log.debug(transform)
+
+
+	narrow_phase_query := jolt.PhysicsSystem_GetNarrowPhaseQuery(ctx.world.physicsManager.physicsSystem)
+	bround_phase_filter := jolt.BroadPhaseLayerFilter_Create(ctx.charecters[0])
+
+	jolt.NarrowPhaseQuery_CastShape2(
+		query = narrow_phase_query,
+		shape = auto_cast box_shape,
+		worldTransform = &transform,
+		direction = &{0, 0, 0},
+		settings = &{
+			base = {
+				activeEdgeMode       = .CollideWithAll,
+				collectFacesMode     = .CollectFaces, // check this
+				collisionTolerance   = 1, // to tweek this
+				penetrationTolerance = 1,
+			},
+			backFaceModeTriangles = .CollideWithBackFaces, // tood check this
+			backFaceModeConvex = .CollideWithBackFaces,
+			useShrunkenShapeAndConvexRadius = true, // tood check this
+			returnDeepestPoint = false, // we dont need the deepst point an it costs
+		}, // shape cast settings
+		baseOffset = &{},
+		collectorType = .AllHit,
+		callback = charecter_on_hit_other,
+		userData = ctx,
+		broadPhaseLayerFilter = bround_phase_filter,
+		objectLayerFilter = nil,
+		bodyFilter = nil,
+		shapeFilter = nil,
+	)
 }
 
 charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
@@ -323,6 +345,8 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 	self := CharPtrArr(hit_ctx.charecters)[0]
 	other := CharPtrArr(hit_ctx.charecters)[1]
 
+	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
+	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
 	self_state, frameSelf := charecter_get_current_state_frame(self^)
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
@@ -345,11 +369,10 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 		id := jolt.Body_GetID(hurt_box.body)
 		if id == result.bodyID2 {
 			// log.debug(hurt_box)
-			block := charecter_check_block(other)
+			block := charecter_check_block(other,other_buffer^)
 			//todo dont make a hurt box apply more than once durring a moves duration
 			//todo fix me
-			log.debug(self.current_state_flags.hit_box_tracker_bit_mask)
-			if block == false && hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false { // the in is checking if its set
+			if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
 				knockback := hit_ctx.hitbox.hitKnockback
 				knockback.x *= side_mod
 				pushback := hit_ctx.hitbox.hitPushback
@@ -358,7 +381,7 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 				self.velocity += pushback
 
 				//this sets it so we dont hit with the same hitbox for multiple frames
-				self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
+				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
 				//todo set self current velocity
 				other.hit_stun_frames = self_state.hitstun
@@ -366,7 +389,7 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 				hit_ctx.world.combo_counter += 1
 				//set in hit_stun
 				other.health-= self_state.damage
-			} else if hit_ctx.hitbox_index in self.current_state_flags.hit_box_tracker_bit_mask == false {
+			} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
 				// log.debug("blocking")
 				knockback := hit_ctx.hitbox.blockKnockback
 				knockback.x *= side_mod
@@ -375,7 +398,7 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 				other.velocity = knockback
 				self.velocity += pushback
 				//this sets it so we dont hit with the same hitbox for multiple frames
-				self.current_state_flags.hit_box_tracker_bit_mask += {hit_ctx.hitbox_index} // todo check this
+				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 				other.block_stun_frames = self_state.blockstun
 
 				other.hit_stun_index=0
@@ -385,8 +408,8 @@ charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCas
 	}
 }
 
-charecter_check_block ::proc(charecter:  ^CharecterBase) -> bool {
-	input := charecter.input_buffer.buffer[charecter.input_buffer.input_index]
+charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:InputBuffer) -> bool {
+	input := input_buffer.buffer[input_buffer.input_index]
 	#partial switch input.dir {
 	case Direction.Back:
 		return true
@@ -446,10 +469,15 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	// read the new position into our structure
 	jolt.CharacterVirtual_GetPosition(character.physics_character, &character.position)
 	jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &character.velocity)
+	for entity in character.entity_pool {
+		if entity.active {
+			entity.physcis_update(character,w)
+		}
+	}
 }
 
 
 delete_charecter :: proc(char: ^CharecterBase) {
 	log.debug("delting charecers")
-	vmem.arena_destroy(&char.charecter_arena)
+	vmem.arena_destroy(&char.arena)
 }

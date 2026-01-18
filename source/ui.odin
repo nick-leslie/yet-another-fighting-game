@@ -3,6 +3,7 @@ package game
 import clay "../libs/clay-odin"
 import gk "game_kernel"
 import "core:fmt"
+import "core:unicode/utf8"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
     // Do something with the error data.
@@ -15,6 +16,7 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
         layout = {
             sizing = { width = clay.SizingGrow(), height = clay.SizingGrow() },
             padding = { 10,10,10,10 },
+            layoutDirection = .TopToBottom,
         },
 	}) {
 		if clay.UI()({
@@ -30,10 +32,72 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p1)
 			charecter_debug_ui(g.world.p2)
 		}
+		input_history(g.world.p1_input_buffer)
 		//todo fix these to the left and right
 	}
 
     return clay.EndLayout()
+}
+
+input_history :: proc(buffer:gk.InputBuffer) {
+	if clay.UI()({
+		layout = {
+			sizing = {
+				width = clay.SizingGrow(),
+				height = clay.SizingFit(),
+			},
+   			padding = { 10,10,10,10 },
+    		layoutDirection = .LeftToRight,
+		},
+	}) {
+		i:= buffer.input_index-1
+		for i != buffer.input_index {
+	  		if(i < 0) {
+	            i=gk.INPUT_BUFFER_LENGTH-1
+	        }
+			input_ui(buffer.buffer[i])
+	        i-=1
+		}
+	}
+}
+
+input_ui:: proc(input:gk.Input) {
+	char_arr := [2]rune{} // todo check if this works
+	switch input.dir {
+	case .Neutral:
+		char_arr[0] = '.'
+	case .Forward:
+		char_arr[0] = '🡲'
+	case .Back:
+		char_arr[0] = '🡰'
+	case .Down:
+		char_arr[0] = '🡳'
+	case .DownBack:
+		char_arr[0] = '🡿'
+	case .DownForward:
+		char_arr[0] = '🡾'
+	case .Up:
+		char_arr[0] = '🡹'
+	case .UpBack:
+		char_arr[0] = '🡼'
+	case .UpForward:
+		char_arr[0] = '🡽'
+	}
+	switch input.attack {
+	case .None:
+		char_arr[1] = ' '
+	case .Light:
+		char_arr[1] = 'L'
+	case .Medium:
+		char_arr = 'M'
+	case .Heavy:
+		char_arr = 'H'
+	}
+	str := utf8.runes_to_string(char_arr[:])
+	clay.TextDynamic(
+		str,
+		clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
+	)
 }
 
 charecter_debug_ui :: proc(charecter:gk.CharecterBase) {

@@ -11,7 +11,7 @@ import vmem "core:mem/virtual"
 
 state_neutral :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
@@ -31,7 +31,7 @@ state_neutral :: proc(char: ^gk.CharecterBase) {
 }
 state_forward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
@@ -53,7 +53,7 @@ state_forward :: proc(char: ^gk.CharecterBase) {
 
 state_backward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
@@ -74,7 +74,7 @@ state_backward :: proc(char: ^gk.CharecterBase) {
 }
 state_jump :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
@@ -113,7 +113,7 @@ state_jump :: proc(char: ^gk.CharecterBase) {
 	append(&char.states, move)
 }
 state_jump_forward :: proc(char: ^gk.CharecterBase) {
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
@@ -135,7 +135,7 @@ state_jump_forward :: proc(char: ^gk.CharecterBase) {
 }
 state_jump_backward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
@@ -181,7 +181,7 @@ state_jump_backward :: proc(char: ^gk.CharecterBase) {
 
 pattern_neutral :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {Input{dir = Direction.Neutral, attack = Attack.None}},
@@ -192,7 +192,7 @@ pattern_neutral :: proc(char: ^gk.CharecterBase) {
 }
 pattern_forward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {Input{dir = Direction.Forward, attack = Attack.None}},
@@ -203,7 +203,7 @@ pattern_forward :: proc(char: ^gk.CharecterBase) {
 }
 pattern_backward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {Input{dir = Direction.Back, attack = Attack.None}},
@@ -214,7 +214,7 @@ pattern_backward :: proc(char: ^gk.CharecterBase) {
 }
 pattern_jump :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {Input{dir = Direction.Up, attack = Attack.None}},
@@ -225,7 +225,7 @@ pattern_jump :: proc(char: ^gk.CharecterBase) {
 }
 pattern_jump_forward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.None}},
@@ -236,7 +236,7 @@ pattern_jump_forward :: proc(char: ^gk.CharecterBase) {
 }
 pattern_jump_backward :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := Pattern {
 		inputs      = {Input{dir = Direction.UpBack, attack = Attack.None}},
@@ -273,7 +273,7 @@ add_state_movement :: proc(char: ^gk.CharecterBase) {
 
 state_light_attack :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	hit_box := Hit_box {
 		position    = Vec3{0, 0, 0},
@@ -377,7 +377,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 
 pattern_light_attack :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = Direction.Forward, attack = Attack.Light}},
@@ -416,7 +416,9 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame = proc(char: ^gk.CharecterBase) {
+					char.velocity = {}
+				},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame {
@@ -492,6 +494,142 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
 				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
+				check_exit = no_cancel, // todo change me
+			},
+			Frame {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame = proc(char: ^gk.CharecterBase) {},
 				check_exit = gk.free_cancel, // todo change me
 			},
 		},
@@ -505,7 +643,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 
 pattern_light_fireball :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {
@@ -536,9 +674,20 @@ pattern_light_fireball :: proc(char: ^gk.CharecterBase) {
 		pritority   = 2,
 		state_index = 7,
 	}
+	pattern_4 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = Direction.Neutral, attack = Attack.Light},
+			gk.Input{dir = Direction.Forward, attack = Attack.None},
+			gk.Input{dir = Direction.DownForward, attack = Attack.None},
+			gk.Input{dir = Direction.Down, attack = Attack.None},
+		},
+		pritority   = 2,
+		state_index = 7,
+	}
 	append(&char.patterns, pattern)
 	append(&char.patterns, pattern_2)
 	append(&char.patterns, pattern_3)
+	append(&char.patterns, pattern_4)
 }
 
 add_state_light_fireball :: proc(char: ^gk.CharecterBase) {
@@ -553,7 +702,7 @@ add_state_stun::proc(char: ^gk.CharecterBase) {
 
 state_block_stun :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State {
 		name="blockstun",
@@ -572,7 +721,7 @@ state_block_stun :: proc(char: ^gk.CharecterBase) {
 }
 state_hit_stun :: proc(char: ^gk.CharecterBase) {
 	using gk
-	context.allocator = vmem.arena_allocator(&char.charecter_arena)
+	context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State {
 		name="hitstun",

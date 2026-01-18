@@ -48,6 +48,7 @@ Game_Memory :: struct {
 	p2_controls: 	Controls,
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
+	cam: 			rl.Camera3D,
 }
 
 CAMERA_DISTANCE :: 60
@@ -93,8 +94,11 @@ update :: proc() {
 	if rl.IsKeyPressed(.ESCAPE) {
 		g.run = false
 	}
-	input := poll_charecter_input(g.p1_controls,true)
-	gk.world_tic(&g.world,input)
+	p1_input := poll_charecter_input(g.p1_controls,true)
+	p2_input := gk.Input {
+		dir = gk.Direction.Neutral,
+	}
+	gk.world_tic(&g.world,p1_input,p2_input)
 	//tood check hits
 }
 
@@ -102,19 +106,29 @@ physics_update :: proc() {
 	gk.world_physics_tic(&g.world)
 }
 
+free_cam := false
 
 draw :: proc() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.BLACK)
-
-	rl.BeginMode3D(game_camera())
+	if rl.IsKeyPressed(.F) {
+		free_cam = !free_cam
+	}
+	if free_cam {
+		rl.UpdateCamera(&g.cam,.FREE)
+	} else {
+	}
+	if rl.IsKeyPressed(.R) && free_cam == false{
+		g.cam = game_camera() // we may want to only do this once but tmp for now
+	}
+	rl.BeginMode3D(g.cam)
 
 	charecter_draw(g.world.p1)
 	charecter_draw(g.world.p2)
 	charecter_draw_hit_boxes(g.world.p1)
 	charecter_draw_hit_boxes(g.world.p2)
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
-	rl.DrawModel(g.model_tmp,{0,0,0},1,rl.WHITE)
+	// rl.DrawModelEx(g.model_tmp,{0,0,0},{-1,0,0},90,500,rl.WHITE)
 
 	rl.DrawCircle3D(CAMERA_TARGET,1,{},0,rl.BLUE)
 
@@ -193,7 +207,6 @@ game_init :: proc() {
 		air_move_speed = 15,
 		jump_height = 50,
 		p1_side = true,
-		input_buffer = {},
 	}
 	p2 := gk.CharecterBase {
 		health=100,
@@ -203,7 +216,6 @@ game_init :: proc() {
 		air_move_speed = 10,
 		jump_height = 20,
 		p1_side = false,
-		input_buffer = {},
 	}
 	gk.initilize_charecter_memory(&p1)
 	gk.initilize_charecter_memory(&p2)
@@ -225,7 +237,8 @@ game_init :: proc() {
 		clay_arena=clay_arena,
 		world=	gk.world_init(p1,p2),
 		p1_controls=p1_controls,
-		model_tmp=rl.LoadModel("assets/tmp/psx_humanoid_female.glb"),
+		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
+		cam = game_camera(),
 	}
 	game_hot_reloaded(g)
 }
