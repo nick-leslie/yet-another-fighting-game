@@ -62,36 +62,43 @@ input_history :: proc(buffer:gk.InputBuffer) {
 }
 
 input_ui:: proc(input:gk.Input) {
-	char_arr := [2]rune{} // todo check if this works
+	char_arr := [3]rune{} // todo check if this works
 	switch input.dir {
 	case .Neutral:
 		char_arr[0] = '.'
+		char_arr[1] = ' '
 	case .Forward:
-		char_arr[0] = '🡲'
+		char_arr[0] = '-'
+		char_arr[1] = '>'
 	case .Back:
-		char_arr[0] = '🡰'
+		char_arr[0] = '<'
+		char_arr[1] = '-'
 	case .Down:
-		char_arr[0] = '🡳'
+		char_arr[0] = 'V'
 	case .DownBack:
-		char_arr[0] = '🡿'
+		char_arr[0] = 'V'
+		char_arr[1] = '/'
 	case .DownForward:
-		char_arr[0] = '🡾'
+		char_arr[0] = '\\'
+		char_arr[1] = 'V'
 	case .Up:
-		char_arr[0] = '🡹'
+		char_arr[0] = '^'
 	case .UpBack:
-		char_arr[0] = '🡼'
+		char_arr[0] = '^'
+		char_arr[1] = '\\'
 	case .UpForward:
-		char_arr[0] = '🡽'
+		char_arr[0] = '/'
+		char_arr[1] = '^'
 	}
 	switch input.attack {
 	case .None:
-		char_arr[1] = ' '
+		char_arr[2] = ' '
 	case .Light:
-		char_arr[1] = 'L'
+		char_arr[2] = 'L'
 	case .Medium:
-		char_arr = 'M'
+		char_arr[2] = 'M'
 	case .Heavy:
-		char_arr = 'H'
+		char_arr[2] = 'H'
 	}
 	str := utf8.runes_to_string(char_arr[:])
 	clay.TextDynamic(

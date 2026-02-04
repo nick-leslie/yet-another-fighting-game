@@ -15,7 +15,6 @@ clay_color_to_rl_color :: proc(color: clay.Color) -> rl.Color {
     return {u8(color.r), u8(color.g), u8(color.b), u8(color.a)}
 }
 
-raylib_fonts := [dynamic]Raylib_Font{}
 
 // Alias for compatibility, default to ascii support
 // measure_text :: measure_text_ascii
@@ -26,7 +25,7 @@ measure_text_unicode :: proc "c" (text: clay.StringSlice, config: ^clay.TextElem
 
 	line_width: f32 = 0
 
-	font := raylib_fonts[config.fontId].font
+	font := g.fonts[config.fontId].font
 	text_str := string(text.chars[:text.length])
 
     // This function seems somewhat expensive, if you notice performance issues, you could assume
@@ -61,7 +60,7 @@ measure_text_unicode :: proc "c" (text: clay.StringSlice, config: ^clay.TextElem
 measure_text_ascii :: proc "c" (text: clay.StringSlice, config: ^clay.TextElementConfig, userData: rawptr) -> clay.Dimensions {
 	line_width: f32 = 0
 
-	font := raylib_fonts[config.fontId].font
+	font := g.fonts[config.fontId].font
 	text_str := string(text.chars[:text.length])
 
 	for i in 0..<len(text_str) {
@@ -87,7 +86,7 @@ measure_text_ascii :: proc "c" (text: clay.StringSlice, config: ^clay.TextElemen
 	return {width = line_width * scaleFactor + total_spacing, height = f32(config.fontSize)}
 }
 
-clay_raylib_render :: proc(render_commands: ^clay.ClayArray(clay.RenderCommand), allocator := context.temp_allocator) {
+clay_raylib_render :: proc(render_commands: ^clay.ClayArray(clay.RenderCommand),fonts:[dynamic]Raylib_Font, allocator := context.temp_allocator) {
     for i in 0 ..< render_commands.length {
         render_command := clay.RenderCommandArray_Get(render_commands, i)
         bounds := render_command.boundingBox
@@ -102,7 +101,7 @@ clay_raylib_render :: proc(render_commands: ^clay.ClayArray(clay.RenderCommand),
             // Raylib uses C strings instead of Odin strings, so we need to clone
             // Assume this will be freed elsewhere since we default to the temp allocator
             cstr_text := strings.clone_to_cstring(text, allocator)
-            font := raylib_fonts[config.fontId].font
+            font := fonts[config.fontId].font
             rl.DrawTextEx(font, cstr_text, {bounds.x, bounds.y}, f32(config.fontSize), f32(config.letterSpacing), clay_color_to_rl_color(config.textColor))
         case .Image:
             config := render_command.renderData.image

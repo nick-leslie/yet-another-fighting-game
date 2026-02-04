@@ -49,6 +49,8 @@ Game_Memory :: struct {
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
+	// setup game arena
+	fonts: 			[dynamic]Raylib_Font,
 }
 
 CAMERA_DISTANCE :: 60
@@ -144,7 +146,7 @@ draw :: proc() {
 	commands := create_ui_layout()
 
 	//something is going wrong with the interactions between the cam and clay
-	clay_raylib_render(&commands,context.temp_allocator)
+	clay_raylib_render(&commands,g.fonts,context.temp_allocator)
 	// rl.DrawFPS(5, 50)
 
 	rl.EndDrawing()
@@ -180,12 +182,8 @@ game_init :: proc() {
 
 
     default_font = rl.GetFontDefault()
-    append(&raylib_fonts,Raylib_Font{
-	    fontId=0,
-	    font=default_font,
-	})
-	log.debug(raylib_fonts)
 
+	utf_font := rl.LoadFont("./assets/nishiki-teki-font/NishikiTeki-MVxaJ.ttf")
 	g_context = context
 	g = new(Game_Memory)
 	//TODO investigate why we cant move you below the setup of G
@@ -219,6 +217,7 @@ game_init :: proc() {
 	}
 	gk.initilize_charecter_memory(&p1)
 	gk.initilize_charecter_memory(&p2)
+	//we need this to be in a predictable order factory time
 	add_state_movement(&p1) // the nill is tmp
 	add_state_light_attack(&p1)
 	add_state_light_fireball(&p1)
@@ -230,6 +229,15 @@ game_init :: proc() {
 		1280,
 		720,
 	})
+	fonts := make([dynamic]Raylib_Font)
+	append(&fonts,Raylib_Font{
+	  fontId=0,
+	  font=default_font,
+	})
+	append(&fonts,Raylib_Font{
+		  fontId=0,
+		  font=utf_font,
+	})
 	g^ = Game_Memory {
 		run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
@@ -239,6 +247,7 @@ game_init :: proc() {
 		p1_controls=p1_controls,
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
+		fonts = fonts,
 	}
 	game_hot_reloaded(g)
 }
@@ -263,8 +272,8 @@ game_shutdown :: proc() {
 	gk.destroy_world(g.world) // we may want to pass world
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
+	delete(g.fonts)
 	free(g)
-	delete(raylib_fonts)
 	//destroy spall
  	spall.context_destroy(&spall_ctx)             // Flushes and closes file
     delete(buffer_backing)

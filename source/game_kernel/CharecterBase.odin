@@ -30,7 +30,8 @@ CharecterBase :: struct {
 	air_move_speed:    f32,
 	air_drag:          f32,
 	p1_side:           bool,
-	states:            [dynamic]State, // should this be state
+	//this breaks compiling
+	states:            [dynamic]State(CharecterBase), // should this be state
 	patterns:          [dynamic]Pattern,
 	entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
 	current_frame:     int,
@@ -50,7 +51,8 @@ CharecterBase :: struct {
 initilize_charecter_memory :: proc(char: ^CharecterBase) {
 	arena_alocator := vmem.arena_allocator(&char.arena)
 	char.patterns = make([dynamic]Pattern,arena_alocator)
-	char.states = make([dynamic]State,arena_alocator)
+	char.states = make([dynamic]State(CharecterBase),arena_alocator)
+	char.entity_pool = make([dynamic]Entity,arena_alocator)
 }
 
 setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
@@ -59,6 +61,11 @@ setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
 		setup_move_bodys(&state,pm^,arena_alocator)
 	}
 	setup_charecter_collison(char, pm)
+	for &entity in char.entity_pool {
+		log.debug("setting up enitty")
+		//
+		setup_entity(&entity,char,pm^)
+	}
 }
 
 
@@ -185,9 +192,9 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^W
 
 	frame.on_frame(character) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
-	for entity in character.entity_pool {
+	for &entity in character.entity_pool {
 		if entity.active == true {
-			entity.update(character,w)
+			entity_update(&entity,character,w)
 		}
 	}
 	//reduce hit and block stun frames
@@ -200,7 +207,7 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^W
 	// log.debug("done with charecter update")
 }
 
-charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State,Frame) {
+charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State(CharecterBase),Frame(CharecterBase)) {
 	character.current_state = state
 	character.current_frame = 0
 	character.jump_requested = false
@@ -210,7 +217,7 @@ charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State,Fram
 	return state,frame
 }
 
-charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State, Frame) {
+charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State(CharecterBase), Frame(CharecterBase)) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
 	state_frame_len := len(state.frames)
@@ -235,13 +242,10 @@ character_add_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manager) 
 	// todo add all the bodys to the simulation before searching for an attack.
 	// this nees to be done in lockstep seprate from the charecter update
 }
-
+// should we inline this
 character_remove_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manager) {
 	_, frame := charecter_get_current_state_frame(character)
-	for &hurt_box in frame.hurtbox_list {
-		id := jolt.Body_GetID(hurt_box.body)
-		jolt.BodyInterface_RemoveBody(pm.bodyInterface, id)
-	}
+	remove_state_hurtboxes(frame.hurtbox_list,pm)
 }
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
@@ -469,9 +473,9 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 	// read the new position into our structure
 	jolt.CharacterVirtual_GetPosition(character.physics_character, &character.position)
 	jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &character.velocity)
-	for entity in character.entity_pool {
+	for &entity in character.entity_pool {
 		if entity.active {
-			entity.physcis_update(character,w)
+			entity_physics_update(&entity,character,w)
 		}
 	}
 }

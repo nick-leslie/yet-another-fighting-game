@@ -31,8 +31,11 @@ Stage :: struct {
 
 
 World :: struct {
-	physicsManager:    Physics_Manager,
+	// Physics_Manager should be global and percist between frames take these out
+	physicsManager:    Physics_Manager, // this should be a fully seprate api? that way we can take out the physics if we need
 	stage:             Stage,
+
+	// rollbackable
 	p1:                CharecterBase, // these should be charecters
 	p2:                CharecterBase,
 	p1_input_buffer:   InputBuffer,

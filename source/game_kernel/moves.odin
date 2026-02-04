@@ -4,9 +4,9 @@ import "../../libs/jolt"
 import "core:log"
 import "base:runtime"
 
-State :: struct {
+State :: struct($T:typeid) {
 	name:		   string,
-	frames:        [dynamic]Frame,
+	frames:        [dynamic]Frame(T),
 	hurtbox_bodys: [dynamic]^jolt.Body, // all these bodys are precreated or alocated but asleep
 	hit_boxes: 	   [dynamic]Hit_box,
 	// should all this be in a seprate struct
@@ -50,6 +50,13 @@ check_cancel_options :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	return false
 }
 
+remove_state_hurtboxes :: proc(hurt_box_list:[dynamic]Hurt_box,pm:Physics_Manager) {
+	for &hurt_box in hurt_box_list {
+		id := jolt.Body_GetID(hurt_box.body)
+		jolt.BodyInterface_RemoveBody(pm.bodyInterface, id)
+	}
+}
+
 jump_state_cancel :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
@@ -91,13 +98,13 @@ exit_hit_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 	return false
 }
 
-Frame :: struct {
+Frame :: struct($T:typeid) {
 	frame_type:    FrameType,
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
-	on_frame:      proc(_: ^CharecterBase),
-	check_exit:    proc(_: ^CharecterBase, _: int) -> bool, // takes char pointer and proposed state
+	on_frame:      proc(_: ^T),
+	check_exit:    proc(_: ^T, _: int) -> bool, // takes char pointer and proposed state
 }
 
 Hurt_box :: struct {
@@ -128,7 +135,7 @@ FrameType :: enum {
 
 //todo we may want to replace this with code gen
 // man this sucks but we love it
-setup_move_bodys :: proc(move: ^State,pm:Physics_Manager,arena_alocator:runtime.Allocator) {
+setup_move_bodys :: proc(move: ^State($T),pm:Physics_Manager,arena_alocator:runtime.Allocator) {
 	if len(move.hit_boxes) > HIT_BOX_MAX {
 		assert(false,"we have more hit boxes than tracking flags please reduce the number of hit boxes 64 should be more than enough")
 	}
