@@ -9,14 +9,14 @@ import vmem "core:mem/virtual"
 
 
 
-state_neutral :: proc(char: ^gk.CharecterBase) {
+state_neutral ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.move_dir = Vec3{0, 0, 0}
 			//todo if should we check if grounded?
 			char.velocity = Vec3{0, char.velocity.y, 0}
@@ -29,14 +29,14 @@ state_neutral :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.states, move)
 }
-state_forward :: proc(char: ^gk.CharecterBase) {
+state_forward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			if char.p1_side do char.velocity.x  = 	1 * char.move_speed
 			if !char.p1_side do char.velocity.x =  -1 * char.move_speed
 		},
@@ -51,7 +51,7 @@ state_forward :: proc(char: ^gk.CharecterBase) {
 }
 
 
-state_backward :: proc(char: ^gk.CharecterBase) {
+state_backward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -59,7 +59,7 @@ state_backward :: proc(char: ^gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			if char.p1_side do char.velocity.x  = -1 * char.move_speed
 			if !char.p1_side do char.velocity.x =  1 * char.move_speed
 		},
@@ -72,14 +72,14 @@ state_backward :: proc(char: ^gk.CharecterBase) {
 
 	append(&char.states, move)
 }
-state_jump :: proc(char: ^gk.CharecterBase) {
+state_jump ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
 			log.debug("are you running again")
 			char.move_dir = Vec3{0, 1, 0}
@@ -90,7 +90,7 @@ state_jump :: proc(char: ^gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
 			log.debug("are you running again")
 			char.move_dir = Vec3{0, 1, 0}
@@ -101,7 +101,7 @@ state_jump :: proc(char: ^gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 		},
 		check_exit = gk.jump_state_cancel, // todo change me
 	}
@@ -112,14 +112,14 @@ state_jump :: proc(char: ^gk.CharecterBase) {
 
 	append(&char.states, move)
 }
-state_jump_forward :: proc(char: ^gk.CharecterBase) {
+state_jump_forward ::proc(char: ^gk.CharecterBase) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
 			if char.p1_side do char.move_dir = Vec3{1, 1, 0}
 			if !char.p1_side do char.move_dir = Vec3{-1, 1, 0}
@@ -133,7 +133,7 @@ state_jump_forward :: proc(char: ^gk.CharecterBase) {
 
 	append(&char.states, move)
 }
-state_jump_backward :: proc(char: ^gk.CharecterBase) {
+state_jump_backward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -142,7 +142,7 @@ state_jump_backward :: proc(char: ^gk.CharecterBase) {
 		//I think inline allocations of dynamics is causing leaks
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0.}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
 			if char.p1_side do char.move_dir = Vec3{-1, 1, 0}
 			if !char.p1_side do char.move_dir = Vec3{1, 1, 0}
@@ -154,7 +154,7 @@ state_jump_backward :: proc(char: ^gk.CharecterBase) {
 		//I think inline allocations of dynamics is causing leaks
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
 			if char.p1_side do char.move_dir = Vec3{-1, 1, 0}
 			if !char.p1_side do char.move_dir = Vec3{1, 1, 0}
@@ -166,7 +166,7 @@ state_jump_backward :: proc(char: ^gk.CharecterBase) {
 		//I think inline allocations of dynamics is causing leaks
 		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 		hitbox_list = {},
-		on_frame = proc(char: ^gk.CharecterBase) {
+		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 		},
 		check_exit = gk.jump_state_cancel, // todo change me
 	}
@@ -179,7 +179,7 @@ state_jump_backward :: proc(char: ^gk.CharecterBase) {
 	append(&char.states, move)
 }
 
-pattern_neutral :: proc(char: ^gk.CharecterBase) {
+pattern_neutral ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -190,7 +190,7 @@ pattern_neutral :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_forward :: proc(char: ^gk.CharecterBase) {
+pattern_forward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -201,7 +201,7 @@ pattern_forward :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_backward :: proc(char: ^gk.CharecterBase) {
+pattern_backward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -212,7 +212,7 @@ pattern_backward :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_jump :: proc(char: ^gk.CharecterBase) {
+pattern_jump ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -223,7 +223,7 @@ pattern_jump :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_jump_forward :: proc(char: ^gk.CharecterBase) {
+pattern_jump_forward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -234,7 +234,7 @@ pattern_jump_forward :: proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_jump_backward :: proc(char: ^gk.CharecterBase) {
+pattern_jump_backward ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -247,7 +247,7 @@ pattern_jump_backward :: proc(char: ^gk.CharecterBase) {
 }
 
 
-add_state_movement :: proc(char: ^gk.CharecterBase) {
+add_state_movement ::proc(char: ^gk.CharecterBase) {
 	using gk
 	log.debug("in add movement")
 	state_neutral(char)
@@ -271,7 +271,7 @@ add_state_movement :: proc(char: ^gk.CharecterBase) {
 
 
 
-state_light_attack :: proc(char: ^gk.CharecterBase) {
+state_light_attack ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -290,7 +290,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -298,7 +298,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -306,7 +306,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -314,7 +314,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -322,7 +322,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {0},
-				on_frame = proc(char: ^gk.CharecterBase) {
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 				},
 				check_exit = no_cancel, // todo change me
 			},
@@ -331,7 +331,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {0},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -339,7 +339,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {0},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -347,7 +347,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {0},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -355,7 +355,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -363,7 +363,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = gk.free_cancel, // todo change me
 			},
 		},
@@ -375,7 +375,7 @@ state_light_attack :: proc(char: ^gk.CharecterBase) {
 }
 
 
-pattern_light_attack :: proc(char: ^gk.CharecterBase) {
+pattern_light_attack ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -399,13 +399,13 @@ pattern_light_attack :: proc(char: ^gk.CharecterBase) {
 	append(&char.patterns, pattern3)
 }
 
-add_state_light_attack :: proc(char: ^gk.CharecterBase) {
+add_state_light_attack ::proc(char: ^gk.CharecterBase) {
 	using gk
 	state_light_attack(char)
 	pattern_light_attack(char)
 }
 
-state_light_fireball :: proc(char: ^gk.CharecterBase) {
+state_light_fireball ::proc(char: ^gk.CharecterBase) {
 	using gk
 	move := gk.State(gk.CharecterBase) {
 		name="fireball",
@@ -416,7 +416,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					char.velocity = {}
 				},
 				check_exit = no_cancel, // todo change me
@@ -426,7 +426,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -434,7 +434,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -442,7 +442,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			Frame(gk.CharecterBase) {
@@ -450,7 +450,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 				},
 				check_exit = no_cancel, // todo change me
 			},
@@ -459,7 +459,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -467,7 +467,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -475,7 +475,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					log.debug("spawn fireball")
 				},
 				check_exit = no_cancel, // todo change me
@@ -485,7 +485,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -493,7 +493,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -501,7 +501,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -509,7 +509,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -517,7 +517,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -525,7 +525,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -533,7 +533,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -541,7 +541,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -549,7 +549,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -557,7 +557,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -565,7 +565,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -573,7 +573,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -581,7 +581,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -589,7 +589,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -597,7 +597,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -605,7 +605,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -613,7 +613,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -621,7 +621,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
 			},
 			gk.Frame(CharecterBase) {
@@ -629,7 +629,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame = proc(char: ^gk.CharecterBase) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = gk.free_cancel, // todo change me
 			},
 		},
@@ -641,7 +641,7 @@ state_light_fireball :: proc(char: ^gk.CharecterBase) {
 }
 
 
-pattern_light_fireball :: proc(char: ^gk.CharecterBase) {
+pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -690,23 +690,40 @@ pattern_light_fireball :: proc(char: ^gk.CharecterBase) {
 	append(&char.patterns, pattern_4)
 }
 
-entity_fireball :: proc(char: ^gk.CharecterBase) {
-	using gk
-	append(&char.entity_pool,gk.Entity{
+entity_fireball ::proc(char: ^gk.CharecterBase) {
+	append(&char.entity_pool,gk.Entity {
 		states = {
-
+			gk.State(gk.Entity) {
+				frames= {
+					gk.Frame(gk.Entity) {
+						frame_type = gk.FrameType.Recovery,
+						//I think inline allocations of dynamics is causing leaks
+						hurtbox_list = {
+							gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 5., 5.}},
+						},
+						hitbox_list = {},
+						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
+							if  enitity.charecter_ptr.p1_side do enitity.velocity.x  = 1 * enitity.move_speed
+							if !enitity.charecter_ptr.p1_side do enitity.velocity.x = -1 * enitity.move_speed
+						},
+						check_exit = proc(char: ^gk.Entity, cancel_index: int) -> bool {
+							return false
+						}, // todo change me
+					},
+				},
+			},
 		},
-		activate=          proc(self:^Entity,charecter:^CharecterBase,world:^World){
+		activate=          proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){
 			self.position = charecter.position
 		}, // this runs onetime
-		update=            proc(self:^Entity,charecter:^CharecterBase,world:^World){},
-		on_hit=			   proc(self:^Entity,hit_ctx:HitBoxCtx){},
-		physcis_update=    proc(self:^Entity,charecter:^CharecterBase,world:^World){},
-		deactivate=        proc(self:^Entity,charecter:^CharecterBase,world:^World) {},
+		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
+		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx){},
+		physcis_update=    proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
+		deactivate=        proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World) {},
 	})
 }
 
-add_state_light_fireball :: proc(char: ^gk.CharecterBase) {
+add_state_light_fireball ::proc(char: ^gk.CharecterBase) {
 	state_light_fireball(char)
 	pattern_light_fireball(char)
 	entity_fireball(char)
@@ -717,7 +734,7 @@ add_state_stun::proc(char: ^gk.CharecterBase) {
 	state_block_stun(char)
 }
 
-state_block_stun :: proc(char: ^gk.CharecterBase) {
+state_block_stun ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -727,7 +744,7 @@ state_block_stun :: proc(char: ^gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 			hitbox_list = {},
-			on_frame = proc(char: ^gk.CharecterBase) {},
+			on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 			check_exit = exit_block_stun, // todo change me
 		}},
 		isAttack  = false,
@@ -736,7 +753,7 @@ state_block_stun :: proc(char: ^gk.CharecterBase) {
 	index := len(char.states)-1
 	char.block_stun_index = index
 }
-state_hit_stun :: proc(char: ^gk.CharecterBase) {
+state_hit_stun ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -746,7 +763,7 @@ state_hit_stun :: proc(char: ^gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 			hitbox_list = {},
-			on_frame = proc(char: ^gk.CharecterBase) {},
+			on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 			check_exit = exit_hit_stun, // todo change me
 		}},
 		isAttack  = false,

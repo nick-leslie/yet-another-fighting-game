@@ -190,7 +190,7 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^W
 	}
 
 
-	frame.on_frame(character) // run frame update
+	frame.on_frame(character,w) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
 	for &entity in character.entity_pool {
 		if entity.active == true {

@@ -20,6 +20,7 @@ Entity :: struct {
 	health: 		   u32,
 	current_state: 	   int,
 	current_frame: 	   int,
+	move_speed:        f32,
 	// physics
 	using position:    Vec3,
 	velocity:          Vec3,
@@ -28,7 +29,10 @@ Entity :: struct {
 	current_state_flags: struct { // we may want to remove this
 		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	},
+	charecter_ptr: 	   ^CharecterBase,
 	//not stored for rollback
+	// can we have a compile time amount of states
+	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
 	states:            [dynamic]State(Entity), // should this be state
 	activate:          proc(self:^Entity,charecter:^CharecterBase,world:^World), // this runs onetime
 	update:            proc(self:^Entity,charecter:^CharecterBase,world:^World),
@@ -41,7 +45,7 @@ Entity :: struct {
 setup_entity :: proc(entity:^Entity,charecter:^CharecterBase,pm:Physics_Manager) {
 	charecter_allocatior := vmem.arena_allocator(&charecter.arena)
 	setup_entity_physics(entity,pm,charecter_allocatior) // look into odin auto pass pointers
-
+	entity.charecter_ptr = charecter
 }
 
 // do we want to
@@ -52,7 +56,19 @@ activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) 
 }
 
 entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
+	state := entity.states[entity.current_state]
+	frame := state.frames[entity.current_frame]
+	exit := frame.check_exit(entity,entity.current_frame)
+	if exit == true {
+		entity.current_state = entity.state_map[entity.current_state]
+		entity.current_frame = 0
+	}
+	frame.on_frame(entity,world)
+	if entity.current_frame > len(state.frames) {
+		entity.current_frame += 1
+	}
 	entity.update(entity,charecter,world)
+	//todo advance frame
 }
 
 
@@ -64,10 +80,12 @@ entity_physics_update::proc(entity:^Entity,charecter:^CharecterBase,world:^World
 }
 
 
-deactivate_entity :: proc(entity:^Entity,character:^CharecterBase) {
+deactivate_entity :: proc(entity:^Entity,character:^CharecterBase,world:^World) {
 	entity.active = false
+	entity.current_state = 0
+	entity.current_frame = 0
+	entity.deactivate(entity,character,world)
 	//todo remove
-
 }
 
 

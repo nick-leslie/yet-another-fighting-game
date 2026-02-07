@@ -17,11 +17,48 @@ State :: struct($T:typeid) {
 	damage:        u32,
 }
 
+Frame :: struct($T:typeid) {
+	frame_type:    FrameType,
+	cancel_states: [dynamic]int,
+	hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static we may want to make it an index
+	hitbox_list:   [dynamic]int, // index into the hit box array of the state
+	on_frame:      proc(_: ^T,world:^World),
+	check_exit:    proc(_: ^T, _: int) -> bool, // takes char pointer and proposed state
+}
+
+Hurt_box :: struct {
+	using position: Vec3,
+	extent:         Vec3, // width height extent will be static
+	body:           ^jolt.Body, // all these bodys are precreated or alocated but asleep
+	// todo properties
+}
+//for multi hits spawn a new hitbox
+Hit_box :: struct {
+	using position:   Vec3,
+	extent:           Vec3, // width height extent will be static
+	hitKnockback:     Vec3, // this is applied to other
+	hitPushback: 	  Vec3, // this is applied to self
+	blockKnockback:   Vec3,
+	blockPushback:    Vec3,
+	attackDir:        AttackDir,
+	// todo properties
+}
+
+
+FrameType :: enum {
+	Startup,
+	Active,
+	Recovery,
+}
+
+
+
 AttackDir :: enum {
 	Mid,
 	High,
 	Low,
 }
+
 
 
 delete_state :: proc(move: ^State) {
@@ -96,40 +133,6 @@ exit_hit_stun :: proc(char: ^CharecterBase, cancel_index: int) -> bool {
 		return true
 	}
 	return false
-}
-
-Frame :: struct($T:typeid) {
-	frame_type:    FrameType,
-	cancel_states: [dynamic]int,
-	hurtbox_list:  [dynamic]Hurt_box, // width height extent will be static we may want to make it an index
-	hitbox_list:   [dynamic]int, // index into the hit box array of the state
-	on_frame:      proc(_: ^T),
-	check_exit:    proc(_: ^T, _: int) -> bool, // takes char pointer and proposed state
-}
-
-Hurt_box :: struct {
-	using position: Vec3,
-	extent:         Vec3, // width height extent will be static
-	body:           ^jolt.Body, // all these bodys are precreated or alocated but asleep
-	// todo properties
-}
-//for multi hits spawn a new hitbox
-Hit_box :: struct {
-	using position:   Vec3,
-	extent:           Vec3, // width height extent will be static
-	hitKnockback:     Vec3, // this is applied to other
-	hitPushback: 	  Vec3, // this is applied to self
-	blockKnockback:   Vec3,
-	blockPushback:    Vec3,
-	attackDir:        AttackDir,
-	// todo properties
-}
-
-
-FrameType :: enum {
-	Startup,
-	Active,
-	Recovery,
 }
 
 
