@@ -1,20 +1,20 @@
 package game_kernel
 
-HOOK_FUNCTION:: proc(self:^CharecterBase,other:^CharecterBase,world:^World)
+// HOOK_FUNCTION:: proc(self:^CharecterBase,other:^CharecterBase,world:^World)
 
-CharecterHooks :: struct {
-	// on tic
-	onTic:HOOK_FUNCTION,
-	onSelfHitOther:proc(self:^CharecterBase,other:^CharecterBase,world:^World,isCounter:bool,hitbox:Hit_box),
-	// onBlocks
-	onSelfBlocked:HOOK_FUNCTION,
-	// onHit
-	onSelfGotHit:HOOK_FUNCTION,
-	// spawn projectile?
-	selfSpawnProjectile:HOOK_FUNCTION,
-	// onState change
-	onSelfStateChange:proc(self:^CharecterBase,world:^World),
-}
+// CharecterHooks :: struct {
+// 	// on tic
+// 	onTic:HOOK_FUNCTION,
+// 	onSelfHitOther:proc(self:^CharecterBase,other:^CharecterBase,world:^World,isCounter:bool,hitbox:Hit_box),
+// 	// onBlocks
+// 	onSelfBlocked:HOOK_FUNCTION,
+// 	// onHit
+// 	onSelfGotHit:HOOK_FUNCTION,
+// 	// spawn projectile?
+// 	selfSpawnProjectile:HOOK_FUNCTION,
+// 	// onState change
+// 	onSelfStateChange:proc(self:^CharecterBase,world:^World),
+// }
 
 // RenderHooks :: struct {
 // 	// on tic

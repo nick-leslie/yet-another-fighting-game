@@ -35,6 +35,16 @@ charecter_draw :: proc(character: gk.CharecterBase) {
 					rl.BLUE,
 				)
 			}
+			for &hitbox_index in enity_frame.hitbox_list {
+				hitbox := enity_state.hit_boxes[hitbox_index]
+				rl.DrawCube(
+					enity.position + hitbox.position,
+					hitbox.extent.x,
+					hitbox.extent.y,
+					0.0,
+					rl.RED,
+				)
+			}
 		}
 	}
 }

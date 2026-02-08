@@ -694,8 +694,17 @@ pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
 
 entity_fireball ::proc(char: ^gk.CharecterBase) {
 	append(&char.entity_pool,gk.Entity {
+		move_speed = 1.0,
 		states = {
 			gk.State(gk.Entity) {
+				hit_boxes = {
+					gk.Hit_box {
+						position    = Vec3{0, 0, 0},
+						extent      = Vec3{10., 5., 10.},
+						hitKnockback = Vec3{-10, 0, 0},
+						blockPushback = Vec3{10,0,0},
+					},
+				},
 				frames= {
 					gk.Frame(gk.Entity) {
 						frame_type = gk.FrameType.Recovery,
@@ -703,10 +712,10 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 						hurtbox_list = {
 							gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 5., 5.}},
 						},
-						hitbox_list = {},
+						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
-							if  enitity.charecter_ptr.p1_side do enitity.velocity.x  = 1 * enitity.move_speed
-							if !enitity.charecter_ptr.p1_side do enitity.velocity.x = -1 * enitity.move_speed
+							if  enitity.charecter_ptr.p1_side do enitity.velocity.x = -1 * enitity.move_speed
+							if !enitity.charecter_ptr.p1_side do enitity.velocity.x =  1 * enitity.move_speed
 						},
 						check_exit = proc(char: ^gk.Entity, cancel_index: int) -> bool {
 							return false
@@ -719,7 +728,12 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 			self.position = charecter.position
 		}, // this runs onetime
 		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
-		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx){},
+		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){
+			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		},
+		on_block=		   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){
+			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		},
 		physcis_update=    proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
 		deactivate=        proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World) {},
 	})

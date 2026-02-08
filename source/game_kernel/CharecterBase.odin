@@ -250,13 +250,14 @@ character_remove_hurt_boxes :: proc(character: CharecterBase, pm: Physics_Manage
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
 InputBfrPtrArr :: ^[2]^InputBuffer
-HitBoxCtx :: struct {
+HitBoxCtx :: struct($T:typeid) {
 	charecters:   CharPtrArr,
 	input_buffers:InputBfrPtrArr, // todo this may be bad
 	hitbox_tracker_ptr: ^bit_set[0..<64; u64],
 	hitbox_index: int,
 	hitbox:       ^Hit_box,
 	world: 		  ^World,
+	self:^T,
 }
 //bruh this shit about to get funky
 character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr, w:^World) {
@@ -265,7 +266,8 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 		//todo make me a function once we unify
 		hit_box := state.hit_boxes[hitbox_index]
 		position := characters[0].position
-		hitbox_context := HitBoxCtx {
+		hitbox_context := HitBoxCtx(CharecterBase) {
+			self = characters[0],
 			charecters   = characters,
 			hitbox       = &hit_box,
 			hitbox_index = hitbox_index,
@@ -273,19 +275,32 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 			input_buffers = input_buffers,
 			world 	   	 = w,
 		}
-		setup_hitbox_and_ctx(&hit_box,&hitbox_context,position)
+		setup_hitbox_and_ctx(&hit_box,&hitbox_context,position,charecter_on_hit_other)
 	}
+	// should we make this a function in entity
 	for &entity in characters[0].entity_pool {
 		if entity.active {
-			// state := entity.states[entity.current_state]
-			// frame := state.frames[entity.current_frame]
-
-			//todo check for hit
+			enity_state := entity.states[entity.current_state]
+			enity_frame := enity_state.frames[entity.current_frame]
+			for &hitbox_index in enity_frame.hitbox_list {
+				hit_box := enity_state.hit_boxes[hitbox_index]
+				position := entity.position
+				hitbox_context := HitBoxCtx(Entity) {
+					self = &entity,
+					charecters   = characters,
+					hitbox       = &hit_box,
+					hitbox_index = hitbox_index,
+					hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
+					input_buffers = input_buffers,
+					world 	   	 = w,
+				}
+				setup_hitbox_and_ctx(&hit_box,&hitbox_context,position,entity_on_hit_other)
+			}
 		}
 	}
 }
 
-setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx,position:Vec3) {
+setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx($T),position:Vec3,callback:proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult)) {
 	extent := hit_box.extent * 0.5
 	box_shape := jolt.BoxShape_Create(&extent, 0) // make sure this works
 	defer jolt.Shape_Destroy(auto_cast box_shape)
@@ -334,7 +349,7 @@ setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx,position:Vec3) {
 		}, // shape cast settings
 		baseOffset = &{},
 		collectorType = .AllHit,
-		callback = charecter_on_hit_other,
+		callback = callback,
 		userData = ctx,
 		broadPhaseLayerFilter = bround_phase_filter,
 		objectLayerFilter = nil,
@@ -345,7 +360,7 @@ setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx,position:Vec3) {
 
 charecter_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
 	context = g_context // todo fix me
-	hit_ctx: ^HitBoxCtx = auto_cast (hit_ctx_ptr) //todo remove auto cast
+	hit_ctx: ^HitBoxCtx(CharecterBase) = auto_cast (hit_ctx_ptr) //todo remove auto cast
 	self := CharPtrArr(hit_ctx.charecters)[0]
 	other := CharPtrArr(hit_ctx.charecters)[1]
 
