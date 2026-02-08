@@ -14,6 +14,7 @@ if [ ! -d "./odin-c-bindgen" ] ; then
 fi
 if [ ! -f bindgen.bin ] ; then
     echo compiling odin bind gen
+    # install libdevl
     odin build odin-c-bindgen/src -out:bindgen.bin
 fi
 

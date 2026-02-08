@@ -562,6 +562,9 @@ CharacterVirtual              :: struct {} /* Inherits JPH_CharacterBase */
 CharacterContactListener      :: struct {}
 CharacterVsCharacterCollision :: struct {}
 Skeleton                      :: struct {}
+SkeletonPose                  :: struct {}
+SkeletalAnimation             :: struct {}
+SkeletonMapper                :: struct {}
 RagdollSettings               :: struct {}
 Ragdoll                       :: struct {}
 
@@ -803,7 +806,7 @@ JobSystemConfig :: struct {
 JobSystem :: struct {}
 
 /* Calculate max tire impulses by combining friction, slip, and suspension impulse. Note that the actual applied impulse may be lower (e.g. when the vehicle is stationary on a horizontal surface the actual impulse applied will be 0) */
-TireMaxImpulseCallback :: proc "c" (wheelIndex: u32, outLongitudinalImpulse: ^f32, outLateralImpulse: ^f32, suspensionImpulse: f32, longitudinalFriction: f32, lateralFriction: f32, longitudinalSlip: f32, lateralSlip: f32, deltaTime: f32)
+TireMaxImpulseCallback :: proc "c" (userData: rawptr, wheelIndex: u32, outLongitudinalImpulse: ^f32, outLateralImpulse: ^f32, suspensionImpulse: f32, longitudinalFriction: f32, lateralFriction: f32, longitudinalSlip: f32, lateralSlip: f32, deltaTime: f32)
 
 @(default_calling_convention="c", link_prefix="JPH_")
 foreign lib {
@@ -2018,7 +2021,48 @@ foreign lib {
 	Skeleton_CalculateParentJointIndices :: proc(skeleton: ^Skeleton) ---
 	Skeleton_AreJointsCorrectlyOrdered   :: proc(skeleton: ^Skeleton) -> bool ---
 
-	/* Ragdoll */
+	/* SkeletonPose */
+	SkeletonPose_Create                           :: proc() -> ^SkeletonPose ---
+	SkeletonPose_Destroy                          :: proc(pose: ^SkeletonPose) ---
+	SkeletonPose_SetSkeleton                      :: proc(pose: ^SkeletonPose, skeleton: ^Skeleton) ---
+	SkeletonPose_GetSkeleton                      :: proc(pose: ^SkeletonPose) -> ^Skeleton ---
+	SkeletonPose_SetRootOffset                    :: proc(pose: ^SkeletonPose, offset: ^RVec3) ---
+	SkeletonPose_GetRootOffset                    :: proc(pose: ^SkeletonPose, result: ^RVec3) ---
+	SkeletonPose_GetJointCount                    :: proc(pose: ^SkeletonPose) -> i32 ---
+	SkeletonPose_GetJointState                    :: proc(pose: ^SkeletonPose, index: i32, outTranslation: ^Vec3, outRotation: ^Quat) ---
+	SkeletonPose_SetJointState                    :: proc(pose: ^SkeletonPose, index: i32, translation: ^Vec3, rotation: ^Quat) ---
+	SkeletonPose_GetJointMatrix                   :: proc(pose: ^SkeletonPose, index: i32, result: ^Mat4) ---
+	SkeletonPose_SetJointMatrix                   :: proc(pose: ^SkeletonPose, index: i32, _matrix: ^Mat4) ---
+	SkeletonPose_GetJointMatrices                 :: proc(pose: ^SkeletonPose, outMatrices: ^Mat4, count: i32) ---
+	SkeletonPose_SetJointMatrices                 :: proc(pose: ^SkeletonPose, matrices: ^Mat4, count: i32) ---
+	SkeletonPose_CalculateJointMatrices           :: proc(pose: ^SkeletonPose) ---
+	SkeletonPose_CalculateJointStates             :: proc(pose: ^SkeletonPose) ---
+	SkeletonPose_CalculateLocalSpaceJointMatrices :: proc(pose: ^SkeletonPose, outMatrices: ^Mat4) ---
+
+	/* SkeletalAnimation */
+	SkeletalAnimation_Create                :: proc() -> ^SkeletalAnimation ---
+	SkeletalAnimation_Destroy               :: proc(animation: ^SkeletalAnimation) ---
+	SkeletalAnimation_GetDuration           :: proc(animation: ^SkeletalAnimation) -> f32 ---
+	SkeletalAnimation_IsLooping             :: proc(animation: ^SkeletalAnimation) -> bool ---
+	SkeletalAnimation_SetIsLooping          :: proc(animation: ^SkeletalAnimation, looping: bool) ---
+	SkeletalAnimation_ScaleJoints           :: proc(animation: ^SkeletalAnimation, scale: f32) ---
+	SkeletalAnimation_Sample                :: proc(animation: ^SkeletalAnimation, time: f32, pose: ^SkeletonPose) ---
+	SkeletalAnimation_GetAnimatedJointCount :: proc(animation: ^SkeletalAnimation) -> i32 ---
+	SkeletalAnimation_AddAnimatedJoint      :: proc(animation: ^SkeletalAnimation, jointName: cstring) ---
+	SkeletalAnimation_AddKeyframe           :: proc(animation: ^SkeletalAnimation, jointIndex: i32, time: f32, translation: ^Vec3, rotation: ^Quat) ---
+
+	/* SkeletonMapper */
+	SkeletonMapper_Create                   :: proc() -> ^SkeletonMapper ---
+	SkeletonMapper_Destroy                  :: proc(mapper: ^SkeletonMapper) ---
+	SkeletonMapper_Initialize               :: proc(mapper: ^SkeletonMapper, skeleton1: ^Skeleton, neutralPose1: ^Mat4, skeleton2: ^Skeleton, neutralPose2: ^Mat4) ---
+	SkeletonMapper_LockAllTranslations      :: proc(mapper: ^SkeletonMapper, skeleton2: ^Skeleton, neutralPose2: ^Mat4) ---
+	SkeletonMapper_LockTranslations         :: proc(mapper: ^SkeletonMapper, skeleton2: ^Skeleton, lockedTranslations: ^bool, neutralPose2: ^Mat4) ---
+	SkeletonMapper_Map                      :: proc(mapper: ^SkeletonMapper, pose1ModelSpace: ^Mat4, pose2LocalSpace: ^Mat4, outPose2ModelSpace: ^Mat4) ---
+	SkeletonMapper_MapReverse               :: proc(mapper: ^SkeletonMapper, pose2ModelSpace: ^Mat4, outPose1ModelSpace: ^Mat4) ---
+	SkeletonMapper_GetMappedJointIndex      :: proc(mapper: ^SkeletonMapper, joint1Index: i32) -> i32 ---
+	SkeletonMapper_IsJointTranslationLocked :: proc(mapper: ^SkeletonMapper, joint2Index: i32) -> bool ---
+
+	/* RagdollSettings */
 	RagdollSettings_Create                                :: proc() -> ^RagdollSettings ---
 	RagdollSettings_Destroy                               :: proc(settings: ^RagdollSettings) ---
 	RagdollSettings_GetSkeleton                           :: proc(character: ^RagdollSettings) -> ^Skeleton ---
@@ -2028,13 +2072,36 @@ foreign lib {
 	RagdollSettings_CalculateBodyIndexToConstraintIndex   :: proc(settings: ^RagdollSettings) ---
 	RagdollSettings_GetConstraintIndexForBodyIndex        :: proc(settings: ^RagdollSettings, bodyIndex: i32) -> i32 ---
 	RagdollSettings_CalculateConstraintIndexToBodyIdxPair :: proc(settings: ^RagdollSettings) ---
+	RagdollSettings_ResizeParts                           :: proc(settings: ^RagdollSettings, count: i32) ---
+	RagdollSettings_GetPartCount                          :: proc(settings: ^RagdollSettings) -> i32 ---
+	RagdollSettings_SetPartShape                          :: proc(settings: ^RagdollSettings, partIndex: i32, shape: ^Shape) ---
+	RagdollSettings_SetPartPosition                       :: proc(settings: ^RagdollSettings, partIndex: i32, position: ^RVec3) ---
+	RagdollSettings_SetPartRotation                       :: proc(settings: ^RagdollSettings, partIndex: i32, rotation: ^Quat) ---
+	RagdollSettings_SetPartMotionType                     :: proc(settings: ^RagdollSettings, partIndex: i32, motionType: MotionType) ---
+	RagdollSettings_SetPartObjectLayer                    :: proc(settings: ^RagdollSettings, partIndex: i32, layer: ObjectLayer) ---
+	RagdollSettings_SetPartMassProperties                 :: proc(settings: ^RagdollSettings, partIndex: i32, mass: f32) ---
+	RagdollSettings_SetPartToParent                       :: proc(settings: ^RagdollSettings, partIndex: i32, constraintSettings: ^SwingTwistConstraintSettings) ---
 	RagdollSettings_CreateRagdoll                         :: proc(settings: ^RagdollSettings, system: ^PhysicsSystem, collisionGroup: CollisionGroupID, userData: u64) -> ^Ragdoll --- /*=0*/
-	Ragdoll_Destroy                                       :: proc(ragdoll: ^Ragdoll) ---
-	Ragdoll_AddToPhysicsSystem                            :: proc(ragdoll: ^Ragdoll, activationMode: Activation, lockBodies: bool) --- /*= JPH_ActivationActivate */
-	Ragdoll_RemoveFromPhysicsSystem                       :: proc(ragdoll: ^Ragdoll, lockBodies: bool) --- /* = true */
-	Ragdoll_Activate                                      :: proc(ragdoll: ^Ragdoll, lockBodies: bool) --- /* = true */
-	Ragdoll_IsActive                                      :: proc(ragdoll: ^Ragdoll, lockBodies: bool) -> bool --- /* = true */
-	Ragdoll_ResetWarmStart                                :: proc(ragdoll: ^Ragdoll) ---
+
+	/* Ragdoll */
+	Ragdoll_Destroy                    :: proc(ragdoll: ^Ragdoll) ---
+	Ragdoll_AddToPhysicsSystem         :: proc(ragdoll: ^Ragdoll, activationMode: Activation, lockBodies: bool) --- /*= JPH_ActivationActivate */
+	Ragdoll_RemoveFromPhysicsSystem    :: proc(ragdoll: ^Ragdoll, lockBodies: bool) --- /* = true */
+	Ragdoll_Activate                   :: proc(ragdoll: ^Ragdoll, lockBodies: bool) --- /* = true */
+	Ragdoll_IsActive                   :: proc(ragdoll: ^Ragdoll, lockBodies: bool) -> bool --- /* = true */
+	Ragdoll_ResetWarmStart             :: proc(ragdoll: ^Ragdoll) ---
+	Ragdoll_SetPose                    :: proc(ragdoll: ^Ragdoll, pose: ^SkeletonPose, lockBodies: bool) --- /* = true */
+	Ragdoll_SetPose2                   :: proc(ragdoll: ^Ragdoll, rootOffset: ^RVec3, jointMatrices: ^Mat4, lockBodies: bool) --- /* = true */
+	Ragdoll_GetPose                    :: proc(ragdoll: ^Ragdoll, outPose: ^SkeletonPose, lockBodies: bool) --- /* = true */
+	Ragdoll_GetPose2                   :: proc(ragdoll: ^Ragdoll, outRootOffset: ^RVec3, outJointMatrices: ^Mat4, lockBodies: bool) --- /* = true */
+	Ragdoll_DriveToPoseUsingMotors     :: proc(ragdoll: ^Ragdoll, pose: ^SkeletonPose) ---
+	Ragdoll_DriveToPoseUsingKinematics :: proc(ragdoll: ^Ragdoll, pose: ^SkeletonPose, deltaTime: f32, lockBodies: bool) --- /* = true */
+	Ragdoll_GetBodyCount               :: proc(ragdoll: ^Ragdoll) -> i32 ---
+	Ragdoll_GetBodyID                  :: proc(ragdoll: ^Ragdoll, bodyIndex: i32) -> BodyID ---
+	Ragdoll_GetConstraintCount         :: proc(ragdoll: ^Ragdoll) -> i32 ---
+	Ragdoll_GetConstraint              :: proc(ragdoll: ^Ragdoll, constraintIndex: i32) -> ^TwoBodyConstraint ---
+	Ragdoll_GetRootTransform           :: proc(ragdoll: ^Ragdoll, outPosition: ^RVec3, outRotation: ^Quat, lockBodies: bool) --- /* = true */
+	Ragdoll_GetRagdollSettings         :: proc(ragdoll: ^Ragdoll) -> ^RagdollSettings ---
 
 	/* JPH_EstimateCollisionResponse */
 	EstimateCollisionResponse :: proc(body1: ^Body, body2: ^Body, manifold: ^ContactManifold, combinedFriction: f32, combinedRestitution: f32, minVelocityForRestitution: f32, numIterations: u32, result: ^CollisionEstimationResult) ---
@@ -2282,12 +2349,41 @@ foreign lib {
 	WheeledVehicleController_SetHandBrakeInput                       :: proc(controller: ^WheeledVehicleController, handBrakeInput: f32) ---
 	WheeledVehicleController_GetHandBrakeInput                       :: proc(controller: ^WheeledVehicleController) -> f32 ---
 	WheeledVehicleController_GetWheelSpeedAtClutch                   :: proc(controller: ^WheeledVehicleController) -> f32 ---
-	WheeledVehicleController_SetTireMaxImpulseCallback               :: proc(controller: ^WheeledVehicleController, tireMaxImpulseCallback: TireMaxImpulseCallback) ---
+	WheeledVehicleController_SetTireMaxImpulseCallback               :: proc(controller: ^WheeledVehicleController, tireMaxImpulseCallback: TireMaxImpulseCallback, userData: rawptr) ---
 	WheeledVehicleController_GetEngine                               :: proc(controller: ^WheeledVehicleController) -> ^VehicleEngine ---
 	WheeledVehicleController_GetTransmission                         :: proc(controller: ^WheeledVehicleController) -> ^VehicleTransmission ---
+}
 
-	/* WheelSettingsTV - WheelTV - TrackedVehicleController */
-	/* TODO: Add VehicleTrack and VehicleTrackSettings */
+VehicleTrack :: struct {}
+
+TrackSide :: enum u32 {
+	Left  = 0,
+	Right = 1,
+}
+
+VehicleTrackSettings :: struct {
+	drivenWheel:       u32,
+	wheels:            ^u32,
+	wheelsCount:       u32,
+	inertia:           f32,
+	angularDamping:    f32,
+	maxBrakeTorque:    f32,
+	differentialRatio: f32,
+}
+
+@(default_calling_convention="c", link_prefix="JPH_")
+foreign lib {
+	VehicleTrackSettings_Init         :: proc(settings: ^VehicleTrackSettings) ---
+	VehicleTrack_GetAngularVelocity   :: proc(track: ^VehicleTrack) -> f32 ---
+	VehicleTrack_SetAngularVelocity   :: proc(track: ^VehicleTrack, velocity: f32) ---
+	VehicleTrack_GetDrivenWheel       :: proc(track: ^VehicleTrack) -> u32 ---
+	VehicleTrack_GetInertia           :: proc(track: ^VehicleTrack) -> f32 ---
+	VehicleTrack_GetAngularDamping    :: proc(track: ^VehicleTrack) -> f32 ---
+	VehicleTrack_GetMaxBrakeTorque    :: proc(track: ^VehicleTrack) -> f32 ---
+	VehicleTrack_GetDifferentialRatio :: proc(track: ^VehicleTrack) -> f32 ---
+	TrackedVehicleController_GetTrack :: proc(controller: ^TrackedVehicleController, side: TrackSide) -> ^VehicleTrack ---
+
+	/* WheelSettingsTV */
 	WheelSettingsTV_Create                           :: proc() -> ^WheelSettingsTV ---
 	WheelSettingsTV_GetLongitudinalFriction          :: proc(settings: ^WheelSettingsTV) -> f32 ---
 	WheelSettingsTV_SetLongitudinalFriction          :: proc(settings: ^WheelSettingsTV, value: f32) ---
@@ -2353,7 +2449,7 @@ foreign lib {
 	LinearCurve_GetMaxX       :: proc(curve: ^LinearCurve) -> f32 ---
 	LinearCurve_GetValue      :: proc(curve: ^LinearCurve, x: f32) -> f32 ---
 	LinearCurve_GetPointCount :: proc(curve: ^LinearCurve) -> u32 ---
-	LinearCurve_GetPoint      :: proc(curve: ^LinearCurve, index: u32) -> Point ---
+	LinearCurve_GetPoint      :: proc(curve: ^LinearCurve, index: u32, result: ^Point) ---
 	LinearCurve_GetPoints     :: proc(curve: ^LinearCurve, points: ^Point, count: ^u32) ---
 }
 

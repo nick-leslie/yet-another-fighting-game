@@ -1,5 +1,6 @@
 #+feature dynamic-literals
 #+vet !unused !using-stmt
+#+feature using-stmt
 
 package game
 // import rl "vendor:raylib"
@@ -477,6 +478,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					log.debug("spawn fireball")
+					activate_entity(char,0,w) // activate fireball
 				},
 				check_exit = no_cancel, // todo change me
 			},
@@ -721,6 +723,7 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 		physcis_update=    proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
 		deactivate=        proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World) {},
 	})
+	log.debug(char.entity_pool)
 }
 
 add_state_light_fireball ::proc(char: ^gk.CharecterBase) {
@@ -763,7 +766,7 @@ state_hit_stun ::proc(char: ^gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
 			hitbox_list = {},
-			on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
+			on_frame = proc(char: ^gk.CharecterBase,w:^gk.World) {},
 			check_exit = exit_hit_stun, // todo change me
 		}},
 		isAttack  = false,

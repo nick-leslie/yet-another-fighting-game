@@ -22,6 +22,21 @@ charecter_draw :: proc(character: gk.CharecterBase) {
 			rl.BLUE,
 		)
 	}
+	for &enity in character.entity_pool {
+		if enity.active == true {
+			enity_state := enity.states[enity.current_state]
+			enity_frame := enity_state.frames[enity.current_frame]
+			for &hurt_box in enity_frame.hurtbox_list {
+				rl.DrawCube(
+					enity.position + hurt_box.position,
+					hurt_box.extent.x,
+					hurt_box.extent.y,
+					0.0,
+					rl.BLUE,
+				)
+			}
+		}
+	}
 }
 
 charecter_draw_hit_boxes :: proc(character:gk.CharecterBase) {

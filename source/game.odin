@@ -216,12 +216,13 @@ game_init :: proc() {
 		p1_side = false,
 	}
 	gk.initilize_charecter_memory(&p1)
+	log.debug(p1.entity_pool)
 	gk.initilize_charecter_memory(&p2)
 	//we need this to be in a predictable order factory time
 	add_state_movement(&p1) // the nill is tmp
 	add_state_light_attack(&p1)
 	add_state_light_fireball(&p1)
-	log.debug(p1.states[7])
+	log.debug(p1.entity_pool)
 	add_state_stun(&p1)
 	add_state_movement(&p2) // the nill is tmp
 	add_state_stun(&p2)

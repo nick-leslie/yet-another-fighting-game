@@ -2,6 +2,7 @@ package game_kernel
 
 import vmem "core:mem/virtual"
 import "base:runtime"
+import "core:log"
 
 /*
 	ENTITY desighn doc
@@ -50,9 +51,12 @@ setup_entity :: proc(entity:^Entity,charecter:^CharecterBase,pm:Physics_Manager)
 
 // do we want to
 activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) {
+	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
+	log.debug(entity)
 	entity.activate(entity,character,world)
 	entity.active = true
+	log.debug(entity)
 }
 
 entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
