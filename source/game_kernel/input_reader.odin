@@ -29,7 +29,6 @@ Input :: struct {
 }
 
 
-MAX_PATTERN_LEN :: 7 // we set this to be the length of 6321456 (strive super input)
 Pattern :: struct {
     //we will always alocate these with a cap pre alocated
     // these are essently fixed. could we use code gen?
@@ -59,7 +58,7 @@ update_input_buffer :: proc(input_buffer:^InputBuffer,input:Input) {
 }
 // this is still too buggy
 //todo test this becca
-INPUT_BUFFER_LENGTH :: 20
+INPUT_BUFFER_LENGTH :: 25
 // could we speed this up with a binary tree
 pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this

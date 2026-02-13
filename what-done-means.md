@@ -16,3 +16,12 @@ nice to haves
 skills I need to learn
 [] 3d moddeling
 [] basic sound desighn
+
+
+
+
+# goals for non prototype
+* [ ] make charecters more generic. like how entitys work
+* [ ] rework physics remove jolt replace with custom
+* [ ] use fixed point
+* [ ] add in a scripting lang for writing moves

@@ -697,6 +697,9 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 		move_speed = 1.0,
 		states = {
 			gk.State(gk.Entity) {
+				damage = 10,
+				hitstun = 32,
+				blockstun = 64,
 				hit_boxes = {
 					gk.Hit_box {
 						position    = Vec3{0, 0, 0},

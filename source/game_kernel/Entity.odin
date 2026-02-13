@@ -55,7 +55,7 @@ setup_entity :: proc(entity:^Entity,charecter:^CharecterBase,pm:Physics_Manager)
 activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) {
 	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
-	log.debug(entity)
+	entity.current_state_flags = {} // reset current state flags
 	entity.activate(entity,character,world)
 	entity.active = true
 	log.debug(entity)
@@ -108,14 +108,15 @@ entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastRe
 	context = g_context // todo fix me
 	hit_ctx: ^HitBoxCtx(Entity) = auto_cast (hit_ctx_ptr) //todo remove auto cast
 	entity := hit_ctx.self
+
 	self := CharPtrArr(hit_ctx.charecters)[0]
 	other := CharPtrArr(hit_ctx.charecters)[1]
 
 	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
 	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
-	// entity_state := entity.states[entity.current_state]
-	// entity_frame := state.frames[entity.current_frame]
-	self_state, frame_self := charecter_get_current_state_frame(self^)
+	entity_state := entity.states[entity.current_state]
+	// entity_frame := entity_state.frames[entity.current_frame]
+	_, frame_self := charecter_get_current_state_frame(self^)
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 	for &hurt_box in frame_self.hurtbox_list {
@@ -152,11 +153,12 @@ entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastRe
 				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
 				//todo set self current velocity
-				other.hit_stun_frames = self_state.hitstun
+				other.hit_stun_frames = entity_state.hitstun
 				other.block_stun_frames=0
 				hit_ctx.world.combo_counter += 1
 				//set in hit_stun
-				other.health-= self_state.damage
+				other.health -= entity_state.damage
+				log.debug("hit other")
 				entity.on_hit(entity,hit_ctx^)
 			} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
 				// log.debug("blocking")
@@ -168,7 +170,7 @@ entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastRe
 				self.velocity += pushback
 				//this sets it so we dont hit with the same hitbox for multiple frames
 				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-				other.block_stun_frames = self_state.blockstun
+				other.block_stun_frames = entity_state.blockstun
 
 				other.hit_stun_index=0
 
