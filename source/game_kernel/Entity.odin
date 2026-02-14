@@ -1,9 +1,8 @@
 package game_kernel
 
-import vmem "core:mem/virtual"
-import "base:runtime"
 import "core:log"
 import "../../libs/jolt"
+import psy "../physics"
 
 /*
 	ENTITY desighn doc
@@ -24,10 +23,7 @@ Entity :: struct {
 	current_frame: 	   int,
 	move_speed:        f32,
 	// physics
-	using position:    Vec3,
-	velocity:          Vec3,
-	prev_position:     Vec3, // do we need
-	prev_velocity:	   Vec3, // do we need
+	body:              psy.FixedBody,
 	current_state_flags: struct { // we may want to remove this
 		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	},
@@ -46,8 +42,7 @@ Entity :: struct {
 
 
 setup_entity :: proc(entity:^Entity,charecter:^CharecterBase,pm:Physics_Manager) {
-	charecter_allocatior := vmem.arena_allocator(&charecter.arena)
-	setup_entity_physics(entity,pm,charecter_allocatior) // look into odin auto pass pointers
+    log.debug("setups")
 	entity.charecter_ptr = charecter
 }
 
@@ -79,11 +74,13 @@ entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
 
 
 entity_physics_update::proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
-	state := entity.states[entity.current_state]
-	frame := state.frames[entity.current_frame]
-	remove_state_hurtboxes(frame.hurtbox_list,world.physicsManager)
+	log.debug("started entity physics update")
+	// state := entity.states[entity.current_state]
+	// frame := state.frames[entity.current_frame]
+	// remove_state_hurtboxes(frame.hurtbox_list,world.physicsManager)
 	entity.physcis_update(entity,charecter,world)
-	entity.position += entity.velocity
+	psy.move_by_vel(&entity.body)
+	log.debug("done")
 }
 
 
@@ -96,12 +93,6 @@ deactivate_entity :: proc(entity:^Entity,character:^CharecterBase,world:^World) 
 }
 
 
-
-setup_entity_physics :: proc (entity:^Entity,pm:Physics_Manager,allocator: runtime.Allocator) {
-	for &state in entity.states {
-		setup_move_bodys(&state,pm,allocator)
-	}
-}
 
 // is this needed
 entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {

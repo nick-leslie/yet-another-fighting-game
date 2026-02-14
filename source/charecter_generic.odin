@@ -7,6 +7,7 @@ package game
 import "core:log"
 import gk "game_kernel"
 import vmem "core:mem/virtual"
+import psy "./physics"
 
 
 
@@ -479,6 +480,17 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					log.debug("spawn fireball")
 					activate_entity(char,0,w) // activate fireball
+					log.debug("gaming")
+				},
+				check_exit = no_cancel, // todo change me
+			},
+			gk.Frame(CharecterBase) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
+					log.debug("gaming2")
 				},
 				check_exit = no_cancel, // todo change me
 			},
@@ -623,15 +635,9 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 				//I think inline allocations of dynamics is causing leaks
 				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
 				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(CharecterBase) {
-				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
+				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
+				    log.debug("bruh fuck")
+				},
 				check_exit = gk.free_cancel, // todo change me
 			},
 		},
@@ -717,8 +723,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
-							if  enitity.charecter_ptr.p1_side do enitity.velocity.x = -1 * enitity.move_speed
-							if !enitity.charecter_ptr.p1_side do enitity.velocity.x =  1 * enitity.move_speed
+							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
+							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
 						},
 						check_exit = proc(char: ^gk.Entity, cancel_index: int) -> bool {
 							return false
@@ -727,8 +733,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 				},
 			},
 		},
-		activate=          proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){
-			self.position = charecter.position
+		activate=  proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){
+			self.body.position = psy.float_vec3_to_fixed([3]f64{f64(charecter.position.x),f64(charecter.position.y),f64(charecter.position.z)})
 		}, // this runs onetime
 		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
 		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){

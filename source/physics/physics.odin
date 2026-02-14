@@ -1,6 +1,8 @@
 package physics
 
 import fixed "core:math/fixed"
+import "core:log"
+
 
 Fixed12_4 :: distinct fixed.Fixed(i16,4) // fixed
 Vec2Fixed ::  [2]Fixed12_4
@@ -15,6 +17,8 @@ RiggedBody :: struct($T:typeid) {
 	prev_velocity:     [2]T, //do we need this
 }
 
+FixedBody :: RiggedBody(Fixed12_4)
+
 Box :: struct {
 	using position:   Vec2Fixed,
 	extent:           Vec2Fixed,
@@ -23,7 +27,7 @@ Box :: struct {
 
 
 // unfix body should only be used for rendering and should not be used for game play
-unfix_body :: proc(body:^RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
+unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 	//todo convert the body out of float
 	return RiggedBody(f64) {
 		position = {fixed.to_f64(body.position.x),fixed.to_f64(body.position.y)},
@@ -36,20 +40,37 @@ unfix_body :: proc(body:^RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
 	body.position = Vec2Fixed {
 		fixed.add(body.position.x,body.velocity.x),
-		fixed.add(body.position.y,body.velocity.y)
+		fixed.add(body.position.y,body.velocity.y),
 	}
 	return body
 }
 
-add_float_vec_to_vel:: proc (body:^RiggedBody(Fixed12_4),val:[2]f64) -> ^RiggedBody(Fixed12_4) {
-	val_fixed := [2]Fixed12_4 {}
-	fixed.init_from_f64(&val_fixed.x,val.y)
-	fixed.init_from_f64(&val_fixed.x,val.y)
+add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
+    vec_fixed := float_vec3_to_fixed(vec)
 	body.position = Vec2Fixed {
-		fixed.add(body.velocity.x,val_fixed.x),
-		fixed.add(body.velocity.y,val_fixed.y)
+		fixed.add(body.velocity.x,vec_fixed.x),
+		fixed.add(body.velocity.y,vec_fixed.y),
 	}
 	return body
+}
+
+// depreacted todo figure out how to do this
+// or figure out how to take any static 2 + len vec
+float_vec3_to_fixed :: proc(vec:[3]f64) -> [2]Fixed12_4 {
+	log.debug(vec)
+   	vec_fixed := [2]Fixed12_4 {}
+	fixed.init_from_f64(&vec_fixed.x,vec.x)
+	fixed.init_from_f64(&vec_fixed.y,vec.y)
+	log.debug(vec_fixed)
+	log.debug(fixed.to_f64(vec_fixed.x))
+	log.debug(fixed.to_f64(vec_fixed.y))
+    return vec_fixed
+}
+f64_to_fixed :: proc(val:f64) -> Fixed12_4 {
+    // log.warn("this should only be called at start of game")
+   	val_fixed := Fixed12_4 {}
+	fixed.init_from_f64(&val_fixed,val)
+	return val_fixed
 }
 
 // collisions
@@ -96,26 +117,24 @@ line_line :: proc(a: [4]Fixed12_4, b: [4]Fixed12_4) -> bool {
     // Calculate denominator
     denominator := fixed.sub(
         fixed.mul(fixed.sub(b.w, b.y), fixed.sub(a.z, a.x)),
-        fixed.mul(fixed.sub(b.z, b.x), fixed.sub(a.w, a.y))
+        fixed.mul(fixed.sub(b.z, b.x), fixed.sub(a.w, a.y)),
     )
 
     // Calculate uA
     uA := fixed.div(
         fixed.sub(
             fixed.mul(fixed.sub(b.z, b.x), fixed.sub(a.y, b.y)),
-            fixed.mul(fixed.sub(b.w, b.y), fixed.sub(a.x, b.x))
+            fixed.mul(fixed.sub(b.w, b.y), fixed.sub(a.x, b.x)),
         ),
-        denominator
+        denominator,
     )
 
     // Calculate uB
     uB := fixed.div(
         fixed.sub(
             fixed.mul(fixed.sub(a.z, a.x), fixed.sub(a.y, b.y)),
-            fixed.mul(fixed.sub(a.w, a.y), fixed.sub(a.x, b.x))
-        ),
-        denominator
-    )
+            fixed.mul(fixed.sub(a.w, a.y), fixed.sub(a.x, b.x)),
+        ),denominator)
 
     // Check if uA and uB are between 0-1
     zero_fixed := Fixed12_4 {}

@@ -189,7 +189,6 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^W
 		}
 	}
 
-
 	frame.on_frame(character,w) // run frame update
 	character.current_frame += 1 // incrment the fraem by 1
 	for &entity in character.entity_pool {
@@ -278,26 +277,13 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 		setup_hitbox_and_ctx(&hit_box,&hitbox_context,position,charecter_on_hit_other)
 	}
 	// should we make this a function in entity
-	for &entity in characters[0].entity_pool {
-		if entity.active {
-			enity_state := entity.states[entity.current_state]
-			enity_frame := enity_state.frames[entity.current_frame]
-			for &hitbox_index in enity_frame.hitbox_list {
-				hit_box := enity_state.hit_boxes[hitbox_index]
-				position := entity.position
-				hitbox_context := HitBoxCtx(Entity) {
-					self = &entity,
-					charecters   = characters,
-					hitbox       = &hit_box,
-					hitbox_index = hitbox_index,
-					hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
-					input_buffers = input_buffers,
-					world 	   	 = w,
-				}
-				setup_hitbox_and_ctx(&hit_box,&hitbox_context,position,entity_on_hit_other)
-			}
-		}
-	}
+	// for &entity in characters[0].entity_pool {
+	// 	if entity.active {
+	// 		// enity_state := entity.states[entity.current_state]
+	// 		// enity_frame := enity_state.frames[entity.current_frame]
+	// 		//todo sub in non jolt physics collision
+	// 	}
+	// }
 }
 
 setup_hitbox_and_ctx :: proc(hit_box:^Hit_box,ctx:^HitBoxCtx($T),position:Vec3,callback:proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult)) {
