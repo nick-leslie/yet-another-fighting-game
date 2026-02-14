@@ -18,10 +18,12 @@ RiggedBody :: struct($T:typeid) {
 }
 
 FixedBody :: RiggedBody(Fixed12_4)
+FixedBox :: Box(Fixed12_4)
+UnfixedBox :: Box(f64)
 
-Box :: struct {
-	using position:   Vec2Fixed,
-	extent:           Vec2Fixed,
+Box :: struct($T:typeid) {
+	using position:   [2]T,
+	extent:           [2]T,
 }
 // general
 
@@ -34,6 +36,13 @@ unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 		velocity = {fixed.to_f64(body.velocity.x),fixed.to_f64(body.velocity.y)},
 		prev_position = {fixed.to_f64(body.prev_position.x),fixed.to_f64(body.prev_position.y)},
 		prev_velocity = {fixed.to_f64(body.prev_velocity.x),fixed.to_f64(body.prev_velocity.y)},
+	}
+}
+unfix_box :: proc(box:Box(Fixed12_4)) -> Box(f64) {
+	//todo convert the body out of float
+	return Box(f64) {
+		position = {fixed.to_f64(box.position.x),fixed.to_f64(box.position.y)},
+		extent = {fixed.to_f64(box.extent.x),fixed.to_f64(box.extent.y)},
 	}
 }
 // physics
@@ -73,9 +82,21 @@ f64_to_fixed :: proc(val:f64) -> Fixed12_4 {
 	return val_fixed
 }
 
+fix_box :: proc(box:Box(f64)) -> FixedBox {
+   	vec_fixed := [4]Fixed12_4 {}
+	fixed.init_from_f64(&vec_fixed.x,box.position.x)
+	fixed.init_from_f64(&vec_fixed.y,box.position.y)
+	fixed.init_from_f64(&vec_fixed.z,box.extent.x)
+	fixed.init_from_f64(&vec_fixed.w,box.extent.y)
+	return FixedBox {
+        position = {vec_fixed.x,vec_fixed.y},
+        extent = {vec_fixed.z,vec_fixed.w},
+	}
+}
+
 // collisions
 
-check_box_box_collision :: proc(a:Box,b:Box) -> bool {
+check_box_box_collision :: proc(a:FixedBox,b:FixedBox) -> bool {
 	two_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&two_fixed,2.0)
 	a_half_width := fixed.div(a.extent.x,two_fixed)
@@ -89,7 +110,7 @@ check_box_box_collision :: proc(a:Box,b:Box) -> bool {
 		a.y.i <= fixed.add(b.y,b_half_height).i
 	)
 }
-check_box_plane_x_collision :: proc(box:Box, plane:[4]Fixed12_4) -> bool {
+check_box_plane_x_collision :: proc(box:Box(Fixed12_4), plane:[4]Fixed12_4) -> bool {
 	two_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&two_fixed,2.0)
 	box_half_width := fixed.div(box.extent.x,two_fixed)

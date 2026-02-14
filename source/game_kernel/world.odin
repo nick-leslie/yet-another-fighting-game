@@ -10,6 +10,7 @@ CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
 CAMERA_TARGET   :: Vec3 {0,25,0}
 Vec3 :: [3]f32
 Vec2 :: [2]f32
+Vec264 :: [2]f64
 Vec4 :: [4]f32
 
 Quat :: quaternion128
@@ -90,8 +91,6 @@ world_tic ::proc(w:^World,p1_input:Input,p2_input:Input) {
 	charecter_update(&w.p1, w.p1_input_buffer,w)
 	charecter_update(&w.p2, w.p2_input_buffer,w)
 
-	character_add_hurt_boxes(w.p1, w.physicsManager) // investigate why comenting this out breaks things
-	character_add_hurt_boxes(w.p2, w.physicsManager)
 	character_check_hit(&{&w.p1, &w.p2},&{&w.p1_input_buffer,&w.p2_input_buffer}, w)
 	character_check_hit(&{&w.p2, &w.p1},&{&w.p2_input_buffer,&w.p1_input_buffer}, w)
 }

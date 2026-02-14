@@ -14,9 +14,12 @@ import psy "./physics"
 state_neutral ::proc(char: ^gk.CharecterBase) {
 	using gk
 	context.allocator = vmem.arena_allocator(&char.arena)
+	unfixed_box := psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}}
+	fixed := psy.fix_box(unfixed_box)
+	unfixed_2 := psy.unfix_box(fixed)
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(unfixed_box)},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.move_dir = Vec3{0, 0, 0}
@@ -36,7 +39,7 @@ state_forward ::proc(char: ^gk.CharecterBase) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			if char.p1_side do char.velocity.x  = 	1 * char.move_speed
@@ -59,7 +62,7 @@ state_backward ::proc(char: ^gk.CharecterBase) {
 
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			if char.p1_side do char.velocity.x  = -1 * char.move_speed
@@ -79,7 +82,7 @@ state_jump ::proc(char: ^gk.CharecterBase) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
@@ -90,7 +93,7 @@ state_jump ::proc(char: ^gk.CharecterBase) {
 	}
 	one_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
@@ -101,7 +104,7 @@ state_jump ::proc(char: ^gk.CharecterBase) {
 	}
 	two_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 		},
@@ -119,7 +122,7 @@ state_jump_forward ::proc(char: ^gk.CharecterBase) {
 
 	zero_frame := gk.Frame(gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
@@ -142,7 +145,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase) {
 	zero_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0.}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
@@ -154,7 +157,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase) {
 	one_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
@@ -166,7 +169,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase) {
 	two_frame := gk.Frame(CharecterBase) {
 		frame_type = gk.FrameType.Active,
 		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 		},
@@ -278,8 +281,10 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	hit_box := Hit_box {
-		position    = Vec3{0, 0, 0},
-		extent      = Vec3{10., 5., 10.},
+        box = psy.fix_box(psy.UnfixedBox{
+            position    = [2]f64{0, 0},
+            extent      = [2]f64{10., 5.},
+        }),
 		hitKnockback = Vec3{-10, 0, 0},
 		blockPushback = Vec3{10,0,0},
 	}
@@ -290,7 +295,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 		frames    = {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -298,7 +303,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -306,7 +311,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -314,7 +319,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -322,7 +327,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 				},
@@ -331,7 +336,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -339,7 +344,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -347,7 +352,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -355,7 +360,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -363,7 +368,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = gk.free_cancel, // todo change me
@@ -416,7 +421,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 		frames    = {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					char.velocity = {}
@@ -426,7 +431,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -434,7 +439,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -442,7 +447,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -450,7 +455,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			Frame(gk.CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 				},
@@ -459,7 +464,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -467,7 +472,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Startup,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -475,7 +480,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Active,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					log.debug("spawn fireball")
@@ -487,7 +492,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 					log.debug("gaming2")
@@ -497,7 +502,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -505,7 +510,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -513,7 +518,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -521,7 +526,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -529,7 +534,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -537,7 +542,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -545,7 +550,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -553,7 +558,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -561,7 +566,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -569,7 +574,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -577,7 +582,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -585,7 +590,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -593,7 +598,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -601,7 +606,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -609,7 +614,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -617,7 +622,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -625,7 +630,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 				check_exit = no_cancel, // todo change me
@@ -633,7 +638,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 			gk.Frame(CharecterBase) {
 				frame_type = gk.FrameType.Recovery,
 				//I think inline allocations of dynamics is causing leaks
-				hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 10.}}},
+				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 				    log.debug("bruh fuck")
@@ -708,8 +713,10 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 				blockstun = 64,
 				hit_boxes = {
 					gk.Hit_box {
-						position    = Vec3{0, 0, 0},
-						extent      = Vec3{10., 5., 10.},
+					    box = psy.fix_box(psy.UnfixedBox{
+							position    = [2]f64{0, 0},
+							extent      = [2]f64{10., 5.},
+						}),
 						hitKnockback = Vec3{-10, 0, 0},
 						blockPushback = Vec3{10,0,0},
 					},
@@ -719,7 +726,7 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 						frame_type = gk.FrameType.Recovery,
 						//I think inline allocations of dynamics is causing leaks
 						hurtbox_list = {
-							gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 5., 5.}},
+							psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 5.}}),
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
@@ -768,7 +775,7 @@ state_block_stun ::proc(char: ^gk.CharecterBase) {
 		name="blockstun",
 		frames = {Frame(gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
-			hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
+			hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
 			check_exit = exit_block_stun, // todo change me
@@ -787,7 +794,7 @@ state_hit_stun ::proc(char: ^gk.CharecterBase) {
 		name="hitstun",
 		frames = {Frame(gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
-			hurtbox_list = {gk.Hurt_box{position = Vec3{0, 0, 0}, extent = Vec3{5., 10., 0.}}},
+			hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 			hitbox_list = {},
 			on_frame = proc(char: ^gk.CharecterBase,w:^gk.World) {},
 			check_exit = exit_hit_stun, // todo change me

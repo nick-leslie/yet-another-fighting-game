@@ -107,27 +107,17 @@ entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastRe
 	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
 	entity_state := entity.states[entity.current_state]
 	// entity_frame := entity_state.frames[entity.current_frame]
-	_, frame_self := charecter_get_current_state_frame(self^)
+	// _, frame_self := charecter_get_current_state_frame(self^)
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
-	for &hurt_box in frame_self.hurtbox_list {
-		id := jolt.Body_GetID(hurt_box.body)
-		if id == result.bodyID2 do return
-	}
 
-	if hit_ctx.world.stage.floor_id == result.bodyID2 do return // use layers to filter
 
-	self_id := jolt.CharacterVirtual_GetInnerBodyID(self.physics_character)
-	other_id := jolt.CharacterVirtual_GetInnerBodyID(other.physics_character)
-	if self_id == result.bodyID2 do return
-	if other_id == result.bodyID2 do return
 
 	side_mod: f32 = 1.
 	if other.p1_side == false do side_mod = -1.
 
 	for &hurt_box in frameOther.hurtbox_list {
-		id := jolt.Body_GetID(hurt_box.body)
-		if id == result.bodyID2 {
+		if psy.check_box_box_collision(hit_ctx.hitbox.box,hurt_box){
 			// log.debug(hurt_box)
 			block := charecter_check_block(other,other_buffer^)
 			//todo dont make a hurt box apply more than once durring a moves duration

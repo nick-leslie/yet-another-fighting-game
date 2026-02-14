@@ -58,6 +58,7 @@ CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
 CAMERA_TARGET   :: Vec3 {0,25,0}
 Vec3 :: [3]f32
 Vec2 :: [2]f32
+Vec264 :: [2]f64
 Vec4 :: [4]f32
 
 Quat :: quaternion128
