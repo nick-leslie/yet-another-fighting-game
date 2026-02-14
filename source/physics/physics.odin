@@ -7,7 +7,6 @@ Vec2Fixed ::  [2]Fixed12_4
 Vec3Fixed ::  [3]Fixed12_4
 
 // Fixed16_16
-//todo make me a generic
 // todo add a where to force it to be an int
 RiggedBody :: struct($T:typeid) {
 	using position:    [2]T,
@@ -20,11 +19,20 @@ Box :: struct {
 	using position:   Vec2Fixed,
 	extent:           Vec2Fixed,
 }
+// general
 
-unfix_body :: proc(body:^RiggedBody(Fixed12_4)) {
+
+// unfix body should only be used for rendering and should not be used for game play
+unfix_body :: proc(body:^RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 	//todo convert the body out of float
+	return RiggedBody(f64) {
+		position = {fixed.to_f64(body.position.x),fixed.to_f64(body.position.y)},
+		velocity = {fixed.to_f64(body.velocity.x),fixed.to_f64(body.velocity.y)},
+		prev_position = {fixed.to_f64(body.prev_position.x),fixed.to_f64(body.prev_position.y)},
+		prev_velocity = {fixed.to_f64(body.prev_velocity.x),fixed.to_f64(body.prev_velocity.y)},
+	}
 }
-
+// physics
 move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
 	body.position = Vec2Fixed {
 		fixed.add(body.position.x,body.velocity.x),
@@ -33,7 +41,20 @@ move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
 	return body
 }
 
-check_box_collision :: proc(a:Box,b:Box) -> bool {
+add_float_vec_to_vel:: proc (body:^RiggedBody(Fixed12_4),val:[2]f64) -> ^RiggedBody(Fixed12_4) {
+	val_fixed := [2]Fixed12_4 {}
+	fixed.init_from_f64(&val_fixed.x,val.y)
+	fixed.init_from_f64(&val_fixed.x,val.y)
+	body.position = Vec2Fixed {
+		fixed.add(body.velocity.x,val_fixed.x),
+		fixed.add(body.velocity.y,val_fixed.y)
+	}
+	return body
+}
+
+// collisions
+
+check_box_box_collision :: proc(a:Box,b:Box) -> bool {
 	two_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&two_fixed,2.0)
 	a_half_width := fixed.div(a.extent.x,two_fixed)
@@ -41,9 +62,69 @@ check_box_collision :: proc(a:Box,b:Box) -> bool {
 	b_half_width := fixed.div(b.extent.x,two_fixed)
 	b_half_height := fixed.div(b.extent.y,two_fixed)
 	return (
-	 fixed.add(a.x, a_half_width).i >= b.x.i &&
-	 a.x.i <= fixed.add(b.x, b_half_width).i &&
-	fixed.add(a.y, a_half_height).i >= b.y.i &&
-	a.y.i <= fixed.add(b.y,b_half_height).i
+		fixed.add(a.x, a_half_width).i >= b.x.i &&
+		a.x.i <= fixed.add(b.x, b_half_width).i &&
+		fixed.add(a.y, a_half_height).i >= b.y.i &&
+		a.y.i <= fixed.add(b.y,b_half_height).i
 	)
+}
+check_box_plane_x_collision :: proc(box:Box, plane:[4]Fixed12_4) -> bool {
+	two_fixed := Fixed12_4 {}
+	fixed.init_from_f64(&two_fixed,2.0)
+	box_half_width := fixed.div(box.extent.x,two_fixed)
+	box_half_height := fixed.div(box.extent.y,two_fixed)
+	//-w -h  t1 * ----- * t2 +w -h
+	//        |       |
+	//        |    p  |
+	//-w +h b1 * ----- * b2 +w +h
+	t1 := [2]Fixed12_4{fixed.sub(box.x,box_half_width),fixed.sub(box.y,box_half_height)}
+	t2 := [2]Fixed12_4{fixed.add(box.x,box_half_width),fixed.sub(box.y,box_half_height)}
+	b1 := [2]Fixed12_4{fixed.sub(box.x,box_half_width),fixed.add(box.y,box_half_height)}
+	b2 := [2]Fixed12_4{fixed.add(box.x,box_half_width),fixed.add(box.y,box_half_height)}
+
+	l := line_line(plane,{t1.x,t1.y,b1.x,b1.y}) // left
+	r := line_line(plane,{t2.x,t2.y,b2.x,b2.y}) // right
+	t := line_line(plane,{t1.x,t1.y,t2.x,t2.y}) // top
+	b := line_line(plane,{b1.x,b1.y,b2.x,b2.y}) // bot
+	return l || r || t|| b // return if we overlap anywere
+}
+
+line_line :: proc(a: [4]Fixed12_4, b: [4]Fixed12_4) -> bool {
+    // a represents line 1: (a.x, a.y) to (a.z, a.w)
+    // b represents line 2: (b.x, b.y) to (b.z, b.w)
+
+    // Calculate denominator
+    denominator := fixed.sub(
+        fixed.mul(fixed.sub(b.w, b.y), fixed.sub(a.z, a.x)),
+        fixed.mul(fixed.sub(b.z, b.x), fixed.sub(a.w, a.y))
+    )
+
+    // Calculate uA
+    uA := fixed.div(
+        fixed.sub(
+            fixed.mul(fixed.sub(b.z, b.x), fixed.sub(a.y, b.y)),
+            fixed.mul(fixed.sub(b.w, b.y), fixed.sub(a.x, b.x))
+        ),
+        denominator
+    )
+
+    // Calculate uB
+    uB := fixed.div(
+        fixed.sub(
+            fixed.mul(fixed.sub(a.z, a.x), fixed.sub(a.y, b.y)),
+            fixed.mul(fixed.sub(a.w, a.y), fixed.sub(a.x, b.x))
+        ),
+        denominator
+    )
+
+    // Check if uA and uB are between 0-1
+    zero_fixed := Fixed12_4 {}
+	fixed.init_from_f64(&zero_fixed,0)
+    one_fixed := Fixed12_4 {}
+	fixed.init_from_f64(&one_fixed,1)
+
+    return uA.i >= zero_fixed.i &&
+    uA.i <= one_fixed.i &&
+    uB.i >= zero_fixed.i &&
+    uB.i <= one_fixed.i
 }
