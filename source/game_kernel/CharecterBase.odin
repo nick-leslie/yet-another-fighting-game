@@ -1,35 +1,31 @@
 package game_kernel
-import "../../libs/jolt"
-import "base:runtime"
 import "core:log"
-import "core:math"
 import vmem "core:mem/virtual"
 import psy "../physics"
+import fixed "core:math/fixed"
+
 // this is just a type alieas so I can define it in multiple places
 
 
-CHARACTER_CAPSULE_HALF_HEIGHT: f32 : 2
-CHARACTER_CAPSULE_RADIUS: f32 : 1
+CHARACTER_CAPSULE_HALF_HEIGHT: f64 : 2
+CHARACTER_CAPSULE_RADIUS: f64 : 1
 
 HIT_BOX_MAX :: 64 // we may want to change this
 
 //rename to charecter base
 CharecterBase :: struct {
-	physics_character: ^jolt.CharacterVirtual, // should we sperate
-	arena:   vmem.Arena,
+	arena:             vmem.Arena,
 	health: 		   u32,
 	//do I want to add an arena here
-	using position:    Vec3,
-	velocity:          Vec3,
-	prev_position:     Vec3,
-	prev_velocity:	   Vec3,
+	body:              psy.FixedBody,
+	collision_box:     psy.FixedBox,
 	move_dir:          Vec3,
 	jump_requested:    bool,
 	in_air:            bool,
-	jump_height:       f32,
-	move_speed:        f32,
-	air_move_speed:    f32,
-	air_drag:          f32,
+	jump_height:       f64,
+	move_speed:        f64,
+	air_move_speed:    f64,
+	air_drag:          f64,
 	p1_side:           bool,
 	//this breaks compiling
 	states:            [dynamic]State(CharecterBase), // should this be state
@@ -57,90 +53,11 @@ initilize_charecter_memory :: proc(char: ^CharecterBase) {
 }
 
 setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
-	setup_charecter_collison(char, pm)
 	for &entity in char.entity_pool {
 		log.debug("setting up enitty")
 		//
 		setup_entity(&entity,char,pm^)
 	}
-}
-
-
-setup_charecter_collison :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
-	// capsule shape with origin at the bottom
-	capsule_shape := jolt.RotatedTranslatedShape_Create(
-		position = &{0, CHARACTER_CAPSULE_HALF_HEIGHT, 0},
-		rotation = &QUAT_IDENTITY,
-		// todo we can change the shape to be what ever we want
-		shape = auto_cast jolt.CapsuleShape_Create(
-			CHARACTER_CAPSULE_HALF_HEIGHT,
-			CHARACTER_CAPSULE_RADIUS,
-		),
-	)
-
-	settings: jolt.CharacterVirtualSettings; jolt.CharacterVirtualSettings_Init(&settings)
-	settings.base.shape = auto_cast capsule_shape
-	settings.innerBodyShape = auto_cast capsule_shape // "inner shape" that actually participates in physics (e.g. reacts to raycast and stuff)
-
-	character := jolt.CharacterVirtual_Create(
-		&settings,
-		&char.position,
-		&QUAT_IDENTITY,
-		0,
-		pm.physicsSystem,
-	)
-	//todo pass in context
-	// use static var so the pointers survive
-	@(static) listener_procs: jolt.CharacterContactListener_Procs
-	listener_procs = {
-		OnContactAdded = proc "c" (
-			context_ptr: rawptr,
-			character: ^jolt.CharacterVirtual,
-			other_body_id: jolt.BodyID,
-			_: jolt.SubShapeID,
-			contact_point: ^Vec3,
-			contact_normal: ^Vec3,
-			contact_settings: ^jolt.CharacterContactSettings,
-		) {
-			//
-			// if other_body_id == w.stage.floor_id do return
-			// context = (cast(^runtime.Context)context_ptr)^
-
-			// log.debugf("Contact added: %v", other_body_id)
-		},
-		OnContactPersisted = proc "c" (
-			context_ptr: rawptr,
-			character: ^jolt.CharacterVirtual,
-			other_body_id: jolt.BodyID,
-			_: jolt.SubShapeID,
-			contact_point: ^Vec3,
-			contact_normal: ^Vec3,
-			contact_settings: ^jolt.CharacterContactSettings,
-		) {
-			// if other_body_id == w.stage.floor_id do return
-
-			// context = (cast(^runtime.Context)context_ptr)^
-
-			// log.debugf("Contact persisted: %v", other_body_id)
-		},
-		OnContactRemoved = proc "c" (
-			context_ptr: rawptr,
-			character: ^jolt.CharacterVirtual,
-			other_body_id: jolt.BodyID,
-			_: jolt.SubShapeID,
-		) {
-			// if other_body_id == w.stage.floor_id do return
-
-			// context = (cast(^runtime.Context)context_ptr)^
-
-			// log.debugf("Contact removed: %v", other_body_id)
-		},
-	}
-	current_context := runtime.default_context()
-	listener := jolt.CharacterContactListener_Create(&current_context)
-	jolt.CharacterContactListener_SetProcs(&listener_procs)
-	jolt.CharacterVirtual_SetListener(character, listener)
-	char.physics_character = character
 }
 
 
@@ -236,7 +153,7 @@ HitBoxCtx :: struct($T:typeid) {
 	hitbox_index: int,
 	hitbox:       ^Hit_box,
 	world: 		  ^World,
-	self:^T,
+	self_state:State(T),
 }
 //bruh this shit about to get funky
 character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr, w:^World) {
@@ -245,7 +162,7 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 		//todo make me a function once we unify
 		hit_box := state.hit_boxes[hitbox_index]
 		hitbox_context := HitBoxCtx(CharecterBase) {
-			self = characters[0],
+			self_state = state,
 			charecters   = characters,
 			hitbox       = &hit_box,
 			hitbox_index = hitbox_index,
@@ -253,7 +170,7 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 			input_buffers = input_buffers,
 			world 	   	 = w,
 		}
-		charecter_on_hit_other(hitbox_context)
+		check_hit(hitbox_context)
 	}
 	// should we make this a function in entity
 	// for &entity in characters[0].entity_pool {
@@ -266,59 +183,48 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 }
 
 
-charecter_on_hit_other ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
-	context = g_context // todo fix me
+check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 	self := CharPtrArr(hit_ctx.charecters)[0]
 	other := CharPtrArr(hit_ctx.charecters)[1]
 
 	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
 	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
-	self_state, _ := charecter_get_current_state_frame(self^)
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
 
 
-	side_mod: f32 = 1.
+	side_mod: f64 = 1.
 	if other.p1_side == false do side_mod = -1.
 
 
    	for &hurt_box in frameOther.hurtbox_list {
-        if psy.check_box_box_collision(hurt_box,hit_ctx.hitbox.box) == false{
+    col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
+        log.debug(col_check_res)
+        if col_check_res == false{
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
+		knockback := hit_ctx.hitbox.blockKnockback
+		knockback.x *= side_mod
+		pushback := hit_ctx.hitbox.blockPushback
+		pushback.x *= side_mod
+		psy.add_float_vec2_to_vel(&other.body,knockback)
+		psy.add_float_vec2_to_vel(&self.body,pushback)
+		//this sets it so we dont hit with the same hitbox for multiple frames
+		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
-    // hit
-			knockback := hit_ctx.hitbox.hitKnockback
-			knockback.x *= side_mod
-			pushback := hit_ctx.hitbox.hitPushback
-			pushback.x *= side_mod
-			other.velocity = knockback
-			self.velocity += pushback
-
-			//this sets it so we dont hit with the same hitbox for multiple frames
-			hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-
+            // hit
 			//todo set self current velocity
-			other.hit_stun_frames = self_state.hitstun
+			other.hit_stun_frames = hit_ctx.self_state.hitstun
 			other.block_stun_frames=0
 			hit_ctx.world.combo_counter += 1
 			//set in hit_stun
-			other.health-= self_state.damage
+			other.health-= hit_ctx.self_state.damage
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
-			knockback := hit_ctx.hitbox.blockKnockback
-			knockback.x *= side_mod
-			pushback := hit_ctx.hitbox.blockPushback
-			pushback.x *= side_mod
-			other.velocity = knockback
-			self.velocity += pushback
-			//this sets it so we dont hit with the same hitbox for multiple frames
-			hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-			other.block_stun_frames = self_state.blockstun
-
+			other.block_stun_frames = hit_ctx.self_state.blockstun
 			other.hit_stun_index=0
 		}
         //check if blocking and set to block or hit_stun
@@ -343,53 +249,42 @@ charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:InputBuffer
 
 //todo fully move the velocity control to the moves
 charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
-	character.prev_position = character.position
-	character.prev_velocity = character.velocity
+	character.body.prev_position = character.body.position
+	character.body.prev_velocity = character.body.velocity
 	jump_pressed := character.jump_requested
 	if character.in_air && jump_pressed {
 		jump_pressed = false // there is a better way to do this
 	}
-
 	// Add gravity
-	gravity: Vec3; jolt.PhysicsSystem_GetGravity(w.physicsManager.physicsSystem, &gravity)
-	character.velocity += gravity * FIXED_STEP
+	if psy.check_body_static_collsion(character.collision_box,character.body,w.stage.floor) {
+	    // resolve collisions
+		character.body.position.y = fixed.add(w.stage.floor.position.y,psy.f64_to_fixed(CHARACTER_CAPSULE_HALF_HEIGHT))
+		character.body.velocity.y = psy.Fixed12_4 {}
+	} else {
+		// gravity := psy.f64_to_fixed(-.5) // todo change me
+	    //character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
+	}
 	// log.debug(character.velocity)
 
-	if jolt.CharacterBase_GetGroundState(auto_cast character.physics_character) == .OnGround {
-		character.velocity.y=0
-	}
 
 	// new_velocity += character.addional_velocity
 	// set the velocity to the character
-	jolt.CharacterVirtual_SetLinearVelocity(character.physics_character, &character.velocity)
+	log.debug(character.move_dir)
+	log.debug(psy.unfix_body(character.body))
+	psy.move_by_vel(&character.body) // this moves by vel_tmp
+	log.debug(psy.unfix_body(character.body))
 
-	extended_settings := jolt.ExtendedUpdateSettings {
-		stickToFloorStepDown             = {0, -0.5, 0},
-		walkStairsStepUp                 = {0, 0.4, 0},
-		walkStairsMinStepForward         = 0.02,
-		walkStairsStepForwardTest        = 0.15,
-		walkStairsCosAngleForwardContact = math.cos(math.to_radians_f32(75.0)),
-		walkStairsStepDownExtra          = {},
-	}
-	// update the character physics (btw there's also CharacterVirtual_ExtendedUpdate with stairs support)
-	jolt.CharacterVirtual_ExtendedUpdate(
-		character.physics_character,
-		FIXED_STEP,
-		&extended_settings,
-		PHYS_LAYER_MOVING,
-		w.physicsManager.physicsSystem,
-		nil,
-		nil,
-	)
+	// resolve floor wall and player colisions
 
 	// read the new position into our structure
-	jolt.CharacterVirtual_GetPosition(character.physics_character, &character.position)
-	jolt.CharacterVirtual_GetLinearVelocity(character.physics_character, &character.velocity)
+	//todo all this is gonna get removed
+
 	for &entity in character.entity_pool {
 		if entity.active {
 			entity_physics_update(&entity,character,w)
 		}
 	}
+	character.body.velocity = psy.Fixed12_4{}
 }
 
 

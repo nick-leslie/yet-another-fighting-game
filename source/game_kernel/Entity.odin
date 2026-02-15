@@ -1,7 +1,6 @@
 package game_kernel
 
 import "core:log"
-import "../../libs/jolt"
 import psy "../physics"
 
 /*
@@ -94,70 +93,51 @@ deactivate_entity :: proc(entity:^Entity,character:^CharecterBase,world:^World) 
 
 
 
-// is this needed
-entity_on_hit_other ::  proc "c" (hit_ctx_ptr: rawptr, result: ^jolt.ShapeCastResult) {
-	context = g_context // todo fix me
-	hit_ctx: ^HitBoxCtx(Entity) = auto_cast (hit_ctx_ptr) //todo remove auto cast
-	entity := hit_ctx.self
-
+//todo this is realy stinky and I dont like this get rid of it
+check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity)) {
 	self := CharPtrArr(hit_ctx.charecters)[0]
 	other := CharPtrArr(hit_ctx.charecters)[1]
 
 	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
 	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
-	entity_state := entity.states[entity.current_state]
-	// entity_frame := entity_state.frames[entity.current_frame]
-	// _, frame_self := charecter_get_current_state_frame(self^)
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
 
 
-	side_mod: f32 = 1.
+	side_mod: f64 = 1.
 	if other.p1_side == false do side_mod = -1.
 
-	for &hurt_box in frameOther.hurtbox_list {
-		if psy.check_box_box_collision(hit_ctx.hitbox.box,hurt_box){
-			// log.debug(hurt_box)
-			block := charecter_check_block(other,other_buffer^)
-			//todo dont make a hurt box apply more than once durring a moves duration
-			//todo fix me
-			if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
-				knockback := hit_ctx.hitbox.hitKnockback
-				knockback.x *= side_mod
-				pushback := hit_ctx.hitbox.hitPushback
-				pushback.x *= side_mod
-				other.velocity = knockback
-				self.velocity += pushback
 
-				//this sets it so we dont hit with the same hitbox for multiple frames
-				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
+   	for &hurt_box in frameOther.hurtbox_list {
+    col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
+        log.debug(col_check_res)
+        if col_check_res == false{
+            continue // skip to the next hurt box
+        }
+        block := charecter_check_block(other,other_buffer^)
+		knockback := hit_ctx.hitbox.blockKnockback
+		knockback.x *= side_mod
+		pushback := hit_ctx.hitbox.blockPushback
+		pushback.x *= side_mod
+		psy.add_float_vec2_to_vel(&other.body,knockback)
+		psy.add_float_vec2_to_vel(&self.body,pushback)
+		//this sets it so we dont hit with the same hitbox for multiple frames
+		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
-				//todo set self current velocity
-				other.hit_stun_frames = entity_state.hitstun
-				other.block_stun_frames=0
-				hit_ctx.world.combo_counter += 1
-				//set in hit_stun
-				other.health -= entity_state.damage
-				log.debug("hit other")
-				entity.on_hit(entity,hit_ctx^)
-			} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
-				// log.debug("blocking")
-				knockback := hit_ctx.hitbox.blockKnockback
-				knockback.x *= side_mod
-				pushback := hit_ctx.hitbox.blockPushback
-				pushback.x *= side_mod
-				other.velocity = knockback
-				self.velocity += pushback
-				//this sets it so we dont hit with the same hitbox for multiple frames
-				hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-				other.block_stun_frames = entity_state.blockstun
-
-				other.hit_stun_index=0
-
-				entity.on_block(entity,hit_ctx^)
-			}
-			//check if blocking and set to block or hit_stun
+        if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
+            // hit
+			//todo set self current velocity
+			other.hit_stun_frames = hit_ctx.self_state.hitstun
+			other.block_stun_frames=0
+			hit_ctx.world.combo_counter += 1
+			//set in hit_stun
+			other.health-= hit_ctx.self_state.damage
+		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
+            // block
+			other.block_stun_frames = hit_ctx.self_state.blockstun
+			other.hit_stun_index=0
 		}
-	}
+        //check if blocking and set to block or hit_stun
+    }
 }

@@ -24,7 +24,13 @@ state_neutral ::proc(char: ^gk.CharecterBase) {
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.move_dir = Vec3{0, 0, 0}
 			//todo if should we check if grounded?
-			char.velocity = Vec3{0, char.velocity.y, 0}
+			// we are going to have to change this
+			// char.body.velocity = psy.float_vec3_to_fixed(
+			//     [3]f64{
+			// 		0,
+			// 		 psy.fixed_to_f64(p char.body.velocity.y),
+			// 		0,
+			// 	})
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -42,8 +48,8 @@ state_forward ::proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
-			if char.p1_side do char.velocity.x  = 	1 * char.move_speed
-			if !char.p1_side do char.velocity.x =  -1 * char.move_speed
+			if char.p1_side do char.body.velocity.x = psy.f64_to_fixed(1 * char.move_speed)
+			if !char.p1_side do char.body.velocity.x = psy.f64_to_fixed(-1 * char.move_speed)
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -65,8 +71,8 @@ state_backward ::proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
-			if char.p1_side do char.velocity.x  = -1 * char.move_speed
-			if !char.p1_side do char.velocity.x =  1 * char.move_speed
+    		if char.p1_side do char.body.velocity.x = psy.f64_to_fixed(-1 * char.move_speed)
+    		if !char.p1_side do char.body.velocity.x = psy.f64_to_fixed(1 * char.move_speed)
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -126,8 +132,8 @@ state_jump_forward ::proc(char: ^gk.CharecterBase) {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
 			char.jump_requested = true
-			if char.p1_side do char.move_dir = Vec3{1, 1, 0}
-			if !char.p1_side do char.move_dir = Vec3{-1, 1, 0}
+			if char.p1_side do char.move_dir = Vec364{1, 1, 0}
+			if !char.p1_side do char.move_dir = Vec364{-1, 1, 0}
 		},
 		check_exit = gk.jump_state_cancel, // todo change me
 	}
@@ -285,8 +291,8 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
             position    = [2]f64{0, 0},
             extent      = [2]f64{10., 5.},
         }),
-		hitKnockback = Vec3{-10, 0, 0},
-		blockPushback = Vec3{10,0,0},
+        hitKnockback = Vec264{-10, 0},
+		blockPushback = Vec264{10,0},
 	}
 	move := gk.State(gk.CharecterBase) {
 		name="light attack",
@@ -424,7 +430,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
-					char.velocity = {}
+					char.body.velocity = {}
 				},
 				check_exit = no_cancel, // todo change me
 			},
@@ -717,8 +723,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 							position    = [2]f64{0, 0},
 							extent      = [2]f64{10., 5.},
 						}),
-						hitKnockback = Vec3{-10, 0, 0},
-						blockPushback = Vec3{10,0,0},
+						hitKnockback = Vec264{-10, 0},
+						blockPushback = Vec264{10,0},
 					},
 				},
 				frames= {
@@ -741,7 +747,7 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 			},
 		},
 		activate=  proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){
-			self.body.position = psy.float_vec3_to_fixed([3]f64{f64(charecter.position.x),f64(charecter.position.y),f64(charecter.position.z)})
+			self.body.position = charecter.body.position
 		}, // this runs onetime
 		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
 		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){

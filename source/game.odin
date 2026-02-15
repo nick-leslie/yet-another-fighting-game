@@ -38,6 +38,7 @@ import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
 import "core:prof/spall"
+import psy "./physics"
 
 PIXEL_WINDOW_HEIGHT :: 180
 
@@ -57,6 +58,7 @@ CAMERA_DISTANCE :: 60
 CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
 CAMERA_TARGET   :: Vec3 {0,25,0}
 Vec3 :: [3]f32
+Vec364 :: [3]f64
 Vec2 :: [2]f32
 Vec264 :: [2]f64
 Vec4 :: [4]f32
@@ -200,8 +202,8 @@ game_init :: proc() {
 
 	p1 := gk.CharecterBase {
 		health=100,
-		position = {0, 10, 0},
-		move_speed = 20,
+		body = psy.body_init({0, 10}),
+		move_speed = .5,
 		air_drag = 0.5,
 		air_move_speed = 15,
 		jump_height = 50,
@@ -209,7 +211,7 @@ game_init :: proc() {
 	}
 	p2 := gk.CharecterBase {
 		health=100,
-		position = {10, 10, 0},
+		body = psy.body_init({10, 10}),
 		move_speed = 50,
 		air_drag = 0.5,
 		air_move_speed = 10,

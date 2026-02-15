@@ -1,6 +1,6 @@
 package game
 
-import "core:log"
+// import "core:log"
 import gk "game_kernel"
 import rl  "vendor:raylib"
 import psy "./physics"
@@ -8,20 +8,20 @@ import psy "./physics"
 
 charecter_draw :: proc(character: gk.CharecterBase) {
 	_,frame := gk.charecter_get_current_state_frame(character)
+	char_body := psy.unfix_body(character.body)
+	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
 	rl.DrawCapsule(
-		character.position,
-		character.position + UP * gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,
-		gk.CHARACTER_CAPSULE_RADIUS,
+		pos,
+		pos + UP * f32(gk.CHARACTER_CAPSULE_HALF_HEIGHT) * 2,
+		f32(gk.CHARACTER_CAPSULE_RADIUS),
 		16,
 		8,
 		rl.ORANGE,
 	)
 	for &hurt_box in frame.hurtbox_list {
-	    log.debug(hurt_box)
         unfixed_box := psy.unfix_box(hurt_box)
-        log.debug(unfixed_box)
 		rl.DrawCube(
-			character.position + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
+			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
 			f32(unfixed_box.extent.x),
 			f32(unfixed_box.extent.y),
 			0.0,
@@ -30,7 +30,6 @@ charecter_draw :: proc(character: gk.CharecterBase) {
 	}
 	for &enity in character.entity_pool {
 		if enity.active == true {
-		    log.debug("bruh")
 			enity_state := enity.states[enity.current_state]
 			enity_frame := enity_state.frames[enity.current_frame]
 			entity_body := psy.unfix_body(enity.body)
@@ -63,12 +62,14 @@ charecter_draw :: proc(character: gk.CharecterBase) {
 
 charecter_draw_hit_boxes :: proc(character:gk.CharecterBase) {
 	state,frame := gk.charecter_get_current_state_frame(character)
+	char_body := psy.unfix_body(character.body)
+	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
 	for &hitbox_index in frame.hitbox_list {
 		hitbox := state.hit_boxes[hitbox_index]
         unfixed_box := psy.unfix_box(hitbox.box)
 
 		rl.DrawCube(
-			character.position + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
+			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
 			f32(unfixed_box.extent.x),
 			f32(unfixed_box.extent.y),
 			0.0,

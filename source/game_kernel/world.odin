@@ -3,13 +3,14 @@ package game_kernel
 import "core:log"
 import "../../libs/jolt"
 import "base:runtime"
+import psy "../physics"
 
 
 CAMERA_DISTANCE :: 60
 CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
 CAMERA_TARGET   :: Vec3 {0,25,0}
-Vec3 :: [3]f32
-Vec2 :: [2]f32
+Vec3 :: [3]f64
+Vec2 :: [2]f64
 Vec264 :: [2]f64
 Vec4 :: [4]f32
 
@@ -25,6 +26,7 @@ FLOOR_EXTENT: Vec3={150, 0.05, 10}
 
 Stage :: struct {
 	floor_id:   jolt.BodyID,
+	floor:      psy.FixedBox,
 	left_wall:  jolt.BodyID,
 	right_wall: jolt.BodyID,
 	// todo add wall

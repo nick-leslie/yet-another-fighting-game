@@ -107,7 +107,7 @@ create_physics_mannager :: proc() -> Physics_Manager {
 		physicsSystem                 = physics_system,
 		debugRenderer                 = setup_debug_renderer(),
 	}
-	jolt.PhysicsSystem_SetGravity(physics_system, &Vec3{0, -100, 0})
+	jolt.PhysicsSystem_SetGravity(physics_system, &[3]f32{0, -100, 0})
 	return manager
 }
 
@@ -152,11 +152,11 @@ destroy_physics_mannager :: proc(physicsManager: ^Physics_Manager) {
 
 add_floor :: proc(pm: ^Physics_Manager) -> jolt.BodyID {
 	extent := FLOOR_EXTENT *0.5
-	floor_shape := jolt.BoxShape_Create(&extent, 0)
+	floor_shape := jolt.BoxShape_Create(&{f32(extent.x),f32(extent.y),f32(extent.z)}, 0)
 	defer jolt.Shape_Destroy(auto_cast floor_shape)
 	floor_settings := jolt.BodyCreationSettings_Create3(
 		shape = auto_cast floor_shape,
-		position = &FLOOR_POSITION,
+		position = &{f32(FLOOR_POSITION.x),f32(FLOOR_POSITION.y),f32(FLOOR_POSITION.z)},
 		rotation = &QUAT_IDENTITY,
 		motionType = .Static,
 		objectLayer = PHYS_LAYER_NON_MOVING,

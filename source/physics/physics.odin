@@ -1,7 +1,7 @@
 package physics
 
 import fixed "core:math/fixed"
-import "core:log"
+// import "core:log"
 
 
 Fixed12_4 :: distinct fixed.Fixed(i16,4) // fixed
@@ -27,6 +27,32 @@ Box :: struct($T:typeid) {
 }
 // general
 
+body_init :: proc(pos:[2]f64) -> FixedBody {
+    return FixedBody {
+        position = {f64_to_fixed(pos.x),f64_to_fixed(pos.y)},
+        velocity = {},
+    }
+}
+
+// unfix body should only be used for rendering and should not be used for game play
+fix_body :: proc(body:RiggedBody(f64)) -> RiggedBody(Fixed12_4) {
+    vec_fixed := [8]Fixed12_4 {}
+   	fixed.init_from_f64(&vec_fixed[0],body.position.x)
+    fixed.init_from_f64(&vec_fixed[1],body.position.y)
+   	fixed.init_from_f64(&vec_fixed[2],body.prev_position.x)
+    fixed.init_from_f64(&vec_fixed[3],body.prev_position.y)
+    fixed.init_from_f64(&vec_fixed[4],body.velocity.x)
+    fixed.init_from_f64(&vec_fixed[5],body.velocity.y)
+    fixed.init_from_f64(&vec_fixed[6],body.prev_velocity.x)
+    fixed.init_from_f64(&vec_fixed[7],body.prev_velocity.y)
+    //todo convert the body out of float
+	return RiggedBody(Fixed12_4) {
+		position = {vec_fixed[0],vec_fixed[1]},
+		prev_position = {vec_fixed[2],vec_fixed[3]},
+		velocity = {vec_fixed[4],vec_fixed[5]},
+		prev_velocity = {vec_fixed[6],vec_fixed[7]},
+	}
+}
 
 // unfix body should only be used for rendering and should not be used for game play
 unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
@@ -38,6 +64,7 @@ unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 		prev_velocity = {fixed.to_f64(body.prev_velocity.x),fixed.to_f64(body.prev_velocity.y)},
 	}
 }
+
 unfix_box :: proc(box:Box(Fixed12_4)) -> Box(f64) {
 	//todo convert the body out of float
 	return Box(f64) {
@@ -56,9 +83,24 @@ move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
 
 add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
     vec_fixed := float_vec3_to_fixed(vec)
-	body.position = Vec2Fixed {
+	body.velocity = Vec2Fixed {
 		fixed.add(body.velocity.x,vec_fixed.x),
 		fixed.add(body.velocity.y,vec_fixed.y),
+	}
+	return body
+}
+add_float_vec2_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[2]f64) -> ^RiggedBody(Fixed12_4) {
+    vec_fixed := float_vec2_to_fixed(vec)
+	body.velocity = Vec2Fixed {
+		fixed.add(body.velocity.x,vec_fixed.x),
+		fixed.add(body.velocity.y,vec_fixed.y),
+	}
+	return body
+}
+add_fixed_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]Fixed12_4) -> ^RiggedBody(Fixed12_4) {
+	body.velocity = Vec2Fixed {
+		fixed.add(body.velocity.x,vec.x),
+		fixed.add(body.velocity.y,vec.y),
 	}
 	return body
 }
@@ -66,13 +108,15 @@ add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^Rigged
 // depreacted todo figure out how to do this
 // or figure out how to take any static 2 + len vec
 float_vec3_to_fixed :: proc(vec:[3]f64) -> [2]Fixed12_4 {
-	log.debug(vec)
    	vec_fixed := [2]Fixed12_4 {}
 	fixed.init_from_f64(&vec_fixed.x,vec.x)
 	fixed.init_from_f64(&vec_fixed.y,vec.y)
-	log.debug(vec_fixed)
-	log.debug(fixed.to_f64(vec_fixed.x))
-	log.debug(fixed.to_f64(vec_fixed.y))
+    return vec_fixed
+}
+float_vec2_to_fixed :: proc(vec:[2]f64) -> [2]Fixed12_4 {
+   	vec_fixed := [2]Fixed12_4 {}
+	fixed.init_from_f64(&vec_fixed.x,vec.x)
+	fixed.init_from_f64(&vec_fixed.y,vec.y)
     return vec_fixed
 }
 f64_to_fixed :: proc(val:f64) -> Fixed12_4 {
@@ -80,6 +124,9 @@ f64_to_fixed :: proc(val:f64) -> Fixed12_4 {
    	val_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&val_fixed,val)
 	return val_fixed
+}
+fixed_to_f64 :: proc(val:Fixed12_4) -> f64 {
+    return fixed.to_f64(val)
 }
 
 fix_box :: proc(box:Box(f64)) -> FixedBox {
@@ -94,7 +141,27 @@ fix_box :: proc(box:Box(f64)) -> FixedBox {
 	}
 }
 
+add_fixed_vecs :: proc(vec1:[2]Fixed12_4,vec2:[2]Fixed12_4) -> [2]Fixed12_4 {
+    return [2]Fixed12_4{
+        fixed.add(vec1.x,vec2.x),
+        fixed.add(vec1.y,vec2.y),
+    }
+}
+
 // collisions
+
+check_body_body_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox,b_body:FixedBody) -> bool {
+    a_box := a_box
+    b_box := b_box
+    a_box.position = add_fixed_vecs(a_box.position,a_body.position)
+    b_box.position = add_fixed_vecs(b_box.position,b_body.position)
+    return check_box_box_collision(a_box,b_box)
+}
+check_body_static_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox) -> bool {
+    a_box := a_box
+    a_box.position = add_fixed_vecs(a_box.position,a_body.position)
+    return check_box_box_collision(a_box,b_box)
+}
 
 check_box_box_collision :: proc(a:FixedBox,b:FixedBox) -> bool {
 	two_fixed := Fixed12_4 {}
@@ -110,7 +177,7 @@ check_box_box_collision :: proc(a:FixedBox,b:FixedBox) -> bool {
 		a.y.i <= fixed.add(b.y,b_half_height).i
 	)
 }
-check_box_plane_x_collision :: proc(box:Box(Fixed12_4), plane:[4]Fixed12_4) -> bool {
+check_box_plane_collision :: proc(box:Box(Fixed12_4), plane:[4]Fixed12_4) -> bool {
 	two_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&two_fixed,2.0)
 	box_half_width := fixed.div(box.extent.x,two_fixed)

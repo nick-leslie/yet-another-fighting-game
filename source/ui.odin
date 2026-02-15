@@ -4,6 +4,7 @@ import clay "../libs/clay-odin"
 import gk "game_kernel"
 import "core:fmt"
 import "core:unicode/utf8"
+import psy "./physics"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
     // Do something with the error data.
@@ -121,13 +122,13 @@ charecter_debug_ui :: proc(charecter:gk.CharecterBase) {
 		},
 
 	}) {
-
+	    body := psy.unfix_body(charecter.body)
 		clay.TextDynamic(
 			fmt.tprintfln("Health:%d",charecter.health),
 			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
 		)
 		clay.TextDynamic(
-			fmt.tprintfln("Pos:%v",charecter.velocity),
+			fmt.tprintfln("Pos:%v, Vel:%v",body.position,body.velocity),
 			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255},wrapMode=.None}),
 		)
 		state,_ := gk.charecter_get_current_state_frame(charecter)
