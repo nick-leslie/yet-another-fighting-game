@@ -203,6 +203,7 @@ game_init :: proc() {
 	p1 := gk.CharecterBase {
 		health=100,
 		body = psy.body_init({0, 10}),
+		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
 		move_speed = .5,
 		air_drag = 0.5,
 		air_move_speed = 15,
@@ -212,6 +213,7 @@ game_init :: proc() {
 	p2 := gk.CharecterBase {
 		health=100,
 		body = psy.body_init({10, 10}),
+		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
 		move_speed = 50,
 		air_drag = 0.5,
 		air_move_speed = 10,

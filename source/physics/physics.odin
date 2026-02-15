@@ -1,10 +1,10 @@
 package physics
 
 import fixed "core:math/fixed"
-// import "core:log"
+import "core:log"
 
 
-Fixed12_4 :: distinct fixed.Fixed(i16,4) // fixed
+Fixed12_4 :: distinct fixed.Fixed(i16,6) // fixed
 Vec2Fixed ::  [2]Fixed12_4
 Vec3Fixed ::  [3]Fixed12_4
 
@@ -31,6 +31,13 @@ body_init :: proc(pos:[2]f64) -> FixedBody {
     return FixedBody {
         position = {f64_to_fixed(pos.x),f64_to_fixed(pos.y)},
         velocity = {},
+    }
+}
+
+box_init :: proc(extent:[2]f64) -> FixedBox {
+    return FixedBox {
+        position = {},
+        extent = {f64_to_fixed(extent.x),f64_to_fixed(extent.y)},
     }
 }
 
@@ -79,6 +86,12 @@ move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
 		fixed.add(body.position.y,body.velocity.y),
 	}
 	return body
+}
+
+set_box_by_body :: proc(box:FixedBox,body:FixedBody) -> FixedBox {
+    box := box
+    box.position = add_fixed_vecs(box.position,body.position)
+    return box
 }
 
 add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
@@ -154,7 +167,9 @@ check_body_body_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox,
     a_box := a_box
     b_box := b_box
     a_box.position = add_fixed_vecs(a_box.position,a_body.position)
+    log.debug(unfix_box(a_box))
     b_box.position = add_fixed_vecs(b_box.position,b_body.position)
+    log.debug(unfix_box(b_box))
     return check_box_box_collision(a_box,b_box)
 }
 check_body_static_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox) -> bool {
@@ -163,21 +178,23 @@ check_body_static_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBo
     return check_box_box_collision(a_box,b_box)
 }
 
-check_box_box_collision :: proc(a:FixedBox,b:FixedBox) -> bool {
-	two_fixed := Fixed12_4 {}
-	fixed.init_from_f64(&two_fixed,2.0)
-	a_half_width := fixed.div(a.extent.x,two_fixed)
-	a_half_height := fixed.div(a.extent.y,two_fixed)
-	b_half_width := fixed.div(b.extent.x,two_fixed)
-	b_half_height := fixed.div(b.extent.y,two_fixed)
-	return (
-		fixed.add(a.x, a_half_width).i >= b.x.i &&
-		a.x.i <= fixed.add(b.x, b_half_width).i &&
-		fixed.add(a.y, a_half_height).i >= b.y.i &&
-		a.y.i <= fixed.add(b.y,b_half_height).i
-	)
+check_box_box_collision :: proc(a: FixedBox, b: FixedBox) -> bool {
+    two_fixed := Fixed12_4{}
+    fixed.init_from_f64(&two_fixed, 2.0)
+
+    a_half_width := fixed.div(a.extent.x, two_fixed)
+    a_half_height := fixed.div(a.extent.y, two_fixed)
+    b_half_width := fixed.div(b.extent.x, two_fixed)
+    b_half_height := fixed.div(b.extent.y, two_fixed)
+
+    return (
+        fixed.add(a.x, a_half_width).i >= fixed.sub(b.x, b_half_width).i &&
+        fixed.sub(a.x, a_half_width).i <= fixed.add(b.x, b_half_width).i &&
+        fixed.add(a.y, a_half_height).i >= fixed.sub(b.y, b_half_height).i &&
+        fixed.sub(a.y, a_half_height).i <= fixed.add(b.y, b_half_height).i
+    )
 }
-check_box_plane_collision :: proc(box:Box(Fixed12_4), plane:[4]Fixed12_4) -> bool {
+check_box_line_collision :: proc(box:Box(Fixed12_4), plane:[4]Fixed12_4) -> bool {
 	two_fixed := Fixed12_4 {}
 	fixed.init_from_f64(&two_fixed,2.0)
 	box_half_width := fixed.div(box.extent.x,two_fixed)
@@ -234,4 +251,15 @@ line_line :: proc(a: [4]Fixed12_4, b: [4]Fixed12_4) -> bool {
     uA.i <= one_fixed.i &&
     uB.i >= zero_fixed.i &&
     uB.i <= one_fixed.i
+}
+
+
+check_horizontal_plane_col :: proc(box:Box(Fixed12_4), y:Fixed12_4,check_top:bool) -> bool {
+   	two_fixed := Fixed12_4 {}
+	fixed.init_from_f64(&two_fixed,2.0)
+	half_height := fixed.div(box.extent.y,two_fixed)
+	if check_top == false {
+	    return fixed.sub(box.position.y,half_height).i <= y.i
+	}
+    return fixed.add(box.position.y,half_height).i >= y.i
 }

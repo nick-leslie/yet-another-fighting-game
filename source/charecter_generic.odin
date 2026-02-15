@@ -25,12 +25,7 @@ state_neutral ::proc(char: ^gk.CharecterBase) {
 			char.move_dir = Vec3{0, 0, 0}
 			//todo if should we check if grounded?
 			// we are going to have to change this
-			// char.body.velocity = psy.float_vec3_to_fixed(
-			//     [3]f64{
-			// 		0,
-			// 		 psy.fixed_to_f64(p char.body.velocity.y),
-			// 		0,
-			// 	})
+			char.body.velocity.x = psy.Fixed12_4 {}
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -291,8 +286,8 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
             position    = [2]f64{0, 0},
             extent      = [2]f64{10., 5.},
         }),
-        hitKnockback = Vec264{-10, 0},
-		blockPushback = Vec264{10,0},
+        hitKnockback = Vec264{-1, 0},
+		blockPushback = Vec264{1,0},
 	}
 	move := gk.State(gk.CharecterBase) {
 		name="light attack",
@@ -723,8 +718,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 							position    = [2]f64{0, 0},
 							extent      = [2]f64{10., 5.},
 						}),
-						hitKnockback = Vec264{-10, 0},
-						blockPushback = Vec264{10,0},
+						hitKnockback = Vec264{-0.2, 0},
+						blockPushback = Vec264{0.2,0},
 					},
 				},
 				frames= {

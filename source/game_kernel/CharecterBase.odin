@@ -212,7 +212,6 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 		psy.add_float_vec2_to_vel(&other.body,knockback)
 		psy.add_float_vec2_to_vel(&self.body,pushback)
 		//this sets it so we dont hit with the same hitbox for multiple frames
-		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
             // hit
@@ -227,6 +226,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 			other.block_stun_frames = hit_ctx.self_state.blockstun
 			other.hit_stun_index=0
 		}
+		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
         //check if blocking and set to block or hit_stun
     }
 }
@@ -256,23 +256,23 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 		jump_pressed = false // there is a better way to do this
 	}
 	// Add gravity
-	if psy.check_body_static_collsion(character.collision_box,character.body,w.stage.floor) {
+	gravity := psy.f64_to_fixed(-.02) // todo change me
+    character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
+
+	if psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),w.stage.floor.y,false) {
 	    // resolve collisions
-		character.body.position.y = fixed.add(w.stage.floor.position.y,psy.f64_to_fixed(CHARACTER_CAPSULE_HALF_HEIGHT))
+		// character.body.position.y = fixed.add(w.stage.floor.position.y,psy.f64_to_fixed(CHARACTER_CAPSULE_HALF_HEIGHT))
 		character.body.velocity.y = psy.Fixed12_4 {}
-	} else {
-		// gravity := psy.f64_to_fixed(-.5) // todo change me
-	    //character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
 	}
 	// log.debug(character.velocity)
 
 
 	// new_velocity += character.addional_velocity
 	// set the velocity to the character
-	log.debug(character.move_dir)
-	log.debug(psy.unfix_body(character.body))
+	// log.debug(character.move_dir)
+	// log.debug(psy.unfix_body(character.body))
 	psy.move_by_vel(&character.body) // this moves by vel_tmp
-	log.debug(psy.unfix_body(character.body))
+	// log.debug(psy.unfix_body(character.body))
 
 	// resolve floor wall and player colisions
 
@@ -284,7 +284,6 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 			entity_physics_update(&entity,character,w)
 		}
 	}
-	character.body.velocity = psy.Fixed12_4{}
 }
 
 
