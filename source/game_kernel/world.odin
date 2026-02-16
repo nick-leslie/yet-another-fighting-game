@@ -1,7 +1,6 @@
 package game_kernel
 
 import "core:log"
-import "../../libs/jolt"
 import "base:runtime"
 import psy "../physics"
 
@@ -25,17 +24,13 @@ FLOOR_EXTENT: Vec3={150, 0.05, 10}
 
 
 Stage :: struct {
-	floor_id:   jolt.BodyID,
 	floor:      psy.FixedBox,
-	left_wall:  jolt.BodyID,
-	right_wall: jolt.BodyID,
 	// todo add wall
 }
 
 
 World :: struct {
 	// Physics_Manager should be global and percist between frames take these out
-	physicsManager:    Physics_Manager, // this should be a fully seprate api? that way we can take out the physics if we need
 	stage:             Stage,
 
 	// rollbackable
@@ -56,19 +51,14 @@ world_init :: proc(p1:CharecterBase,p2:CharecterBase) -> World {
 	g_context = context
 	p1 := p1 //todo figure out this
 	p2 := p2
-	pm := create_physics_mannager()
-	floor_id := add_floor(&pm)
 	world := World{}
 	world.p1_input_buffer = {}
 	world.p2_input_buffer = {}
 	world.p1=p1
 	world.p2=p2
-	world.stage= {
-		floor_id=floor_id,
-	}
-	world.physicsManager=pm
-	setup_charecter(&world.p1, &pm)
-	setup_charecter(&world.p2, &pm)
+	world.stage= Stage{}
+	setup_charecter(&world.p1)
+	setup_charecter(&world.p2)
 	return world
 }
 
@@ -103,10 +93,4 @@ world_physics_tic ::proc(w:^World) {
 	charecter_physics_update(&w.p1, w)
 	charecter_physics_update(&w.p2, w)
 	// update normal physics
-	jolt.PhysicsSystem_Update(
-		w.physicsManager.physicsSystem,
-		FIXED_STEP,
-		1,
-		w.physicsManager.jobSystem,
-	)
 }

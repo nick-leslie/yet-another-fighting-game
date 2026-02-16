@@ -52,11 +52,11 @@ initilize_charecter_memory :: proc(char: ^CharecterBase) {
 	char.entity_pool = make([dynamic]Entity,arena_alocator)
 }
 
-setup_charecter :: proc(char: ^CharecterBase, pm: ^Physics_Manager) {
+setup_charecter :: proc(char: ^CharecterBase) {
 	for &entity in char.entity_pool {
 		log.debug("setting up enitty")
 		//
-		setup_entity(&entity,char,pm^)
+		setup_entity(&entity,char)
 	}
 }
 

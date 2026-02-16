@@ -40,7 +40,7 @@ Entity :: struct {
 }
 
 
-setup_entity :: proc(entity:^Entity,charecter:^CharecterBase,pm:Physics_Manager) {
+setup_entity :: proc(entity:^Entity,charecter:^CharecterBase) {
     log.debug("setups")
 	entity.charecter_ptr = charecter
 }
