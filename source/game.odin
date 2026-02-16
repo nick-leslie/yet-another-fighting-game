@@ -204,7 +204,7 @@ game_init :: proc() {
 		health=100,
 		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = .5,
+		move_speed = 7,
 		air_drag = 0.5,
 		air_move_speed = 15,
 		jump_height = 50,

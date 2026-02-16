@@ -706,7 +706,7 @@ pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
 
 entity_fireball ::proc(char: ^gk.CharecterBase) {
 	append(&char.entity_pool,gk.Entity {
-		move_speed = 1.0,
+		move_speed = 4.0,
 		states = {
 			gk.State(gk.Entity) {
 				damage = 10,
@@ -718,8 +718,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 							position    = [2]f64{0, 0},
 							extent      = [2]f64{10., 5.},
 						}),
-						hitKnockback = Vec264{-0.2, 0},
-						blockPushback = Vec264{0.2,0},
+						hitKnockback = Vec264{-5, 0},
+						blockPushback = Vec264{5,0},
 					},
 				},
 				frames= {
@@ -731,8 +731,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
-							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
-							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
+							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
+							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
 						},
 						check_exit = proc(char: ^gk.Entity, cancel_index: int) -> bool {
 							return false

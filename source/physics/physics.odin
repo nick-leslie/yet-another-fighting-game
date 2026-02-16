@@ -81,9 +81,11 @@ unfix_box :: proc(box:Box(Fixed12_4)) -> Box(f64) {
 }
 // physics
 move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
+    delta := f64_to_fixed(.17)
+
 	body.position = Vec2Fixed {
-		fixed.add(body.position.x,body.velocity.x),
-		fixed.add(body.position.y,body.velocity.y),
+		fixed.add(body.position.x,fixed.mul(body.velocity.x,delta)),
+		fixed.add(body.position.y,fixed.mul(body.velocity.y,delta)),
 	}
 	return body
 }
