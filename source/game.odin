@@ -41,7 +41,7 @@ import "core:prof/spall"
 import psy "./physics"
 
 PIXEL_WINDOW_HEIGHT :: 180
-
+MAX_ROLLBACK_WINDOW :: 15
 Game_Memory :: struct {
 	run:            bool,
 	world: 		    gk.World,
@@ -50,6 +50,7 @@ Game_Memory :: struct {
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
+	rollback_state: RollbackStateQueue,
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -155,17 +156,32 @@ draw :: proc() {
 	rl.EndDrawing()
 }
 
-last_world_state:gk.SerlizedWorld
+// last_world_state:gk.SerlizedWorld
 
 @(export)
 game_update :: proc() {
     // todo go back 7 and resimulate in debug zzzz
     //todo make this a queue
-    gk.deserlize_world(last_world_state,&g.world)
-	update()
-	physics_update()
-    last_world_state = gk.serlize_world(g.world)
-
+    potental_last_world_state := get_last_state(&g.rollback_state)
+    // last_world_state := potental_last_world_state.? or_return
+    if last_world_state, ok := potental_last_world_state.?; ok {
+        gk.deserlize_world(last_world_state.world_state,&g.world)
+        if rl.IsKeyPressed(.ESCAPE) {
+    		g.run = false
+    	}
+    	p1_input := poll_charecter_input(g.p1_controls,true)
+    	p2_input := gk.Input {
+    		dir = gk.Direction.Neutral,
+    	}
+    	gk.world_tic(&g.world,p1_input,p2_input)
+    	gk.world_physics_tic(&g.world)
+    	state := RollbackState {
+            p1_input=p1_input,
+            p2_input=p2_input,
+            world_state =  gk.serlize_world(g.world),
+    	}
+    	add_new_state(&g.rollback_state,state)
+    }
 	//
 	draw()
 
@@ -262,6 +278,11 @@ game_init :: proc() {
 		cam = game_camera(),
 		fonts = fonts,
 	}
+	// last_world_state=gk.serlize_world(g.world)
+	state := RollbackState {
+        world_state = gk.serlize_world(g.world),
+   	}
+	add_new_state(&g.rollback_state,state)
 	game_hot_reloaded(g)
 }
 
