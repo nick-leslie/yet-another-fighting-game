@@ -155,11 +155,18 @@ draw :: proc() {
 	rl.EndDrawing()
 }
 
+last_world_state:gk.SerlizedWorld
 
 @(export)
 game_update :: proc() {
+    // todo go back 7 and resimulate in debug zzzz
+    //todo make this a queue
+    gk.deserlize_world(last_world_state,&g.world)
 	update()
 	physics_update()
+    last_world_state = gk.serlize_world(g.world)
+
+	//
 	draw()
 
 	// Everything on tracking allocator is valid until end-of-frame.

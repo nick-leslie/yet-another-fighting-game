@@ -28,6 +28,15 @@ Stage :: struct {
 	// todo add wall
 }
 
+SerlizedWorld :: struct {
+    p1:CharecterSerlizedState,
+    p2:CharecterSerlizedState,
+    hit_stop:u32,
+    combo_counter:int,
+   	p1_input_buffer:   InputBuffer,
+	p2_input_buffer:   InputBuffer,
+    // p1_entitys:[dynamic],
+}
 
 World :: struct {
 	// Physics_Manager should be global and percist between frames take these out
@@ -93,4 +102,27 @@ world_physics_tic ::proc(w:^World) {
 	charecter_physics_update(&w.p1, w)
 	charecter_physics_update(&w.p2, w)
 	// update normal physics
+}
+
+
+serlize_world :: proc (w:World) -> SerlizedWorld {
+    // ,allocator:runtime.Allocator
+    return SerlizedWorld {
+        p1=serlize_charecter(w.p1),
+        p2=serlize_charecter(w.p2),
+        hit_stop=w.hit_stop,
+        combo_counter=w.combo_counter,
+       	p1_input_buffer=w.p1_input_buffer,
+        p2_input_buffer=w.p2_input_buffer,
+    }
+}
+// this is for the rollback deselization to resimulate
+deserlize_world :: proc (serlized:SerlizedWorld,percistent:^World) -> ^World {
+    deserlize_charecter(serlized.p1,&percistent.p1)
+    deserlize_charecter(serlized.p2,&percistent.p2)
+    percistent.p1_input_buffer = serlized.p1_input_buffer
+    percistent.p2_input_buffer = serlized.p2_input_buffer
+    percistent.hit_stop = serlized.hit_stop
+    percistent.combo_counter = serlized.combo_counter
+    return percistent
 }

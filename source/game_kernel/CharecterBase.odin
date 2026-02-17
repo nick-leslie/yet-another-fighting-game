@@ -4,6 +4,7 @@ import vmem "core:mem/virtual"
 import psy "../physics"
 import fixed "core:math/fixed"
 
+
 // this is just a type alieas so I can define it in multiple places
 
 
@@ -12,36 +13,43 @@ CHARACTER_CAPSULE_RADIUS: f64 : 1
 
 HIT_BOX_MAX :: 64 // we may want to change this
 
+CharecterSerlizedState :: struct {
+   	health: 		   u32,
+	body:              psy.FixedBody,
+   	move_dir:          Vec3,
+   	jump_requested:    bool,
+   	in_air:            bool,
+   	jump_height:       f64,
+   	move_speed:        f64,
+   	air_move_speed:    f64,
+   	air_drag:          f64,
+   	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
+   	entity_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of what entitys are active
+   	current_frame:     int,
+    current_state:     int, // this is an index
+    hit_stun_frames:   u32,
+    block_stun_frames: u32,
+    p1_side:           bool,
+   	charecter_flags: bit_field u64 {
+
+	}, // lots of flags for various states.. tuble extc
+}
+
 //rename to charecter base
 CharecterBase :: struct {
 	arena:             vmem.Arena,
-	health: 		   u32,
 	//do I want to add an arena here
-	body:              psy.FixedBody,
+	using serlized_state: CharecterSerlizedState,
 	collision_box:     psy.FixedBox,
-	move_dir:          Vec3,
-	jump_requested:    bool,
-	in_air:            bool,
-	jump_height:       f64,
-	move_speed:        f64,
-	air_move_speed:    f64,
-	air_drag:          f64,
-	p1_side:           bool,
-	//this breaks compiling
 	states:            [dynamic]State(CharecterBase), // should this be state
 	patterns:          [dynamic]Pattern,
-	entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
-	current_frame:     int,
-	current_state:     int, // this is an index
-	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
-	hit_stun_frames:   u32,
 	hit_stun_index:    int, // we may replace this with a constent
-	block_stun_frames: u32,
 	block_stun_index:  int,
-	charecter_flags: bit_field u64 {
-
-	}, // lots of flags for various states.. tuble extc
-
+    entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
+	update:            proc(self:^CharecterBase,world:^World),
+	physcis_update:    proc(self:^CharecterBase,world:^World),
+	on_hit:			   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
+	on_block:		   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
 }
 
 
@@ -290,4 +298,14 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 delete_charecter :: proc(char: ^CharecterBase) {
 	log.debug("delting charecers")
 	vmem.arena_destroy(&char.arena)
+}
+
+
+
+serlize_charecter :: proc(char:CharecterBase) -> CharecterSerlizedState {
+    return char.serlized_state
+}
+deserlize_charecter :: proc(state:CharecterSerlizedState,char:^CharecterBase) {
+    char.serlized_state = state
+    //todo deserlize entity here
 }
