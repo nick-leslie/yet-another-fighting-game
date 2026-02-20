@@ -157,12 +157,38 @@ draw :: proc() {
 }
 
 // last_world_state:gk.SerlizedWorld
+//
 
+debug_rollback :: proc(frames:int) {
+    last_good,go_too :=  start_rollback_n_frames_back(&g.rollback_state,frames)
+    //todo this may be wrong
+    log.debug(go_too)
+    log.debug(g.rollback_state.current_frame)
+    for g.rollback_state.current_frame != go_too {
+          if last_world_state, ok := last_good.?; ok {
+                gk.deserlize_world(last_world_state.world_state,&g.world)
+              	gk.world_tic(&g.world,last_world_state.p1_input,last_world_state.p2_input)
+              	gk.world_physics_tic(&g.world)
+              	state := RollbackState {
+                      p1_input=last_world_state.p1_input,
+                      p2_input=last_world_state.p2_input,
+                      world_state =  gk.serlize_world(g.world),
+              	}
+              	add_new_state(&g.rollback_state,state)
+        }
+        last_good = get_last_state(&g.rollback_state)
+
+    }
+}
+DEBUG_ROLLBACK_FRAMES :: 2
 @(export)
 game_update :: proc() {
+    log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
-    //todo make this a queue
+    log.debug(g.rollback_state.current_frame)
+    debug_rollback(DEBUG_ROLLBACK_FRAMES)
     potental_last_world_state := get_last_state(&g.rollback_state)
+    log.debug(g.rollback_state.current_frame)
     // last_world_state := potental_last_world_state.? or_return
     if last_world_state, ok := potental_last_world_state.?; ok {
         gk.deserlize_world(last_world_state.world_state,&g.world)
@@ -181,6 +207,7 @@ game_update :: proc() {
             world_state =  gk.serlize_world(g.world),
     	}
     	add_new_state(&g.rollback_state,state)
+        log.debug(g.rollback_state.current_frame)
     }
 	//
 	draw()
@@ -279,10 +306,13 @@ game_init :: proc() {
 		fonts = fonts,
 	}
 	// last_world_state=gk.serlize_world(g.world)
-	state := RollbackState {
-        world_state = gk.serlize_world(g.world),
-   	}
-	add_new_state(&g.rollback_state,state)
+	// setup the inital world state
+	for i := 0 ; i < MAX_ROLLBACK_WINDOW; i+=1 {
+    	state := RollbackState {
+            world_state = gk.serlize_world(g.world),
+       	}
+        add_new_state(&g.rollback_state,state)
+	}
 	game_hot_reloaded(g)
 }
 

@@ -1,5 +1,7 @@
 package game
 import gk "game_kernel"
+import "core:log"
+// import "core:log"
 
 
 // TODO ADD A UNIVERSAL AMOUNT OF DELAY
@@ -18,7 +20,6 @@ RollbackStateQueue ::struct {
     buffer:     [MAX_ROLLBACK_WINDOW]Maybe(RollbackState),
     current_frame:int,
     prev_frame:int,
-    rollback_frames:int,
 }
 
 
@@ -28,8 +29,7 @@ add_new_state :: proc(queue:^RollbackStateQueue,state:RollbackState) -> Maybe(Ro
     queue.buffer[queue.current_frame] = state
     queue.prev_frame = queue.current_frame
     queue.current_frame +=1
-    assert(queue.rollback_frames <= len(buffer_backing),"we cant rollback further than the buffer")
-    if queue.current_frame >= queue.rollback_frames-1 {
+    if queue.current_frame >= MAX_ROLLBACK_WINDOW {
         queue.current_frame=0
     }
     return old
@@ -40,8 +40,19 @@ get_last_state :: proc(queue:^RollbackStateQueue) -> Maybe(RollbackState) {
     return queue.buffer[queue.prev_frame]
 }
 
-start_rollback_n_frames_back :: proc(queue:^RollbackStateQueue,last_good:int) -> Maybe(RollbackState) {
-    last_good_frame := queue.buffer[last_good]
-    queue.current_frame = last_good +1
-    return last_good_frame
+start_rollback_n_frames_back :: proc(queue:^RollbackStateQueue,rollback_frame_count:int) -> (Maybe(RollbackState),int) {
+    go_to :=  queue.current_frame
+    queue.current_frame -= rollback_frame_count
+    if  queue.current_frame < 0 {
+         queue.current_frame=MAX_ROLLBACK_WINDOW + queue.current_frame // add in the amoubt past 0
+    }
+    if queue.current_frame != 0 {
+        last_good_frame := queue.buffer[queue.current_frame]
+        log.debug(queue.current_frame)
+        return last_good_frame,go_to
+    } else {
+        last_good_frame := queue.buffer[MAX_ROLLBACK_WINDOW-1]
+        log.debug(MAX_ROLLBACK_WINDOW-1)
+        return last_good_frame,go_to
+    }
 }
