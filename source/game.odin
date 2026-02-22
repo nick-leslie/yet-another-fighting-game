@@ -160,55 +160,60 @@ draw :: proc() {
 //
 
 debug_rollback :: proc(frames:int) {
-    last_good,go_too :=  start_rollback_n_frames_back(&g.rollback_state,frames)
+    pre_rollback := g.rollback_state.current_index
+    last_world_state,go_too :=  rollback_too(&g.rollback_state,g.rollback_state.current_frame-frames)
+    post_rollback := g.rollback_state.current_index
     //todo this may be wrong
-    log.debug(go_too)
-    log.debug(g.rollback_state.current_frame)
+    log.debugf("go_too %d current %d pre rollback %d",
+        go_too,
+        post_rollback,
+        pre_rollback,
+    )
     for g.rollback_state.current_frame != go_too {
-          if last_world_state, ok := last_good.?; ok {
-                gk.deserlize_world(last_world_state.world_state,&g.world)
-              	gk.world_tic(&g.world,last_world_state.p1_input,last_world_state.p2_input)
-              	gk.world_physics_tic(&g.world)
-              	state := RollbackState {
-                      p1_input=last_world_state.p1_input,
-                      p2_input=last_world_state.p2_input,
-                      world_state =  gk.serlize_world(g.world),
-              	}
-              	add_new_state(&g.rollback_state,state)
-        }
-        last_good = get_last_state(&g.rollback_state)
-
+        log.debug("rolling back")
+        gk.deserlize_world(last_world_state.world_state,&g.world)
+       	gk.world_tic(&g.world,last_world_state.p1_input,last_world_state.p2_input)
+       	gk.world_physics_tic(&g.world)
+       	state := RollbackState {
+                p1_input=last_world_state.p1_input,
+                p2_input=last_world_state.p2_input,
+                world_state =  gk.serlize_world(g.world),
+       	}
+       	add_new_state(&g.rollback_state,state)
+        last_world_state = get_current_state(&g.rollback_state)
     }
 }
 DEBUG_ROLLBACK_FRAMES :: 2
 @(export)
 game_update :: proc() {
+    if rl.IsKeyPressed(.ESCAPE) {
+  		g.run = false
+   	}
+    if g.run == false {
+        return
+    }
     log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
-    log.debug(g.rollback_state.current_frame)
+    log.debug(g.rollback_state.current_index)
     debug_rollback(DEBUG_ROLLBACK_FRAMES)
-    potental_last_world_state := get_last_state(&g.rollback_state)
-    log.debug(g.rollback_state.current_frame)
-    // last_world_state := potental_last_world_state.? or_return
-    if last_world_state, ok := potental_last_world_state.?; ok {
-        gk.deserlize_world(last_world_state.world_state,&g.world)
-        if rl.IsKeyPressed(.ESCAPE) {
-    		g.run = false
-    	}
-    	p1_input := poll_charecter_input(g.p1_controls,true)
-    	p2_input := gk.Input {
-    		dir = gk.Direction.Neutral,
-    	}
-    	gk.world_tic(&g.world,p1_input,p2_input)
-    	gk.world_physics_tic(&g.world)
-    	state := RollbackState {
-            p1_input=p1_input,
-            p2_input=p2_input,
-            world_state =  gk.serlize_world(g.world),
-    	}
-    	add_new_state(&g.rollback_state,state)
-        log.debug(g.rollback_state.current_frame)
-    }
+    last_world_state := get_current_state(&g.rollback_state)
+    log.debug(g.rollback_state.current_index)
+    gk.deserlize_world(last_world_state.world_state,&g.world)
+
+   	p1_input := poll_charecter_input(g.p1_controls,true)
+   	p2_input := gk.Input {
+  		dir = gk.Direction.Neutral,
+   	}
+   	gk.world_tic(&g.world,p1_input,p2_input)
+   	gk.world_physics_tic(&g.world)
+   	state := RollbackState {
+        p1_input=p1_input,
+        p2_input=p2_input,
+        world_state =  gk.serlize_world(g.world),
+   	}
+   	add_new_state(&g.rollback_state,state)
+    log.debug(g.rollback_state.current_index)
+
 	//
 	draw()
 
