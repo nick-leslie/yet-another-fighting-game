@@ -159,31 +159,9 @@ draw :: proc() {
 // last_world_state:gk.SerlizedWorld
 //
 
-debug_rollback :: proc(frames:int) {
-    pre_rollback := g.rollback_state.current_index
-    last_world_state,go_too :=  rollback_too(&g.rollback_state,g.rollback_state.current_frame-frames)
-    post_rollback := g.rollback_state.current_index
-    //todo this may be wrong
-    log.debugf("go_too %d current %d pre rollback %d",
-        go_too,
-        post_rollback,
-        pre_rollback,
-    )
-    for g.rollback_state.current_frame != go_too {
-        log.debug("rolling back")
-        gk.deserlize_world(last_world_state.world_state,&g.world)
-       	gk.world_tic(&g.world,last_world_state.p1_input,last_world_state.p2_input)
-       	gk.world_physics_tic(&g.world)
-       	state := RollbackState {
-                p1_input=last_world_state.p1_input,
-                p2_input=last_world_state.p2_input,
-                world_state =  gk.serlize_world(g.world),
-       	}
-       	add_new_state(&g.rollback_state,state)
-        last_world_state = get_current_state(&g.rollback_state)
-    }
-}
-DEBUG_ROLLBACK_FRAMES :: 2
+
+
+DEBUG_ROLLBACK_FRAMES :: 7
 @(export)
 game_update :: proc() {
     if rl.IsKeyPressed(.ESCAPE) {
@@ -195,9 +173,10 @@ game_update :: proc() {
     log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
     log.debug(g.rollback_state.current_index)
+    log.debug(g.rollback_state.current_frame)
     debug_rollback(DEBUG_ROLLBACK_FRAMES)
     last_world_state := get_current_state(&g.rollback_state)
-    log.debug(g.rollback_state.current_index)
+    // log.debug(g.rollback_state.current_index)
     gk.deserlize_world(last_world_state.world_state,&g.world)
 
    	p1_input := poll_charecter_input(g.p1_controls,true)
@@ -212,6 +191,7 @@ game_update :: proc() {
         world_state =  gk.serlize_world(g.world),
    	}
    	add_new_state(&g.rollback_state,state)
+    log.debug(g.rollback_state.current_frame)
     log.debug(g.rollback_state.current_index)
 
 	//
