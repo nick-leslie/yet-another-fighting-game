@@ -1,6 +1,5 @@
 package game
 import gk "game_kernel"
-import "core:log"
 // import "core:log"
 
 
@@ -24,12 +23,12 @@ RollbackStateQueue ::struct {
     current_frame:int,
 }
 
-
+DEBUG_ROLLBACK_FRAMES :: 7
 //icrement current frame
 add_new_state :: proc(queue:^RollbackStateQueue,state:RollbackState) -> RollbackState {
     state := state
     queue.current_frame+=1
-    // state.frame_number = queue.current_frame
+    state.frame_number = queue.current_frame
     queue.current_index = queue.current_frame % (len(queue.buffer)) // rollback windwo
     old := queue.buffer[queue.current_index]
     queue.buffer[queue.current_index] = state
@@ -57,26 +56,17 @@ rollback_too :: proc(queue:^RollbackStateQueue,back_too_frame:int) -> (int) {
 counter:=0
 
 debug_rollback :: proc(frames:int) {
-    pre_rollback_frame := g.rollback_state.current_frame
-    pre_rollback_index := g.rollback_state.current_index
-    go_too :=  rollback_too(&g.rollback_state,g.rollback_state.current_frame-(frames-1))
-    post_rollback_frame := g.rollback_state.current_frame
-    post_rollback_index := g.rollback_state.current_index
-    //todo this may be wrong
-    log.debugf("go_too frame %d current frame %d pre rollback frame %d ",
-        go_too,
-        post_rollback_frame,
-        pre_rollback_frame,
-    )
-    log.debugf("current index %d pre rollback index %d ",
-        post_rollback_index,
-        pre_rollback_index,
-    )
+    go_too :=  rollback_too(&g.rollback_state,g.rollback_state.current_frame-(frames))
+    resimulate_rest(go_too)
+
+}
+
+resimulate_rest :: proc(go_too:int) {
     for g.rollback_state.current_frame != go_too {
         world_state := get_current_state(&g.rollback_state)
-        test := get_next_frame(&g.rollback_state)
-        p1_input := test.p1_input
-        p2_input := test.p2_input
+        next_input := get_next_frame(&g.rollback_state)
+        p1_input := next_input.p1_input
+        p2_input := next_input.p2_input
         gk.deserlize_world(world_state.world_state,&g.world)
        	gk.world_tic(&g.world,p1_input,p2_input)
        	gk.world_physics_tic(&g.world)
@@ -86,21 +76,34 @@ debug_rollback :: proc(frames:int) {
                 p2_input=p2_input,
                 world_state =  serlized_world_state,
        	}
-        log.debug(g.rollback_state.current_index)
        	add_new_state(&g.rollback_state,state)
-        log.debug(g.rollback_state.current_index)
-        log.debug("---")
-    }
-    complete_rollback_index := g.rollback_state.current_index
-    complete_rollback_frame := g.rollback_state.current_frame
-    log.debugf("rollback complete index %d frame:%d",complete_rollback_index,complete_rollback_frame)
-    if counter < 15 {
-        counter+=1
-    } else {
-        // assert(false)
     }
 }
-
-
-// 1 2 3 4 5 6 7 8 9 10
-// ^
+predict_input :: proc() -> gk.Input {
+    return gk.Input {
+  		dir = gk.Direction.Neutral,
+   	}
+}
+resimulate_frame :: proc(frame:int,remote_input:gk.Input,remote_p1:bool) {
+    go_too :=  rollback_too(&g.rollback_state,frame)
+    next_input := get_next_frame(&g.rollback_state)
+    world_state := get_current_state(&g.rollback_state)
+    p1_input := next_input.p1_input
+    p2_input := next_input.p2_input
+    if remote_p1 == true {
+        p1_input = predict_input()
+    } else {
+        p2_input = predict_input()
+    }
+    gk.deserlize_world(world_state.world_state,&g.world)
+   	gk.world_tic(&g.world,p1_input,p2_input)
+   	gk.world_physics_tic(&g.world)
+    serlized_world_state := gk.serlize_world(g.world)
+   	state := RollbackState {
+            p1_input=p1_input,
+            p2_input=p2_input,
+            world_state =  serlized_world_state,
+   	}
+   	add_new_state(&g.rollback_state,state)
+    resimulate_rest(go_too)
+}

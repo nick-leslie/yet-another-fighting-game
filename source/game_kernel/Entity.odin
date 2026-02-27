@@ -52,7 +52,6 @@ activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) 
 	entity.current_state_flags = {} // reset current state flags
 	entity.activate(entity,character,world)
 	entity.active = true
-	log.debug(entity)
 }
 
 entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {

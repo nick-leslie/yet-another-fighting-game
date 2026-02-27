@@ -161,7 +161,7 @@ draw :: proc() {
 
 
 
-DEBUG_ROLLBACK_FRAMES :: 7
+
 @(export)
 game_update :: proc() {
     if rl.IsKeyPressed(.ESCAPE) {
@@ -206,7 +206,7 @@ game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
 	// rl.ToggleFullscreen()
-	// rl.SetWindowPosition(200, 200)
+	// rl.SetWwaindowPosition(200, 200)
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
 }
