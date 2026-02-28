@@ -91,9 +91,9 @@ resimulate_frame :: proc(frame:int,remote_input:gk.Input,remote_p1:bool) {
     p1_input := next_input.p1_input
     p2_input := next_input.p2_input
     if remote_p1 == true {
-        p1_input = predict_input()
+        p1_input = remote_input
     } else {
-        p2_input = predict_input()
+        p2_input = remote_input
     }
     gk.deserlize_world(world_state.world_state,&g.world)
    	gk.world_tic(&g.world,p1_input,p2_input)

@@ -174,10 +174,14 @@ game_update :: proc() {
     // todo go back 7 and resimulate in debug zzzz
     log.debug(g.rollback_state.current_index)
     log.debug(g.rollback_state.current_frame)
-    debug_rollback(DEBUG_ROLLBACK_FRAMES)
-    last_world_state := get_current_state(&g.rollback_state)
+
+    if ODIN_DEBUG == true {
+        debug_rollback(DEBUG_ROLLBACK_FRAMES)
+    }
+
+    // last_world_state := get_current_state(&g.rollback_state)
     // log.debug(g.rollback_state.current_index)
-    gk.deserlize_world(last_world_state.world_state,&g.world)
+    // gk.deserlize_world(last_world_state.world_state,&g.world)
 
    	p1_input := poll_charecter_input(g.p1_controls,true)
    	p2_input := gk.Input {

@@ -1,5 +1,6 @@
 package game
 
+import "core:log"
 import clay "../libs/clay-odin"
 import gk "game_kernel"
 import "core:fmt"
@@ -51,14 +52,17 @@ input_history :: proc(buffer:gk.InputBuffer) {
     		layoutDirection = .LeftToRight,
 		},
 	}) {
-		i:= buffer.input_index-1
+		i := buffer.input_index-1
+		// todo infinite loop fix me its bc of not using mod
 		for i != buffer.input_index {
-	  		if(i < 0) {
-	            i=gk.INPUT_BUFFER_LENGTH-1
-	        }
+	  		i = i %% len(buffer.buffer)
 			input_ui(buffer.buffer[i])
 	        i-=1
+            if i %% len(buffer.buffer) == buffer.input_index {
+                break
+            }
 		}
+		log.debug("done")
 	}
 }
 

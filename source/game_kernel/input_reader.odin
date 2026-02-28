@@ -1,6 +1,7 @@
 #+feature dynamic-literals
 package game_kernel
 
+import "core:log"
 import "core:testing"
 // import "core:log"
 
@@ -52,9 +53,7 @@ InputBuffer ::struct {
 update_input_buffer :: proc(input_buffer:^InputBuffer,input:Input) {
     input_buffer.buffer[input_buffer.input_index] = input
     input_buffer.input_index +=1
-    if input_buffer.input_index >= INPUT_BUFFER_LENGTH-1 {
-        input_buffer.input_index=0
-    }
+    input_buffer.input_index = input_buffer.input_index %% len(input_buffer.buffer)
 }
 // this is still too buggy
 //todo test this becca
@@ -65,11 +64,17 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
     i:= buffer.input_index-1
+    log.debug(i)
+    log.debug(buffer.input_index)
+    log.debug(-1 %% len(buffer.buffer))
     for i != buffer.input_index {
+        // log.debug(i)
         //
-        if(i < 0) {
-            i=INPUT_BUFFER_LENGTH-1
-        }
+        i = i %% len(buffer.buffer)
+        // if(i < 0) {
+        //     i=INPUT_BUFFER_LENGTH-1
+        // }
+        // log.debug(i)
 
         input := buffer.buffer[i]
         // log.info(input)
@@ -91,8 +96,10 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
             }
         }
         i-=1
+        if i %% len(buffer.buffer) == buffer.input_index {
+            break
+        }
     }
-    // log.info(pattern_input_index)
     // find the highest priority move
     highest_priority:= 0
     highest_index :=   0
@@ -109,11 +116,12 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
             highest_index =  i
         }
     }
-    // if highest_index == 1 {
+    // if highest_index == 1 {/
     //     //my guess is this happens when we reset?
     //     log.debug(pattern_list[highest_index].state_index)
     //     assert(false,"random forward state")
     // }
+    log.debug("we out")
     return pattern_list[highest_index].state_index
 }
 
