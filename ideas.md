@@ -1,3 +1,17 @@
+
+## to inplment pre jam
+hit box editor
+rollback top prio
+replays
+replay moment tagging
+replay take over 
+training mode
+local vs
+remote vs
+remaping controls 
+combo scalling
+lobbys
+
 # USE JAVASCRIPT or custom  AS A SCRIPTING LANG FOR CHARECTERS
 # ALLOW USERS TO CREATE CUSTOM MODDED CHARECTERS
 
