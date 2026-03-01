@@ -9,23 +9,25 @@ import psy "../physics"
 	they are then activated and dactivated
 	they have states and frames like a charecter.
 	they also have hooks like a charecter.
-
-
-
 */
-//todo could make a factory
-Entity :: struct {
+
+SerlizedEntityState :: struct {
 	active:			   bool,
 	id: 		   	   int,
 	health: 		   u32,
 	current_state: 	   int,
 	current_frame: 	   int,
 	move_speed:        f32,
-	// physics
-	body:              psy.FixedBody,
 	current_state_flags: struct { // we may want to remove this
 		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	},
+	// physics
+	body:              psy.FixedBody,
+}
+
+//todo could make a factory
+Entity :: struct {
+   	using serlized_state: SerlizedEntityState,
 	charecter_ptr: 	   ^CharecterBase,
 	//not stored for rollback
 	// can we have a compile time amount of states
@@ -139,4 +141,12 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity)) {
 		}
         //check if blocking and set to block or hit_stun
     }
+}
+
+
+serlize_entity :: proc(char:Entity) -> SerlizedEntityState {
+    return char.serlized_state
+}
+deserlize_entity :: proc(state:SerlizedEntityState,entity:^Entity) {
+    entity.serlized_state = state
 }

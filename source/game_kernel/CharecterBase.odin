@@ -1,5 +1,6 @@
 package game_kernel
 import "core:log"
+import "base:runtime"
 import vmem "core:mem/virtual"
 import psy "../physics"
 import fixed "core:math/fixed"
@@ -302,10 +303,18 @@ delete_charecter :: proc(char: ^CharecterBase) {
 
 
 
-serlize_charecter :: proc(char:CharecterBase) -> CharecterSerlizedState {
-    return char.serlized_state
+serlize_charecter :: proc(char:CharecterBase,arena:runtime.Allocator) -> (CharecterSerlizedState,[dynamic]SerlizedEntityState) {
+    entitys := make([dynamic]SerlizedEntityState,len(char.entity_pool))
+    for i := 0 ; i<len(char.entity_pool);i+=1 {
+        append_elem(&entitys,serlize_entity(char.entity_pool[i]))
+    }
+    return char.serlized_state,entitys
 }
-deserlize_charecter :: proc(state:CharecterSerlizedState,char:^CharecterBase) {
+deserlize_charecter :: proc(state:CharecterSerlizedState,entitys_state:[dynamic]SerlizedEntityState,char:^CharecterBase) {
     char.serlized_state = state
+    assert(len(entitys_state) == len(char.entity_pool),"entity pool must match the size of the serlized state")
+    for i := 0 ; i<len(char.entity_pool);i+=1 {
+        deserlize_entity(entitys_state[i],&char.entity_pool[i])
+    }
     //todo deserlize entity here
 }

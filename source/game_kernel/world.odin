@@ -3,6 +3,7 @@ package game_kernel
 import "core:log"
 import "base:runtime"
 import psy "../physics"
+import vmem "core:mem/virtual"
 
 
 CAMERA_DISTANCE :: 60
@@ -29,8 +30,11 @@ Stage :: struct {
 }
 
 SerlizedWorld :: struct {
+    arena:vmem.Arena,
     p1:CharecterSerlizedState,
+    p1_entity_pool:[dynamic]SerlizedEntityState,
     p2:CharecterSerlizedState,
+    p2_entity_pool:[dynamic]SerlizedEntityState,
     hit_stop:u32,
     combo_counter:int,
    	p1_input_buffer:   InputBuffer,
@@ -106,20 +110,22 @@ world_physics_tic ::proc(w:^World) {
 
 
 serlize_world :: proc (w:World) -> SerlizedWorld {
-    // ,allocator:runtime.Allocator
-    return SerlizedWorld {
-        p1=serlize_charecter(w.p1),
-        p2=serlize_charecter(w.p2),
+    serlized_world := SerlizedWorld {
         hit_stop=w.hit_stop,
         combo_counter=w.combo_counter,
        	p1_input_buffer=w.p1_input_buffer,
         p2_input_buffer=w.p2_input_buffer,
     }
+    arena_alloc := vmem.arena_allocator(&serlized_world.arena)
+    serlized_world.p1,serlized_world.p1_entity_pool=serlize_charecter(w.p1,arena_alloc)
+    serlized_world.p2,serlized_world.p2_entity_pool=serlize_charecter(w.p2,arena_alloc)
+    // ,allocator:runtime.Allocator
+    return serlized_world
 }
 // this is for the rollback deselization to resimulate
 deserlize_world :: proc (serlized:SerlizedWorld,percistent:^World) -> ^World {
-    deserlize_charecter(serlized.p1,&percistent.p1)
-    deserlize_charecter(serlized.p2,&percistent.p2)
+    deserlize_charecter(serlized.p1,serlized.p1_entity_pool,&percistent.p1)
+    deserlize_charecter(serlized.p2,serlized.p2_entity_pool,&percistent.p2)
     percistent.p1_input_buffer = serlized.p1_input_buffer
     percistent.p2_input_buffer = serlized.p2_input_buffer
     percistent.hit_stop = serlized.hit_stop
