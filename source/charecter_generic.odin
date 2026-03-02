@@ -731,8 +731,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity,w:^gk.World) {
-							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
-							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
+							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
+							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
 						},
 						check_exit = proc(char: ^gk.Entity, cancel_index: int) -> bool {
 							return false
