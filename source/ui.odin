@@ -1,6 +1,5 @@
 package game
 
-import "core:log"
 import clay "../libs/clay-odin"
 import gk "game_kernel"
 import "core:fmt"
@@ -62,7 +61,6 @@ input_history :: proc(buffer:gk.InputBuffer) {
                 break
             }
 		}
-		log.debug("done")
 	}
 }
 

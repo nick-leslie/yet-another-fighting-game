@@ -170,13 +170,13 @@ game_update :: proc() {
     if g.run == false {
         return
     }
-    log.debug("---------------------------")
+    // log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
-    log.debug(g.rollback_state.current_index)
-    log.debug(g.rollback_state.current_frame)
+    // log.debug(g.rollback_state.current_index)
+    // log.debug(g.rollback_state.current_frame)
 
     if ODIN_DEBUG == true {
-        debug_rollback(DEBUG_ROLLBACK_FRAMES)
+        debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
     }
 
     // last_world_state := get_current_state(&g.rollback_state)
@@ -189,14 +189,9 @@ game_update :: proc() {
    	}
    	gk.world_tic(&g.world,p1_input,p2_input)
    	gk.world_physics_tic(&g.world)
-   	state := RollbackState {
-        p1_input=p1_input,
-        p2_input=p2_input,
-        world_state =  gk.serlize_world(g.world),
-   	}
-   	add_new_state(&g.rollback_state,state)
-    log.debug(g.rollback_state.current_frame)
-    log.debug(g.rollback_state.current_index)
+   	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
+    // log.debug(g.rollback_state.current_frame)
+    // log.debug(g.rollback_state.current_index)
 
 	//
 	draw()
@@ -296,12 +291,7 @@ game_init :: proc() {
 	}
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
-	for i := 0 ; i < MAX_ROLLBACK_WINDOW; i+=1 {
-    	state := RollbackState {
-            world_state = gk.serlize_world(g.world),
-       	}
-        add_new_state(&g.rollback_state,state)
-	}
+	g.rollback_state = create_new_rollback_queue()
 	game_hot_reloaded(g)
 }
 
@@ -326,6 +316,7 @@ game_shutdown :: proc() {
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
 	delete(g.fonts)
+	free_rollback_state_queue(&g.rollback_state)
 	free(g)
 	//destroy spall
  	spall.context_destroy(&spall_ctx)             // Flushes and closes file

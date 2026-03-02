@@ -1,7 +1,6 @@
 #+feature dynamic-literals
 package game_kernel
 
-import "core:log"
 import "core:testing"
 // import "core:log"
 
@@ -64,9 +63,6 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
     i:= buffer.input_index-1
-    log.debug(i)
-    log.debug(buffer.input_index)
-    log.debug(-1 %% len(buffer.buffer))
     for i != buffer.input_index {
         // log.debug(i)
         //
@@ -121,7 +117,6 @@ pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
     //     log.debug(pattern_list[highest_index].state_index)
     //     assert(false,"random forward state")
     // }
-    log.debug("we out")
     return pattern_list[highest_index].state_index
 }
 
