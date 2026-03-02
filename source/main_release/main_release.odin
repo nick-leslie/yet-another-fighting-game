@@ -9,10 +9,31 @@ import "core:os"
 import "core:path/filepath"
 import "core:mem"
 import game ".."
+import "core:prof/spall"
+import "core:sync"
+import "base:runtime"
 
 _ :: mem
 
 USE_TRACKING_ALLOCATOR :: #config(USE_TRACKING_ALLOCATOR, false)
+USE_PROFILING :: #config(USE_PROFILING, false)
+
+when USE_PROFILING {
+    spall_ctx: spall.Context
+    buffer_backing: []u8
+    @(thread_local) spall_buffer: spall.Buffer  // thread_local if using multiple threads
+
+    @(instrumentation_enter)
+    spall_enter :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+    	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
+    }
+    @(instrumentation_exit)
+    spall_exit :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+    	spall._buffer_end(&spall_ctx, &spall_buffer)
+    }
+}
+
+
 
 main :: proc() {
 	// Set working dir to dir of executable.
@@ -42,6 +63,12 @@ main :: proc() {
 		mem.tracking_allocator_init(&tracking_allocator, default_allocator)
 		context.allocator = mem.tracking_allocator(&tracking_allocator)
 	}
+	when USE_PROFILING {
+    	spall_ctx = spall.context_create("profile-release.spall")  // Creates the .spall file
+
+        buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
+        spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
+	}
 
 	game.game_init_window()
 	game.game_init()
@@ -61,6 +88,13 @@ main :: proc() {
 
 		mem.tracking_allocator_destroy(&tracking_allocator)
 	}
+
+	when USE_PROFILING {
+    	spall.context_destroy(&spall_ctx)             // Flushes and closes file
+        delete(buffer_backing)
+        spall.buffer_destroy(&spall_ctx, &spall_buffer)  // Writes buffer to file
+	}
+
 
 	if logh_err == os.ERROR_NONE {
 		log.destroy_file_logger(logger, logger_alloc)

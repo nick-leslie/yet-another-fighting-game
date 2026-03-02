@@ -27,17 +27,13 @@ created.
 
 package game
 
-import "core:sync"
-// import "core:fmt"
 import "core:log"
 import "base:runtime"
-// import "core:fmt"
 // import "core:math/linalg"
 import rl "vendor:raylib"
 import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
-import "core:prof/spall"
 import psy "./physics"
 
 PIXEL_WINDOW_HEIGHT :: 180
@@ -212,12 +208,6 @@ game_init_window :: proc() {
 
 @(export)
 game_init :: proc() {
-	spall_ctx = spall.context_create("profile.spall")  // Creates the .spall file
-
-    buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
-    spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
-
-
     default_font = rl.GetFontDefault()
 
 	utf_font := rl.LoadFont("./assets/nishiki-teki-font/NishikiTeki-MVxaJ.ttf")
@@ -319,10 +309,6 @@ game_shutdown :: proc() {
 	free_rollback_state_queue(&g.rollback_state)
 	free(g)
 	//destroy spall
- 	spall.context_destroy(&spall_ctx)             // Flushes and closes file
-    delete(buffer_backing)
-    spall.buffer_destroy(&spall_ctx, &spall_buffer)  // Writes buffer to file
-
 }
 
 @(export)
@@ -366,17 +352,3 @@ game_parent_window_size_changed :: proc(w, h: int) {
 
 
 
-spall_ctx: spall.Context
-buffer_backing: []u8
-@(thread_local) spall_buffer: spall.Buffer  // thread_local if using multiple threads
-
-@(instrumentation_enter)
-spall_enter :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
-	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
-}
-
-
-@(instrumentation_exit)
-spall_exit :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
-	spall._buffer_end(&spall_ctx, &spall_buffer)
-}

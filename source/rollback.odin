@@ -29,14 +29,15 @@ RollbackStateQueue ::struct {
 
 create_new_rollback_queue :: proc() -> RollbackStateQueue {
 	arena: vmem.Arena
-	err := vmem.arena_init_growing(&arena, MAX_ROLLBACK_WINDOW*mem.Megabyte) // todo grow this
+	//todo shrink me
+	err := vmem.arena_init_growing(&arena, MAX_ROLLBACK_WINDOW*mem.Kilobyte) // todo grow this
 	if err != nil {
 		assert(false,"failed to make rollback state")
 	}
 	state_queue := RollbackStateQueue{}
 	arena_allocator := vmem.arena_allocator(&arena)
 	for i := 0 ; i < MAX_ROLLBACK_WINDOW; i+=1 {
-		backing := make([]byte,mem.Megabyte,arena_allocator)
+		backing := make([]byte,mem.Kilobyte,arena_allocator)
 		slot_arena: vmem.Arena
 
 		static_err := vmem.arena_init_buffer(&slot_arena, backing[:])
