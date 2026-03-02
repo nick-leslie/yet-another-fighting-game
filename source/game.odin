@@ -235,7 +235,7 @@ game_init :: proc() {
 	}
 
 	p1 := gk.CharecterBase {
-		health=100,
+		health=200,
 		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
 		move_speed = 7,

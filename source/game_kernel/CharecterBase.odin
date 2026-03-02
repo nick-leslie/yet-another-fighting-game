@@ -303,16 +303,15 @@ delete_charecter :: proc(char: ^CharecterBase) {
 
 
 
-serlize_charecter :: proc(char:CharecterBase,arena:runtime.Allocator) -> (CharecterSerlizedState,[dynamic]SerlizedEntityState) {
-    entitys := make([dynamic]SerlizedEntityState,len(char.entity_pool))
-    for i := 0 ; i<len(char.entity_pool)-1;i+=1 {
+serlize_charecter :: proc(char:CharecterBase,allocator:runtime.Allocator) -> (CharecterSerlizedState,[dynamic]SerlizedEntityState) {
+    entitys := make([dynamic]SerlizedEntityState,allocator)
+    for i := 0 ; i<len(char.entity_pool);i+=1 {
         append_elem(&entitys,serlize_entity(char.entity_pool[i]))
     }
     return char.serlized_state,entitys
 }
 deserlize_charecter :: proc(state:CharecterSerlizedState,entitys_states:[dynamic]SerlizedEntityState,char:^CharecterBase) {
     char.serlized_state = state
-    // log.debugf("entity_states len:%d, entity pool len:%d",len(entitys_states),len(char.entity_pool))
     assert(len(entitys_states) == len(char.entity_pool),"entity pool must match the size of the serlized state")
     for i := 0 ; i<len(char.entity_pool);i+=1 {
     	// log.debug("deserlizing entity")
