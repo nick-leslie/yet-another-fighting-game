@@ -12,11 +12,6 @@
 [] lobbys
 
 
-
-
-
-
-
 # early access and or beta
 [] we have a main menue
 [] we have 2 charecters
