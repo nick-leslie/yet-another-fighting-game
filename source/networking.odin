@@ -1,8 +1,6 @@
 package game
 import "core:net"
-import "core:sync"
-import "core:bytes"
-import "core:time/datetime"
+// import "core:sync"
 import "core:thread"
 import "core:log"
 import gk "game_kernel"
@@ -10,21 +8,21 @@ import "core:encoding/cbor"  // Compact binary JSON-like format
 NetworkMessage :: struct {
     packet_version:u8,
     frame:int,
-    message_type:MessageType
+    message_type:MessageType,
     // game_check_sum:u32, // todo check me
 }
 
 MessageType :: union #no_nil {
     ConnectToOther,
-    SendInput
+    SendInput,
 
 }
 ConnectToOther :: struct {
-    character:u8
+    character:u8,
 }
 
 SendInput :: struct {
-    input:gk.Input
+    input:gk.Input,
 }
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 NetworkMannager :: struct {
@@ -34,33 +32,66 @@ NetworkMannager :: struct {
    	thread: ^thread.Thread,
     message_queue:[MAX_NETWORK_WINDOW]NetworkMessage,
     reader_pos:int,
-    writer_pos:int
+    writer_pos:int,
+    other_player_connected:bool,
 }
 
-make_lobby :: proc() {
-    addr,ok := net.parse_ip4_address("")
+LobbyCreateError :: enum {
+	AddressErr,
+	SocketBindErr,
+}
+
+make_lobby :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
+    addr,ok := net.parse_ip4_address("127.0.0.1")
     if ok == false  {
     	log.error("invalida address")
-        return
+        return nil,LobbyCreateError.AddressErr
     }
-    udp_socket,udp_err := net.make_bound_udp_socket(addr,1233)
+    udp_socket,udp_err := net.make_bound_udp_socket(addr,port)
+    net.set_blocking(udp_socket,true)
     if udp_err != nil {
     	log.error("failed to bind to socket")
-    	return
+    	return nil,LobbyCreateError.SocketBindErr
     }
     log.debug(udp_socket)
+    mannager := NetworkMannager {
+    	address = addr,
+     	port = port,
+     	message_queue = {},
+      	reader_pos = 0,
+      	writer_pos = 0,
+       other_player_connected = false,
+    }
+    //todo add logger to context
+    thread := thread.create_and_start_with_poly_data(&mannager,recv_input_network)
+    mannager.thread = thread
+
+    return mannager,nil
     // tcp_socket,tcp_err := net.dial_tcp_from_address_and_port(addr,1234)
 }
 
-recv_input_network :: proc(mannager:^NetworkMannager) {
-    // make this not fixed
+destory_lobby :: proc(mannager:^NetworkMannager) {
+	// we are using termincate here bcause we have an infinite loop
+	// thread.terminate(mannager.thread,1)
+}
 
-    buffer := [size_of(NetworkMessage)]u8{}
-    net.recv_udp(mannager.socket,buffer[:])
-    msg,err := decode_message(buffer[:])
-    mannager.message_queue[mannager.writer_pos] = msg
-    //we dont need this to be attomic because its one producer
-    mannager.writer_pos = mannager.writer_pos %% len(mannager.message_queue)
+recv_input_network :: proc(mannager:^NetworkMannager) {
+	context.logger = g_context.logger
+	// make this not fixed
+    log.debug("started listening for messages")
+    for {
+	    buffer := [size_of(NetworkMessage)]u8{}
+	    net.recv_udp(mannager.socket,buffer[:])
+		log.debug("got message")
+		log.debug(buffer)
+	    msg,err := decode_message(buffer[:])
+	    if err != nil {
+	   		continue // love the continue here
+	    }
+	    mannager.message_queue[mannager.writer_pos] = msg
+	    //we dont need this to be attomic because its one producer
+	    mannager.writer_pos = mannager.writer_pos %% len(mannager.message_queue)
+    }
 }
 
 poll_remote_input :: proc(mannager:^NetworkMannager) -> Maybe(NetworkMessage) {
@@ -74,7 +105,7 @@ poll_remote_input :: proc(mannager:^NetworkMannager) -> Maybe(NetworkMessage) {
 
 
 EncodeErr :: union {
-    cbor.Marshal_Error
+    cbor.Marshal_Error,
 }
 
 //we wrap here so we can add a custom impl if cbor is slow

@@ -5,6 +5,9 @@ import gk "game_kernel"
 import "core:fmt"
 import "core:unicode/utf8"
 import psy "./physics"
+import "core:log"
+import "core:os"
+import "core:strconv"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
     // Do something with the error data.
@@ -30,6 +33,7 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 				layoutDirection=.LeftToRight,
         	},
 		}) {
+			network_mannagment_ui()
 			charecter_debug_ui(g.world.p1)
 			charecter_debug_ui(g.world.p2)
 		}
@@ -61,6 +65,43 @@ input_history :: proc(buffer:gk.InputBuffer) {
                 break
             }
 		}
+	}
+}
+
+network_mannagment_ui :: proc() {
+	if clay.UI(clay.ID("network_mannagment_layout"))({
+		layout = {
+			sizing = {
+				width = clay.SizingGrow(),
+				height = clay.SizingFit(),
+			},
+			padding = { 10,10,10,10 },
+	  		layoutDirection = .LeftToRight,
+		},
+
+	}) {
+		callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+			if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
+				context = g_context
+				log.debug("connecting to network")
+				port := 363636
+				if len(os.args) >= 2 {
+					port_from_str,ok := strconv.parse_int(os.args[1])
+					log.debug(port_from_str)
+					if ok == true {
+						port = port_from_str
+					}
+				}
+				mannager,err := make_lobby(port)
+				if mannager == nil || err != nil {
+					log.debug("failed to connect")
+					return
+				}
+				g.network_mannager = mannager.?
+			}
+		}
+		clay.OnHover(callback,nil)
+		clay.Text("connect",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 	}
 }
 

@@ -47,6 +47,7 @@ Game_Memory :: struct {
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
 	rollback_state: RollbackStateQueue,
+	network_mannager:NetworkMannager,
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -300,12 +301,11 @@ game_should_run :: proc() -> bool {
 
 @(export)
 game_shutdown :: proc() {
-	// delete_charecter(&g.p1)
-	// delete_charecter(&g.p2)
 	gk.destroy_world(g.world) // we may want to pass world
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
 	delete(g.fonts)
+	destory_lobby(&g.network_mannager)
 	free_rollback_state_queue(&g.rollback_state)
 	free(g)
 	//destroy spall
@@ -349,6 +349,3 @@ game_force_restart :: proc() -> bool {
 game_parent_window_size_changed :: proc(w, h: int) {
 	rl.SetWindowSize(i32(w), i32(h))
 }
-
-
-
