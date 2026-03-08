@@ -61,7 +61,8 @@ make_network_mannager :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateEr
      	message_queue = {},
       	reader_pos = 0,
       	writer_pos = 0,
-       other_player_connected = false,
+        other_player_connected = false,
+        thread = nil,
     }
     //todo add logger to context
 
@@ -74,8 +75,11 @@ network_mannager_start_listening :: proc(mannager:^NetworkMannager) {
 }
 
 destory_lobby :: proc(mannager:^NetworkMannager) {
+    log.debug("cleaning")
 	// we are using termincate here bcause we have an infinite loop
-	// thread.terminate(mannager.thread,1)
+	if mannager.thread != nil {
+	    thread.terminate(mannager.thread,1)
+	}
 }
 
 recv_input_network :: proc(mannager:^NetworkMannager) {

@@ -13,9 +13,6 @@ import "core:os/os2"
 import "core:log"
 import "core:mem"
 import "core:path/filepath"
-import "core:prof/spall"
-import "core:sync"
-import "base:runtime"
 
 
 
@@ -100,20 +97,8 @@ unload_game_api :: proc(api: ^Game_API) {
 	}
 }
 
-spall_ctx: spall.Context
-buffer_backing: []u8
-@(thread_local) spall_buffer: spall.Buffer  // thread_local if using multiple threads
-
-@(instrumentation_enter)
-spall_enter :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
-	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
-}
 
 
-@(instrumentation_exit)
-spall_exit :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
-	spall._buffer_end(&spall_ctx, &spall_buffer)
-}
 
 main :: proc() {
 	// Set working dir to dir of executable.
@@ -130,10 +115,7 @@ main :: proc() {
 	mem.tracking_allocator_init(&tracking_allocator, default_allocator)
 	context.allocator = mem.tracking_allocator(&tracking_allocator)
 
-	spall_ctx = spall.context_create("profile.spall")  // Creates the .spall file
 
-    buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
-    spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
 
 	reset_tracking_allocator :: proc(a: ^mem.Tracking_Allocator) -> bool {
 		err := false
@@ -226,12 +208,9 @@ main :: proc() {
 			panic("Bad free detected")
 		}
 	}
-	
-	spall.context_destroy(&spall_ctx)             // Flushes and closes file
-    delete(buffer_backing)
-    spall.buffer_destroy(&spall_ctx, &spall_buffer)  // Writes buffer to file
-    
-    
+
+
+
 	free_all(context.temp_allocator)
 	game_api.shutdown()
 	if reset_tracking_allocator(&tracking_allocator) {

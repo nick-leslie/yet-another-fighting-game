@@ -145,7 +145,7 @@ input_ui:: proc(input:gk.Input) {
 	case .Heavy:
 		char_arr[2] = 'H'
 	}
-	str := utf8.runes_to_string(char_arr[:])
+	str := utf8.runes_to_string(char_arr[:],context.temp_allocator)
 	clay.TextDynamic(
 		str,
 		clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),

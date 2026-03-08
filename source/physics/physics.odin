@@ -1,7 +1,7 @@
 package physics
 
 import fixed "core:math/fixed"
-import "core:log"
+@(require) import "core:log"
 
 
 Fixed12_4 :: distinct fixed.Fixed(i16,6) // fixed
@@ -169,9 +169,7 @@ check_body_body_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox,
     a_box := a_box
     b_box := b_box
     a_box.position = add_fixed_vecs(a_box.position,a_body.position)
-    log.debug(unfix_box(a_box))
     b_box.position = add_fixed_vecs(b_box.position,b_body.position)
-    log.debug(unfix_box(b_box))
     return check_box_box_collision(a_box,b_box)
 }
 check_body_static_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBox) -> bool {

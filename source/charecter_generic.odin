@@ -414,6 +414,8 @@ add_state_light_attack ::proc(char: ^gk.CharecterBase) {
 }
 
 state_light_fireball ::proc(char: ^gk.CharecterBase) {
+    context.allocator = vmem.arena_allocator(&char.arena)
+
 	using gk
 	move := gk.State(gk.CharecterBase) {
 		name="fireball",
@@ -705,6 +707,8 @@ pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
 }
 
 entity_fireball ::proc(char: ^gk.CharecterBase) {
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
 	append(&char.entity_pool,gk.Entity {
 		move_speed = 4.0,
 		states = {

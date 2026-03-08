@@ -63,12 +63,7 @@ main :: proc() {
 		mem.tracking_allocator_init(&tracking_allocator, default_allocator)
 		context.allocator = mem.tracking_allocator(&tracking_allocator)
 	}
-	when USE_PROFILING {
-    	spall_ctx = spall.context_create("profile-release.spall")  // Creates the .spall file
 
-        buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
-        spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
-	}
 
 	game.game_init_window()
 	game.game_init()

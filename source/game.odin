@@ -35,6 +35,11 @@ import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
 import psy "./physics"
+@(require) import "core:sync"
+@(require) import "core:prof/spall"
+
+USE_PROFILING :: #config(USE_PROFILING, true)
+
 
 PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
@@ -207,8 +212,28 @@ game_init_window :: proc() {
 	rl.SetExitKey(nil)
 }
 
+when USE_PROFILING {
+    spall_ctx: spall.Context
+    buffer_backing: []u8
+    @(thread_local) spall_buffer: spall.Buffer  // thread_local if using multiple threads
+
+    @(instrumentation_enter)
+    spall_enter :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+    	spall._buffer_begin(&spall_ctx, &spall_buffer, "", "", loc)
+    }
+    @(instrumentation_exit)
+    spall_exit :: proc "contextless" (proc_address, call_site_return_address: rawptr, loc: runtime.Source_Code_Location) {
+    	spall._buffer_end(&spall_ctx, &spall_buffer)
+    }
+}
+
 @(export)
 game_init :: proc() {
+   	when USE_PROFILING {
+       	spall_ctx = spall.context_create("profile.spall")  // Creates the .spall file
+        buffer_backing = make([]u8, spall.BUFFER_DEFAULT_SIZE)
+        spall_buffer = spall.buffer_create(buffer_backing, u32(sync.current_thread_id()))
+	}
     default_font = rl.GetFontDefault()
 
 	utf_font := rl.LoadFont("./assets/nishiki-teki-font/NishikiTeki-MVxaJ.ttf")
@@ -245,6 +270,7 @@ game_init :: proc() {
 		jump_height = 20,
 		p1_side = false,
 	}
+	old_allocator := context.allocator
 	gk.initilize_charecter_memory(&p1)
 	log.debug(p1.entity_pool)
 	gk.initilize_charecter_memory(&p2)
@@ -256,6 +282,7 @@ game_init :: proc() {
 	add_state_stun(&p1)
 	add_state_movement(&p2) // the nill is tmp
 	add_state_stun(&p2)
+	context.allocator = old_allocator
 	clay_arena := setup_clay({
 		1280,
 		720,
@@ -301,6 +328,11 @@ game_should_run :: proc() -> bool {
 
 @(export)
 game_shutdown :: proc() {
+   	when USE_PROFILING {
+       	spall.context_destroy(&spall_ctx)             // Flushes and closes file
+        spall.buffer_destroy(&spall_ctx, &spall_buffer)  // Writes buffer to file
+        delete(buffer_backing)
+	}
 	gk.destroy_world(g.world) // we may want to pass world
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
