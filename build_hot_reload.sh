@@ -48,8 +48,6 @@ mv $OUT_DIR/game_tmp$DLL_EXT $OUT_DIR/game$DLL_EXT
 # fi
 
 echo "Building $EXE"
-cp libs/jolt/libjoltcd.so .
-cp libs/jolt/libjoltcd.so ./build/hot_reload
 odin build source/main_hot_reload -out:$EXE -strict-style -vet -debug
 
 if [ $# -ge 1 ] && [ $1 == "run" ]; then
