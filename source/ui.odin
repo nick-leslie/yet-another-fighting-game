@@ -92,12 +92,13 @@ network_mannagment_ui :: proc() {
 						port = port_from_str
 					}
 				}
-				mannager,err := make_lobby(port)
+				mannager,err := make_network_mannager(port)
 				if mannager == nil || err != nil {
 					log.debug("failed to connect")
 					return
 				}
 				g.network_mannager = mannager.?
+				network_mannager_start_listening(&g.network_mannager)
 			}
 		}
 		clay.OnHover(callback,nil)

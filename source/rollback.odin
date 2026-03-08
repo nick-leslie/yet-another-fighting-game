@@ -120,10 +120,20 @@ resimulate_rest :: proc(go_too:int) {
        	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
     }
 }
-predict_input :: proc() -> gk.Input {
-    return gk.Input {
+get_next_input :: proc(frame:int) -> gk.Input {
+	remote,ok := poll_remote_input(&g.network_mannager).?
+	if ok == false {
+		return gk.Input {
   		dir = gk.Direction.Neutral,
-   	}
+   		}
+	}
+	if remote.frame == frame {
+		switch remote.message_type {
+		case MessageType.ConnectToOther:
+		case MessageType.SendInput:
+		}
+	}
+	return {}
 }
 rollback_correct_frame :: proc(frame:int,remote_input:gk.Input,remote_p1:bool) {
     go_too :=  rollback_too(&g.rollback_state,frame)

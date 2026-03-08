@@ -41,7 +41,7 @@ LobbyCreateError :: enum {
 	SocketBindErr,
 }
 
-make_lobby :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
+make_network_mannager :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
     addr,ok := net.parse_ip4_address("127.0.0.1")
     if ok == false  {
     	log.error("invalida address")
@@ -55,6 +55,7 @@ make_lobby :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
     }
     log.debug(udp_socket)
     mannager := NetworkMannager {
+    	socket = udp_socket,
     	address = addr,
      	port = port,
      	message_queue = {},
@@ -63,11 +64,13 @@ make_lobby :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
        other_player_connected = false,
     }
     //todo add logger to context
-    thread := thread.create_and_start_with_poly_data(&mannager,recv_input_network)
-    mannager.thread = thread
 
     return mannager,nil
     // tcp_socket,tcp_err := net.dial_tcp_from_address_and_port(addr,1234)
+}
+network_mannager_start_listening :: proc(mannager:^NetworkMannager) {
+ 	thread := thread.create_and_start_with_poly_data(mannager,recv_input_network)
+    mannager.thread = thread
 }
 
 destory_lobby :: proc(mannager:^NetworkMannager) {
@@ -79,18 +82,22 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 	context.logger = g_context.logger
 	// make this not fixed
     log.debug("started listening for messages")
+    net.set_blocking(mannager.socket,true)
     for {
 	    buffer := [size_of(NetworkMessage)]u8{}
 	    net.recv_udp(mannager.socket,buffer[:])
-		log.debug("got message")
-		log.debug(buffer)
+		// log.debug(buffer)
 	    msg,err := decode_message(buffer[:])
 	    if err != nil {
 	   		continue // love the continue here
 	    }
 	    mannager.message_queue[mannager.writer_pos] = msg
 	    //we dont need this to be attomic because its one producer
-	    mannager.writer_pos = mannager.writer_pos %% len(mannager.message_queue)
+		proposed_pos := mannager.writer_pos+1 %% len(mannager.message_queue)
+		if proposed_pos == mannager.reader_pos {
+			assert(false,"we arnt consuming messages fast enough")
+		}
+	    mannager.writer_pos = proposed_pos
     }
 }
 
