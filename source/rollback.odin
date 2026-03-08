@@ -128,9 +128,9 @@ get_next_input :: proc(frame:int) -> gk.Input {
    		}
 	}
 	if remote.frame == frame {
-		switch remote.message_type {
-		case MessageType.ConnectToOther:
-		case MessageType.SendInput:
+		switch state in remote.message_type {
+		case ConnectToOther:
+		case SendInput:
 		}
 	}
 	return {}
