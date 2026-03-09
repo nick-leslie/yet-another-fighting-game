@@ -82,6 +82,13 @@ destory_lobby :: proc(mannager:^NetworkMannager) {
     log.debug("cleaning")
 	// we are using termincate here bcause we have an infinite loop
 	if mannager.thread != nil {
+	    local_endpoint,ok := net.parse_endpoint("127.0.0.1")
+		if ok == false {
+		    thread.terminate(mannager.thread,0)
+			return
+		}
+		buffer := [256]u8{}
+	    net.send_udp(mannager.socket,buffer[:],local_endpoint)
 	    mannager.should_run = false
     	thread.join(mannager.thread)
     	thread.destroy(mannager.thread)

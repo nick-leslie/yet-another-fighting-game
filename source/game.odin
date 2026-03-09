@@ -318,7 +318,7 @@ game_init :: proc() {
             remote = false,
             network_mannager_ptr = &g.network_mannager,
             input_stack = make_input_stack(arena_alocator),
-            delay = 20,
+            delay = 2,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
