@@ -5,9 +5,7 @@ import gk "game_kernel"
 import "core:fmt"
 import "core:unicode/utf8"
 import psy "./physics"
-import "core:log"
-import "core:os"
-import "core:strconv"
+@(require)import "core:log"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
     // Do something with the error data.
@@ -83,21 +81,6 @@ network_mannagment_ui :: proc() {
 		callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
 			if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
 				context = g_context
-				log.debug("connecting to network")
-				port := 363636
-				if len(os.args) >= 2 {
-					port_from_str,ok := strconv.parse_int(os.args[1])
-					log.debug(port_from_str)
-					if ok == true {
-						port = port_from_str
-					}
-				}
-				mannager,err := make_network_mannager(port)
-				if mannager == nil || err != nil {
-					log.debug("failed to connect")
-					return
-				}
-				g.network_mannager = mannager.?
 				network_mannager_start_listening(&g.network_mannager)
 			}
 		}

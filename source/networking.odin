@@ -31,9 +31,12 @@ NetworkMannager :: struct {
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
     message_queue:[MAX_NETWORK_WINDOW]NetworkMessage,
+    p1_input_mannager:InputMannager,
+    p2_input_mannager:InputMannager,
     reader_pos:int,
     writer_pos:int,
     other_player_connected:bool,
+    should_run:bool,
 }
 
 LobbyCreateError :: enum {
@@ -70,6 +73,7 @@ make_network_mannager :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateEr
     // tcp_socket,tcp_err := net.dial_tcp_from_address_and_port(addr,1234)
 }
 network_mannager_start_listening :: proc(mannager:^NetworkMannager) {
+    mannager.should_run=true
  	thread := thread.create_and_start_with_poly_data(mannager,recv_input_network)
     mannager.thread = thread
 }
@@ -78,7 +82,9 @@ destory_lobby :: proc(mannager:^NetworkMannager) {
     log.debug("cleaning")
 	// we are using termincate here bcause we have an infinite loop
 	if mannager.thread != nil {
-	    thread.terminate(mannager.thread,1)
+	    mannager.should_run = false
+    	thread.join(mannager.thread)
+    	thread.destroy(mannager.thread)
 	}
 }
 
@@ -87,7 +93,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 	// make this not fixed
     log.debug("started listening for messages")
     net.set_blocking(mannager.socket,true)
-    for {
+    for mannager.should_run {
 	    buffer := [size_of(NetworkMessage)]u8{}
 	    net.recv_udp(mannager.socket,buffer[:])
 		// log.debug(buffer)
@@ -102,12 +108,13 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 			assert(false,"we arnt consuming messages fast enough")
 		}
 	    mannager.writer_pos = proposed_pos
+		free_all(context.temp_allocator)
     }
 }
 
 poll_remote_input :: proc(mannager:^NetworkMannager) -> Maybe(NetworkMessage) {
     if mannager.reader_pos+1 > mannager.writer_pos {
-        return {} // todo reutrn an error here
+        return nil // todo reutrn an error here
     }
     value := mannager.message_queue[mannager.reader_pos]
     mannager.reader_pos += 1

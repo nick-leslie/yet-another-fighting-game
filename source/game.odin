@@ -27,6 +27,7 @@ created.
 
 package game
 
+import "core:strconv"
 import "core:log"
 import "base:runtime"
 // import "core:math/linalg"
@@ -35,6 +36,8 @@ import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
 import psy "./physics"
+import vmem "core:mem/virtual"
+import "core:os"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -45,13 +48,15 @@ PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
 Game_Memory :: struct {
 	run:            bool,
+	arena:     vmem.Arena,
+	frame:          int,
 	world: 		    gk.World,
-	p1_controls: 	Controls,
-	p2_controls: 	Controls,
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
 	rollback_state: RollbackStateQueue,
+	p1_input_mannager:InputMannager,
+	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
@@ -96,23 +101,7 @@ ui_camera :: proc() -> rl.Camera2D {
 	return {zoom = f32(rl.GetScreenHeight()) / PIXEL_WINDOW_HEIGHT}
 }
 
-// all of this needs to go in world
-update :: proc() {
-	//move me out
-	if rl.IsKeyPressed(.ESCAPE) {
-		g.run = false
-	}
-	p1_input := poll_charecter_input(g.p1_controls,true)
-	p2_input := gk.Input {
-		dir = gk.Direction.Neutral,
-	}
-	gk.world_tic(&g.world,p1_input,p2_input)
-	//tood check hits
-}
 
-physics_update :: proc() {
-	gk.world_physics_tic(&g.world)
-}
 
 free_cam := false
 
@@ -176,7 +165,14 @@ game_update :: proc() {
     // todo go back 7 and resimulate in debug zzzz
     // log.debug(g.rollback_state.current_index)
     // log.debug(g.rollback_state.current_frame)
-
+    push_to_input_stack(&g.p1_input_mannager,g.frame)
+    // push_to_input_stack(&g.p2_input_mannager,g.frame)
+    p1_input := get_next_input(&g.p1_input_mannager,g.frame)
+    // p2_input := get_next_input(&g.p2_input_mannager,g.frame)
+    p2_input := gk.Input {
+        dir=gk.Direction.Neutral,
+    }
+    // log.debug(p1_input)
     if ODIN_DEBUG == true {
         debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
     }
@@ -185,10 +181,6 @@ game_update :: proc() {
     // log.debug(g.rollback_state.current_index)
     // gk.deserlize_world(last_world_state.world_state,&g.world)
 
-   	p1_input := poll_charecter_input(g.p1_controls,true)
-   	p2_input := gk.Input {
-  		dir = gk.Direction.Neutral,
-   	}
    	gk.world_tic(&g.world,p1_input,p2_input)
    	gk.world_physics_tic(&g.world)
    	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
@@ -200,6 +192,7 @@ game_update :: proc() {
 
 	// Everything on tracking allocator is valid until end-of-frame.
 	free_all(context.temp_allocator)
+	g.frame +=1
 }
 
 @(export)
@@ -296,17 +289,49 @@ game_init :: proc() {
 		  fontId=0,
 		  font=utf_font,
 	})
+	log.debug("connecting to network")
+	port := 363636
+	if len(os.args) >= 2 {
+		port_from_str,ok := strconv.parse_int(os.args[1])
+		log.debug(port_from_str)
+		if ok == true {
+			port = port_from_str
+		}
+	}
+	network_mannager,err := make_network_mannager(port)
+	log.debug(network_mannager)
+	if network_mannager == nil || err != nil {
+		log.debug("failed to connect")
+		return
+	}
+	// does this work
+	arena_alocator := vmem.arena_allocator(&g.arena)
 	g^ = Game_Memory {
 		run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 		clay_arena=clay_arena,
 		world=	gk.world_init(p1,p2),
-		p1_controls=p1_controls,
+		network_mannager=network_mannager.?,
+		p1_input_mannager=InputMannager {
+            controls=p1_controls,
+            remote = false,
+            network_mannager_ptr = &g.network_mannager,
+            input_stack = make_input_stack(arena_alocator),
+            delay = 20,
+		},
+		p2_input_mannager=InputMannager {
+            controls=p1_controls,
+            remote = true,
+            network_mannager_ptr = &g.network_mannager,
+            input_stack = make_input_stack(arena_alocator),
+            delay = 0,
+		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
 		fonts = fonts,
 	}
+	log.debug(network_mannager)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
 	g.rollback_state = create_new_rollback_queue()
@@ -339,6 +364,7 @@ game_shutdown :: proc() {
 	delete(g.fonts)
 	destory_lobby(&g.network_mannager)
 	free_rollback_state_queue(&g.rollback_state)
+	vmem.arena_destroy(&g.arena)
 	free(g)
 	//destroy spall
 }

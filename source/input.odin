@@ -1,7 +1,9 @@
 package game
 
+import "base:runtime"
 import gk "game_kernel"
 import rl "vendor:raylib"
+@(require) import "core:log"
 
 Controls :: union {
     Keyboard,
@@ -24,6 +26,33 @@ GamePad :: struct {
     heavy_key:rl.GamepadButton,
 }
 
+InputWithFrame :: struct {
+    frame:int,
+    input:gk.Input,
+}
+
+InputStack :: struct {
+    stack:[dynamic]InputWithFrame,
+    last_input:gk.Input,
+}
+// this handles handing inputs from the game to the kernal
+// it does not contain a buffer but it allows for delay
+InputMannager :: struct {
+   	controls: 	Controls,
+    delay:       int,
+	input_stack: InputStack,
+	network_mannager_ptr:^NetworkMannager,
+	remote:bool,
+}
+
+make_input_stack:: proc(allocator:runtime.Allocator) -> InputStack {
+    return InputStack {
+        stack = make([dynamic]InputWithFrame,allocator),
+        last_input = gk.Input {
+            dir=gk.Direction.Neutral,
+        },
+    }
+}
 
 poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
     switch &controls in controls {
@@ -86,4 +115,57 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         return {}
     }
     return {}
+}
+
+
+push_to_input_stack :: proc(mannager:^InputMannager,frame:int) {
+    if mannager.remote {
+        if mannager.network_mannager_ptr == nil {
+            assert(false, "we should have a network mannager if the player is remote")
+        }
+    	remote,ok := poll_remote_input(mannager.network_mannager_ptr).?
+    	if ok == false {
+         //todo predict
+            append_elem(&mannager.input_stack.stack,InputWithFrame{
+                input= mannager.input_stack.last_input,
+                frame=frame,
+            })
+            return
+    	}
+  		switch state in remote.message_type {
+  		case ConnectToOther:
+            append_elem(&mannager.input_stack.stack,InputWithFrame{
+                input= mannager.input_stack.last_input,
+                frame=frame,
+            })
+            return
+  		case SendInput:
+            append_elem(&mannager.input_stack.stack, InputWithFrame{
+                    frame=frame,
+                    input=state.input,
+                })
+      		}
+    } else {
+        input := poll_charecter_input(mannager.controls,true)
+        append_elem(&mannager.input_stack.stack, InputWithFrame{
+            frame+mannager.delay, // add delay frames
+            input,
+        })
+    }
+}
+
+
+get_next_input :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
+    // check if we have an input this frame.
+    if mannager.input_stack.stack[0].frame == frame {
+        // if so return and pop
+        input := mannager.input_stack.stack[0]
+        // this may be slow
+        ordered_remove(&mannager.input_stack.stack,0)
+        mannager.input_stack.last_input = input.input
+        return input.input
+    }
+    // if not reuturn what we were doing last frame
+    // awsome prediction
+    return mannager.input_stack.last_input
 }
