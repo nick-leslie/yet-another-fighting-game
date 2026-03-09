@@ -9,9 +9,9 @@ import "core:os"
 import "core:path/filepath"
 import "core:mem"
 import game ".."
-import "core:prof/spall"
-import "core:sync"
-import "base:runtime"
+@(require) import "core:prof/spall"
+@(require) import "core:sync"
+@(require) import "base:runtime"
 
 _ :: mem
 
