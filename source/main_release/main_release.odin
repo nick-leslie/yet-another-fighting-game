@@ -46,7 +46,7 @@ main :: proc() {
 		mode = os.perm(0o644)
 	}
 
-	logh, logh_err := os.open("log.txt", {.Create, .Trunc, .Read, .Write }, os.perm(0o644))
+	logh, logh_err := os.open("log.txt", {.Create, .Trunc, .Read, .Write }, mode)
 
 	if logh_err == os.ERROR_NONE {
 		os.stdout = logh
