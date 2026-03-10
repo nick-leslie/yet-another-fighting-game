@@ -35,20 +35,27 @@ NetworkMannager :: struct {
     p2_input_mannager:InputMannager,
     reader_pos:int,
     writer_pos:int,
+    endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
 }
 
 LobbyCreateError :: enum {
-	AddressErr,
+	InvalidBindAddr,
+	InvalidAddress,
 	SocketBindErr,
 }
 
-make_network_mannager :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
-    addr,ok := net.parse_ip4_address("127.0.0.1")
+make_network_mannager :: proc(port:int,other_ip:string,other_port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
+    addr,ok := net.parse_ip4_address("0.0.0.0")
     if ok == false  {
-    	log.error("invalida address")
-        return nil,LobbyCreateError.AddressErr
+    	log.error("invalida bind address")
+        return nil,LobbyCreateError.InvalidBindAddr
+    }
+    other_addr, other_addr_ok := net.parse_ip4_address(other_ip)
+    if other_addr_ok == false {
+       	log.error("invalida address")
+        return nil,LobbyCreateError.InvalidAddress
     }
     udp_socket,udp_err := net.make_bound_udp_socket(addr,port)
     net.set_blocking(udp_socket,true)
@@ -64,6 +71,10 @@ make_network_mannager :: proc(port:int) -> (Maybe(NetworkMannager),LobbyCreateEr
      	message_queue = {},
       	reader_pos = 0,
       	writer_pos = 0,
+        endpoint=net.Endpoint {
+            address = other_addr,
+            port = other_port,
+        },
         other_player_connected = false,
         thread = nil,
     }
@@ -117,6 +128,19 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 	    mannager.writer_pos = proposed_pos
 		free_all(context.temp_allocator)
     }
+}
+
+SendMesageErr :: union {
+    EncodeErr,
+    net.UDP_Send_Error,
+}
+
+send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_written: int, err: SendMesageErr) {
+    buffer,encode_err := encode_message(msg)
+    if encode_err != nil {
+        return 0,encode_err// todo return err
+    }
+    return net.send_udp(mannager.socket,buffer,mannager.endpoint)
 }
 
 poll_remote_input :: proc(mannager:^NetworkMannager) -> Maybe(NetworkMessage) {

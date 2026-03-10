@@ -291,6 +291,7 @@ game_init :: proc() {
 	})
 	log.debug("connecting to network")
 	port := 363636
+	other_port := 363637
 	if len(os.args) >= 2 {
 		port_from_str,ok := strconv.parse_int(os.args[1])
 		log.debug(port_from_str)
@@ -298,7 +299,14 @@ game_init :: proc() {
 			port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port)
+	if len(os.args) >= 3 {
+		port_from_str,ok := strconv.parse_int(os.args[2])
+		log.debug(port_from_str)
+		if ok == true {
+			other_port = port_from_str
+		}
+	}
+	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port)
 	log.debug(network_mannager)
 	if network_mannager == nil || err != nil {
 		log.debug("failed to connect")
