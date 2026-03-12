@@ -41,7 +41,7 @@ import "core:os"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
-USE_PROFILING :: #config(USE_PROFILING, true)
+USE_PROFILING :: #config(USE_PROFILING, false)
 
 
 PIXEL_WINDOW_HEIGHT :: 180
@@ -163,16 +163,14 @@ game_update :: proc() {
     }
     // log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
-    // log.debug(g.rollback_state.current_index)
-    // log.debug(g.rollback_state.current_frame)
-    push_to_input_stack(&g.p1_input_mannager,g.frame)
-    // push_to_input_stack(&g.p2_input_mannager,g.frame)
+    //
+    //
+    push_to_input_stack(&g.p1_input_mannager,g.frame,true)
+    push_to_input_stack(&g.p2_input_mannager,g.frame,false)
     p1_input := get_next_input(&g.p1_input_mannager,g.frame)
-    // p2_input := get_next_input(&g.p2_input_mannager,g.frame)
-    p2_input := gk.Input {
-        dir=gk.Direction.Neutral,
-    }
-    // log.debug(p1_input)
+    p2_input := get_next_input(&g.p2_input_mannager,g.frame)
+
+
     if ODIN_DEBUG == true {
         debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
     }
@@ -289,29 +287,7 @@ game_init :: proc() {
 		  fontId=0,
 		  font=utf_font,
 	})
-	log.debug("connecting to network")
-	port := 363636
-	other_port := 363637
-	if len(os.args) >= 2 {
-		port_from_str,ok := strconv.parse_int(os.args[1])
-		log.debug(port_from_str)
-		if ok == true {
-			port = port_from_str
-		}
-	}
-	if len(os.args) >= 3 {
-		port_from_str,ok := strconv.parse_int(os.args[2])
-		log.debug(port_from_str)
-		if ok == true {
-			other_port = port_from_str
-		}
-	}
-	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port)
-	log.debug(network_mannager)
-	if network_mannager == nil || err != nil {
-		log.debug("failed to connect")
-		return
-	}
+
 	// does this work
 	arena_alocator := vmem.arena_allocator(&g.arena)
 	g^ = Game_Memory {
@@ -320,7 +296,7 @@ game_init :: proc() {
 		// files will be part any release or web build.
 		clay_arena=clay_arena,
 		world=	gk.world_init(p1,p2),
-		network_mannager=network_mannager.?,
+		// network_mannager=network_mannager.?,
 		p1_input_mannager=InputMannager {
             controls=p1_controls,
             remote = false,
@@ -339,6 +315,30 @@ game_init :: proc() {
 		cam = game_camera(),
 		fonts = fonts,
 	}
+	log.debug("connecting to network")
+	port := 3636
+	other_port := 3636
+	if len(os.args) >= 2 {
+		port_from_str,ok := strconv.parse_int(os.args[1])
+		log.debug(port_from_str)
+		if ok == true {
+			port = port_from_str
+		}
+	}
+	if len(os.args) >= 3 {
+		port_from_str,ok := strconv.parse_int(os.args[2])
+		log.debug(port_from_str)
+		if ok == true {
+			other_port = port_from_str
+		}
+	}
+	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
+	log.debug(network_mannager)
+	if network_mannager == nil || err != nil {
+		log.debug("failed to connect")
+		return
+	}
+	g.network_mannager=network_mannager.?
 	log.debug(network_mannager)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state

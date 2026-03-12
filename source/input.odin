@@ -1,9 +1,12 @@
 package game
 
+import "core:container/queue"
 import "base:runtime"
 import gk "game_kernel"
 import rl "vendor:raylib"
 @(require) import "core:log"
+
+
 
 Controls :: union {
     Keyboard,
@@ -118,40 +121,69 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 }
 
 
-push_to_input_stack :: proc(mannager:^InputMannager,frame:int) {
-    if mannager.remote {
-        if mannager.network_mannager_ptr == nil {
-            assert(false, "we should have a network mannager if the player is remote")
-        }
-    	remote,ok := poll_remote_input(mannager.network_mannager_ptr).?
-    	if ok == false {
-         //todo predict
-            append_elem(&mannager.input_stack.stack,InputWithFrame{
-                input= mannager.input_stack.last_input,
-                frame=frame,
-            })
-            return
-    	}
-  		switch state in remote.message_type {
-  		case ConnectToOther:
-            append_elem(&mannager.input_stack.stack,InputWithFrame{
-                input= mannager.input_stack.last_input,
-                frame=frame,
-            })
-            return
-  		case SendInput:
+push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
+    if mannager.remote == true {
+        input_queue := &mannager.network_mannager_ptr.message_queue
+        length := queue.len(input_queue^)
+        if length <= 0 {
+            log.debug("predicting")
+            //predict
             append_elem(&mannager.input_stack.stack, InputWithFrame{
-                    frame=frame,
-                    input=state.input,
-                })
-      		}
+                frame=frame,
+                input=mannager.input_stack.last_input,
+            })
+            return
+        }
+
+        front_ptr := queue.front_ptr(input_queue)
+        log.debug(front_ptr)
+        if frame > front_ptr.frame {
+            // rollback!!!!!!
+            log.debug("predicting")
+            //predict
+            append_elem(&mannager.input_stack.stack, InputWithFrame{
+                frame=frame,
+                input=mannager.input_stack.last_input,
+            })
+            return
+        }
+        if frame < front_ptr.frame {
+            // missing inputs we are predciting ask for input back
+            log.debug("predicting")
+            //predict
+            append_elem(&mannager.input_stack.stack, InputWithFrame{
+                frame=frame,
+                input=mannager.input_stack.last_input,
+            })
+            return
+        }
+        log.debug("getting input")
+        msg := queue.pop_front(input_queue)
+        log.debug(msg)
+        append_elem(&mannager.input_stack.stack,msg)
     } else {
-        input := poll_charecter_input(mannager.controls,true)
+        input := poll_charecter_input(mannager.controls,p1_side)
+
+        msg := NetworkMessage {
+            packet_version=0,
+            frame=frame+mannager.delay,
+            message_type=SendInput {
+                input,
+            },
+        }
+        if mannager.remote == false && g.network_mannager.should_run == true {
+            size,err := send_messsage(mannager.network_mannager_ptr,msg)
+            if err != nil {
+                log.debug(size)
+                log.debug(err)
+            }
+        }
         append_elem(&mannager.input_stack.stack, InputWithFrame{
             frame+mannager.delay, // add delay frames
             input,
         })
     }
+    // todo we may want to move this into net
 }
 
 
@@ -164,6 +196,9 @@ get_next_input :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
         ordered_remove(&mannager.input_stack.stack,0)
         mannager.input_stack.last_input = input.input
         return input.input
+    }
+    if frame > mannager.input_stack.stack[0].frame && mannager.remote {
+
     }
     // if not reuturn what we were doing last frame
     // awsome prediction

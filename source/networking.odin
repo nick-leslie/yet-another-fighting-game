@@ -1,10 +1,14 @@
 package game
 import "core:net"
+import "base:runtime"
 // import "core:sync"
 import "core:thread"
 import "core:log"
 import gk "game_kernel"
-import "core:encoding/cbor"  // Compact binary JSON-like format
+import "core:encoding/cbor"
+import "core:container/queue"
+
+MESSAGE_VERSION :: 0
 NetworkMessage :: struct {
     packet_version:u8,
     frame:int,
@@ -30,11 +34,8 @@ NetworkMannager :: struct {
     port:int,
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
-    message_queue:[MAX_NETWORK_WINDOW]NetworkMessage,
-    p1_input_mannager:InputMannager,
-    p2_input_mannager:InputMannager,
-    reader_pos:int,
-    writer_pos:int,
+    //todo remove me we want to decouple this
+    message_queue:queue.Queue(InputWithFrame),
     endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
@@ -46,7 +47,7 @@ LobbyCreateError :: enum {
 	SocketBindErr,
 }
 
-make_network_mannager :: proc(port:int,other_ip:string,other_port:int) -> (Maybe(NetworkMannager),LobbyCreateError) {
+make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:runtime.Allocator) -> (Maybe(NetworkMannager),LobbyCreateError) {
     addr,ok := net.parse_ip4_address("0.0.0.0")
     if ok == false  {
     	log.error("invalida bind address")
@@ -64,13 +65,13 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int) -> (Maybe
     	return nil,LobbyCreateError.SocketBindErr
     }
     log.debug(udp_socket)
+    message_queue: queue.Queue(InputWithFrame) = {}
+    queue.init(&message_queue,allocator=allocator)
     mannager := NetworkMannager {
     	socket = udp_socket,
     	address = addr,
      	port = port,
-     	message_queue = {},
-      	reader_pos = 0,
-      	writer_pos = 0,
+     	message_queue = message_queue,
         endpoint=net.Endpoint {
             address = other_addr,
             port = other_port,
@@ -112,55 +113,65 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
     log.debug("started listening for messages")
     net.set_blocking(mannager.socket,true)
     for mannager.should_run {
-	    buffer := [size_of(NetworkMessage)]u8{}
+	    buffer := [150]u8{}
 	    net.recv_udp(mannager.socket,buffer[:])
-		// log.debug(buffer)
-	    msg,err := decode_message(buffer[:])
+		log.debug(buffer)
+		log.debug("got message")
+
+		// remove me we want to make our own queue
+	    msg:NetworkMessage = {}
+		err := cbor.unmarshal_from_bytes(buffer[:],&msg)
+		switch state in msg.message_type {
+		case ConnectToOther:
+            log.debug("connecting")
+		case SendInput:
+            queue.push_back(&mannager.message_queue,InputWithFrame {
+                frame=msg.frame,
+                input=state.input,
+            })
+        }
+		log.debug(msg)
 	    if err != nil {
 	   		continue // love the continue here
 	    }
-	    mannager.message_queue[mannager.writer_pos] = msg
-	    //we dont need this to be attomic because its one producer
-		proposed_pos := mannager.writer_pos+1 %% len(mannager.message_queue)
-		if proposed_pos == mannager.reader_pos {
-			assert(false,"we arnt consuming messages fast enough")
-		}
-	    mannager.writer_pos = proposed_pos
+
 		free_all(context.temp_allocator)
     }
 }
 
 SendMesageErr :: union {
-    EncodeErr,
+    cbor.Marshal_Error,
     net.UDP_Send_Error,
 }
+
 
 send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_written: int, err: SendMesageErr) {
     buffer,encode_err := encode_message(msg)
     if encode_err != nil {
+        log.debug(encode_err)
         return 0,encode_err// todo return err
     }
-    return net.send_udp(mannager.socket,buffer,mannager.endpoint)
-}
-
-poll_remote_input :: proc(mannager:^NetworkMannager) -> Maybe(NetworkMessage) {
-    if mannager.reader_pos+1 > mannager.writer_pos {
-        return nil // todo reutrn an error here
+    log.debug(buffer)
+    test_msg:NetworkMessage = {}
+    cbor.unmarshal_from_bytes(buffer,&test_msg)
+    log.debug(test_msg)
+    bytes,net_err := net.send_udp(mannager.socket,buffer,mannager.endpoint)
+    if net_err == net.UDP_Send_Error.None {
+        return bytes,nil
     }
-    value := mannager.message_queue[mannager.reader_pos]
-    mannager.reader_pos += 1
-    return value
+    return bytes,net_err
+
 }
 
-
-EncodeErr :: union {
-    cbor.Marshal_Error,
-}
 
 //we wrap here so we can add a custom impl if cbor is slow
-encode_message :: proc(msg:NetworkMessage) -> ([]byte,EncodeErr) {
-    data,err := cbor.marshal_into_bytes(msg, cbor.ENCODE_FULLY_DETERMINISTIC)
-    return data,err
+encode_message :: proc(msg:NetworkMessage) -> ([]byte,cbor.Marshal_Error) {
+    data,err := cbor.marshal_into_bytes(msg, cbor.ENCODE_FULLY_DETERMINISTIC,context.temp_allocator)
+    if err != nil {
+        log.debug(err)
+        return data,err
+    }
+    return data,nil
 }
 
 

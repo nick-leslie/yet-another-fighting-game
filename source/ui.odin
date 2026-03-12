@@ -36,6 +36,7 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p2)
 		}
 		input_history(g.world.p1_input_buffer)
+		input_history(g.world.p2_input_buffer)
 		//todo fix these to the left and right
 	}
 
