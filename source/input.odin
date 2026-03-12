@@ -127,6 +127,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
         length := queue.len(input_queue^)
         if length <= 0 {
             log.debug("predicting")
+            // assert(false,"predciting")
             //predict
             append_elem(&mannager.input_stack.stack, InputWithFrame{
                 frame=frame,
@@ -139,7 +140,9 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
         log.debug(front_ptr)
         if frame > front_ptr.frame {
             // rollback!!!!!!
-            log.debug("predicting")
+            // go back and insert the frame at the right pos.
+            // then resimulate
+            assert(false,"rollback")
             //predict
             append_elem(&mannager.input_stack.stack, InputWithFrame{
                 frame=frame,
@@ -149,7 +152,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back
-            log.debug("predicting")
+            log.debug("predicting because of missing")
             //predict
             append_elem(&mannager.input_stack.stack, InputWithFrame{
                 frame=frame,
