@@ -124,7 +124,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 }
 
 
-push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> bool {
+push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
         input_queue := &mannager.network_mannager_ptr.message_queue
         length := queue.len(input_queue^)
@@ -134,7 +134,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> b
             //predict
 
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return false
+            return 0
         }
 
         front_ptr := queue.front_ptr(input_queue)
@@ -148,16 +148,16 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> b
             if prediction.input == front_ptr.input {
                 queue.pop_front(input_queue)
                 // our prediction was right no need to rollback
-                return false
+                return 0
             }
             log.debug(frame)
             log.debug(front_ptr)
-            assert(false,"rollback")
-
+            // assert(false,"rollback")
+            queue.pop_front(input_queue)
             //predict
 
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return true
+            return front_ptr.frame
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back
@@ -165,7 +165,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> b
             //predict
             // todo this may be wrong
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return false
+            return 0
         }
         log.debug("getting input")
         msg := queue.pop_front(input_queue)
@@ -192,7 +192,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> b
             input,
         },frame+mannager.delay)
     }
-    return false
+    return 0
     // todo we may want to move this into net
 }
 

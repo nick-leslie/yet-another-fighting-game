@@ -162,10 +162,24 @@ game_update :: proc() {
         return
     }
     if g.network_mannager.should_run == true {
-        requires_rollback := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
-        requires_rollback |= push_to_input_stack(&g.p2_input_mannager,g.frame,false)
+        // the remote player should be the only one that decides when roll back
+        rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
+        rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,g.frame,false)
         p1_input := get_next_input(&g.p1_input_mannager,g.frame)
         p2_input := get_next_input(&g.p2_input_mannager,g.frame)
+        if rollback_to_p1 > 0 {
+            //this feels kinda dumb very messy not a fan
+            rollback_correct_frame(rollback_to_p1,p1_input,true)
+            rollback_to_p1 = push_to_input_stack(&g.p1_input_mannager,g.frame,true)
+            p1_input = get_next_input(&g.p1_input_mannager,g.frame)
+            p2_input = get_next_input(&g.p2_input_mannager,g.frame)
+        }
+        if rollback_to_p2 > 0 {
+            rollback_correct_frame(rollback_to_p2,p2_input,true)
+            rollback_to_p2 = push_to_input_stack(&g.p2_input_mannager,g.frame,false)
+            p1_input = get_next_input(&g.p1_input_mannager,g.frame)
+            p2_input = get_next_input(&g.p1_input_mannager,g.frame)
+        }
 
 
         if ODIN_DEBUG == true {
@@ -305,14 +319,14 @@ game_init :: proc() {
             remote = false,
             network_mannager_ptr = &g.network_mannager,
             input_stack = make_input_stack(arena_alocator),
-            delay = 2,
+            delay = 0,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
             remote = true,
             network_mannager_ptr = &g.network_mannager,
             input_stack = make_input_stack(arena_alocator),
-            delay = 2,
+            delay = 0,
 		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
