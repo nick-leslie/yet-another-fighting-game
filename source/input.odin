@@ -4,6 +4,7 @@ import "core:container/queue"
 import "base:runtime"
 import gk "game_kernel"
 import rl "vendor:raylib"
+import "./utils"
 @(require) import "core:log"
 
 
@@ -44,6 +45,8 @@ InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
 	input_stack: InputStack,
+	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame),
+	last_input: InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
 }
@@ -121,7 +124,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 }
 
 
-push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
+push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> bool {
     if mannager.remote == true {
         input_queue := &mannager.network_mannager_ptr.message_queue
         length := queue.len(input_queue^)
@@ -129,11 +132,9 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
             log.debug("predicting")
             // assert(false,"predciting")
             //predict
-            append_elem(&mannager.input_stack.stack, InputWithFrame{
-                frame=frame,
-                input=mannager.input_stack.last_input,
-            })
-            return
+
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            return false
         }
 
         front_ptr := queue.front_ptr(input_queue)
@@ -142,31 +143,36 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
             // rollback!!!!!!
             // go back and insert the frame at the right pos.
             // then resimulate
+            // check if predictions are correct
+            prediction := utils.get_at_frame(mannager.input_buffer,front_ptr.frame)
+            if prediction.input == front_ptr.input {
+                queue.pop_front(input_queue)
+                // our prediction was right no need to rollback
+                return false
+            }
+            log.debug(frame)
+            log.debug(front_ptr)
             assert(false,"rollback")
+
             //predict
-            append_elem(&mannager.input_stack.stack, InputWithFrame{
-                frame=frame,
-                input=mannager.input_stack.last_input,
-            })
-            return
+
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            return true
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back
             log.debug("predicting because of missing")
             //predict
-            append_elem(&mannager.input_stack.stack, InputWithFrame{
-                frame=frame,
-                input=mannager.input_stack.last_input,
-            })
-            return
+            // todo this may be wrong
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            return false
         }
         log.debug("getting input")
         msg := queue.pop_front(input_queue)
         log.debug(msg)
-        append_elem(&mannager.input_stack.stack,msg)
+        utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
-
         msg := NetworkMessage {
             packet_version=0,
             frame=frame+mannager.delay,
@@ -181,27 +187,22 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) {
                 log.debug(err)
             }
         }
-        append_elem(&mannager.input_stack.stack, InputWithFrame{
+        utils.insert_at_frame(&mannager.input_buffer,InputWithFrame{
             frame+mannager.delay, // add delay frames
             input,
-        })
+        },frame+mannager.delay)
     }
+    return false
     // todo we may want to move this into net
 }
 
 
 get_next_input :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     // check if we have an input this frame.
-    if mannager.input_stack.stack[0].frame == frame {
+    input := utils.get_at_frame(mannager.input_buffer,frame)
+    if input.frame == frame {
         // if so return and pop
-        input := mannager.input_stack.stack[0]
-        // this may be slow
-        ordered_remove(&mannager.input_stack.stack,0)
-        mannager.input_stack.last_input = input.input
         return input.input
-    }
-    if frame > mannager.input_stack.stack[0].frame && mannager.remote {
-
     }
     // if not reuturn what we were doing last frame
     // awsome prediction

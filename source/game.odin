@@ -161,27 +161,31 @@ game_update :: proc() {
     if g.run == false {
         return
     }
+    if g.network_mannager.should_run == true {
+        requires_rollback := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
+        requires_rollback |= push_to_input_stack(&g.p2_input_mannager,g.frame,false)
+        p1_input := get_next_input(&g.p1_input_mannager,g.frame)
+        p2_input := get_next_input(&g.p2_input_mannager,g.frame)
+
+
+        if ODIN_DEBUG == true {
+            debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
+        }
+
+        // last_world_state := get_current_state(&g.rollback_state)
+        // log.debug(g.rollback_state.current_index)
+        // gk.deserlize_world(last_world_state.world_state,&g.world)
+
+       	gk.world_tic(&g.world,p1_input,p2_input)
+       	gk.world_physics_tic(&g.world)
+       	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
+       	g.frame +=1
+    }
     // log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
     //
     //
-    push_to_input_stack(&g.p1_input_mannager,g.frame,true)
-    push_to_input_stack(&g.p2_input_mannager,g.frame,false)
-    p1_input := get_next_input(&g.p1_input_mannager,g.frame)
-    p2_input := get_next_input(&g.p2_input_mannager,g.frame)
 
-
-    if ODIN_DEBUG == true {
-        debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
-    }
-
-    // last_world_state := get_current_state(&g.rollback_state)
-    // log.debug(g.rollback_state.current_index)
-    // gk.deserlize_world(last_world_state.world_state,&g.world)
-
-   	gk.world_tic(&g.world,p1_input,p2_input)
-   	gk.world_physics_tic(&g.world)
-   	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
     // log.debug(g.rollback_state.current_frame)
     // log.debug(g.rollback_state.current_index)
 
@@ -190,7 +194,6 @@ game_update :: proc() {
 
 	// Everything on tracking allocator is valid until end-of-frame.
 	free_all(context.temp_allocator)
-	g.frame +=1
 }
 
 @(export)
@@ -309,7 +312,7 @@ game_init :: proc() {
             remote = true,
             network_mannager_ptr = &g.network_mannager,
             input_stack = make_input_stack(arena_alocator),
-            delay = 0,
+            delay = 2,
 		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),

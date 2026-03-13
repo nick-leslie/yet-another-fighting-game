@@ -10,6 +10,8 @@
 * [ ] serlize on validated that input is good.
 * [ ] show that inputs are correct
 * [ ] lobbys
+* [ ] nat hole punch
+* [ ] match making servers
 
 
 [ ] menues
