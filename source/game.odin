@@ -54,7 +54,7 @@ Game_Memory :: struct {
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
-	rollback_state: RollbackStateQueue,
+	rollback_state: RollbackMannager,
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
@@ -167,29 +167,22 @@ game_update :: proc() {
         rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
         rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,g.frame,false)
         if rollback_to_p1 > 0 {
-            //this feels kinda dumb very messy not a fan
-            rollback_correct_frame(rollback_to_p1,
-            	get_input_at_frame(&g.p1_input_mannager,rollback_to_p1),
-            	get_input_at_frame(&g.p2_input_mannager,rollback_to_p1),
-            )
-            rollback_to_p1 = push_to_input_stack(&g.p1_input_mannager,g.frame,true)
+            rollback_correct_frame(&g.rollback_state,&g.world,rollback_to_p1)
         }
         if rollback_to_p2 > 0 {
+        //we have a rollback issue where we are not pusing fully to buffer
         	log.debug("we rolling back")
         	log.debug(rollback_to_p2)
         	log.debug(get_input_at_frame(&g.p2_input_mannager,rollback_to_p2))
         	// assert(false,"we have a rollback")
-	        rollback_correct_frame(rollback_to_p2,
-	        	get_input_at_frame(&g.p1_input_mannager,rollback_to_p2),
-	        	get_input_at_frame(&g.p2_input_mannager,rollback_to_p2),
-	        )
+	        rollback_correct_frame(&g.rollback_state,&g.world,rollback_to_p2)
         }
         p1_input := get_input_at_frame(&g.p1_input_mannager,g.frame)
         p2_input := get_input_at_frame(&g.p2_input_mannager,g.frame)
 
 
         if ODIN_DEBUG == true {
-            debug_rollback(&g.rollback_state,DEBUG_ROLLBACK_FRAMES)
+            debug_rollback(&g.rollback_state,&g.world,DEBUG_ROLLBACK_FRAMES)
         }
 
         // last_world_state := get_current_state(&g.rollback_state)

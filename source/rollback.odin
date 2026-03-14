@@ -18,7 +18,7 @@ RollbackState :: struct {
 }
 
 // MAX_ROLLBACK_FRAMES :: 25
-RollbackStateQueue ::struct {
+RollbackMannager ::struct {
     //todo note to future nick use an option to show if there state there
     buffer:     [MAX_ROLLBACK_WINDOW]RollbackState,
     current_index:int,
@@ -29,14 +29,14 @@ RollbackStateQueue ::struct {
     p2_input_mannager:^InputMannager,
 }
 
-create_new_rollback_queue :: proc(p1_input_mannager:^InputMannager,p2_input_mannager:^InputMannager,) -> RollbackStateQueue {
+create_new_rollback_queue :: proc(p1_input_mannager:^InputMannager,p2_input_mannager:^InputMannager,) -> RollbackMannager {
 	arena: vmem.Arena
 	//todo shrink me
 	err := vmem.arena_init_growing(&arena, MAX_ROLLBACK_WINDOW*mem.Kilobyte) // todo grow this
 	if err != nil {
 		assert(false,"failed to make rollback state")
 	}
-	state_queue := RollbackStateQueue{
+	state_queue := RollbackMannager{
 		p1_input_mannager=p1_input_mannager,
 		p2_input_mannager=p2_input_mannager,
 	}
@@ -60,13 +60,13 @@ create_new_rollback_queue :: proc(p1_input_mannager:^InputMannager,p2_input_mann
 	return state_queue
 }
 
-free_rollback_state_queue :: proc(queue:^RollbackStateQueue	) {
+free_rollback_state_queue :: proc(queue:^RollbackMannager	) {
 	vmem.arena_destroy(&queue.arena_backing)
 }
 
 DEBUG_ROLLBACK_FRAMES :: 7
 //icrement current frame
-add_new_state :: proc(queue:^RollbackStateQueue,world:gk.World,inputs:[2]gk.Input) {
+add_new_state :: proc(queue:^RollbackMannager,world:gk.World,inputs:[2]gk.Input) {
     queue.current_frame+=1
     index :=  queue.current_frame % (len(queue.buffer)) // rollback windwo
     queue.current_index = index
@@ -86,11 +86,11 @@ add_new_state :: proc(queue:^RollbackStateQueue,world:gk.World,inputs:[2]gk.Inpu
 }
 
 
-get_current_state :: proc(queue:^RollbackStateQueue) -> RollbackState {
+get_current_state :: proc(queue:^RollbackMannager) -> RollbackState {
     return queue.buffer[queue.current_index]
 }
 
-rollback_too :: proc(queue:^RollbackStateQueue,back_too_frame:int) -> (int) {
+rollback_too :: proc(queue:^RollbackMannager,back_too_frame:int) -> (int) {
     go_to :=  queue.current_frame
     queue.current_frame = back_too_frame
     queue.current_index = queue.current_frame %% len(queue.buffer) // rollback windwo
@@ -99,41 +99,42 @@ rollback_too :: proc(queue:^RollbackStateQueue,back_too_frame:int) -> (int) {
 
 counter:=0
 
-debug_rollback :: proc(queue:^RollbackStateQueue,frames:int) {
-	if queue.current_frame < frames {
+debug_rollback :: proc(rollback_mannager:^RollbackMannager,world:^gk.World,frames:int) {
+	if rollback_mannager.current_frame < frames {
 		log.debug("not enough frames to rollback skipping")
 		return
 	}
-    go_too :=  rollback_too(queue,queue.current_frame-(frames))
-    resimulate_rest(go_too,queue.current_frame)
+    go_too :=  rollback_too(rollback_mannager,rollback_mannager.current_frame-(frames))
+    resimulate_rest(rollback_mannager,world,go_too)
 }
+
 //this shit is all cringe rewrite
-resimulate_rest :: proc(go_too:int,frame:int) {
-	frame := frame
-    for g.rollback_state.current_frame != go_too {
-        world_state := get_current_state(&g.rollback_state)
-        //to try this
-        p1_input := get_input_at_frame(g.rollback_state.p1_input_mannager,frame)
-        p2_input := get_input_at_frame(g.rollback_state.p2_input_mannager,frame)
-        gk.deserlize_world(world_state.world_state,&g.world)
-       	gk.world_tic(&g.world,p1_input,p2_input)
-       	gk.world_physics_tic(&g.world)
-       	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
-        frame+=1
+resimulate_rest :: proc(rollback_mannager:^RollbackMannager,world:^gk.World,go_to:int) {
+    for g.rollback_state.current_frame != go_to {
+    	run_frame(rollback_mannager,world)
     }
 }
 
-rollback_correct_frame :: proc(frame:int,p1_input:gk.Input,p2_input:gk.Input) {
-    go_too :=  rollback_too(&g.rollback_state,frame)
-    world_state := get_current_state(&g.rollback_state)
-    gk.deserlize_world(world_state.world_state,&g.world)
-   	gk.world_tic(&g.world,p1_input,p2_input)
-   	gk.world_physics_tic(&g.world)
-   	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
-    resimulate_rest(go_too,frame)
+rollback_correct_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World,frame:int) {
+    go_too :=  rollback_too(rollback_mannager,frame)
+    run_frame(rollback_mannager,world)
+    resimulate_rest(rollback_mannager,world,go_too)
 }
 
 
+run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
+
+	world_state := get_current_state(rollback_mannager)
+    gk.deserlize_world(world_state.world_state,world)
+
+   	p1_input := get_input_at_frame(rollback_mannager.p1_input_mannager,rollback_mannager.current_frame)
+    p2_input := get_input_at_frame(rollback_mannager.p2_input_mannager,rollback_mannager.current_frame)
+
+   	gk.world_tic(world,p1_input,p2_input)
+   	gk.world_physics_tic(world)
+
+   	add_new_state(rollback_mannager,world^,[2]gk.Input{p1_input,p2_input})
+}
 
 // go back to frame
 // correct input
