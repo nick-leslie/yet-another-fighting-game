@@ -66,9 +66,9 @@ free_rollback_state_queue :: proc(queue:^RollbackMannager	) {
 
 DEBUG_ROLLBACK_FRAMES :: 7
 //icrement current frame
-add_new_state :: proc(queue:^RollbackMannager,world:gk.World,inputs:[2]gk.Input) {
+add_new_state :: proc(queue:^RollbackMannager,world:gk.World) {
     queue.current_frame+=1
-    index :=  queue.current_frame % (len(queue.buffer)) // rollback windwo
+    index :=  queue.current_frame %% (len(queue.buffer)) // rollback windwo
     queue.current_index = index
     old := &queue.buffer[index]
     arena := &old.arena
@@ -76,8 +76,6 @@ add_new_state :: proc(queue:^RollbackMannager,world:gk.World,inputs:[2]gk.Input)
     allocator := vmem.arena_allocator(arena)
 	state := RollbackState {
 		arena = old.arena,
-        p1_input=inputs[0],
-        p2_input=inputs[1],
         world_state =  gk.serlize_world(g.world,allocator),
         frame_number = queue.current_frame,
    	}
@@ -133,7 +131,7 @@ run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
    	gk.world_tic(world,p1_input,p2_input)
    	gk.world_physics_tic(world)
 
-   	add_new_state(rollback_mannager,world^,[2]gk.Input{p1_input,p2_input})
+   	add_new_state(rollback_mannager,world^)
 }
 
 // go back to frame

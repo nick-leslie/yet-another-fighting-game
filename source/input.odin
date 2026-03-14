@@ -146,7 +146,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             prediction := utils.get_at_frame(mannager.input_buffer,front_ptr.frame)
             if prediction.input == front_ptr.input {
             	log.debug("correct prediction")
-             	
+
              	input := queue.pop_front(input_queue)
                 utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
                 // our prediction was right no need to rollback
@@ -159,7 +159,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             input := queue.pop_front(input_queue)
             //predict
 
-            utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
+            utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
             return front_ptr.frame
         }
         if frame < front_ptr.frame {
@@ -173,9 +173,13 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         log.debug("getting input")
         msg := queue.pop_front(input_queue)
         log.debug(msg)
+        log.debug(msg.frame == frame)
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
+        input = gk.Input {
+       		dir=gk.Direction.Forward,
+        }
         msg := NetworkMessage {
             packet_version=0,
             frame=frame+mannager.delay,

@@ -191,7 +191,7 @@ game_update :: proc() {
 
        	gk.world_tic(&g.world,p1_input,p2_input)
        	gk.world_physics_tic(&g.world)
-       	add_new_state(&g.rollback_state,g.world,[2]gk.Input{p1_input,p2_input})
+       	add_new_state(&g.rollback_state,g.world)
        	g.frame +=1
     }
     // log.debug("---------------------------")
@@ -318,7 +318,7 @@ game_init :: proc() {
             remote = false,
             network_mannager_ptr = &g.network_mannager,
             input_stack = make_input_stack(arena_alocator),
-            delay = 0,
+            delay = 2,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
