@@ -138,7 +138,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         }
 
         front_ptr := queue.front_ptr(input_queue)
-        log.debug(front_ptr)
         if frame > front_ptr.frame {
             // rollback!!!!!!
             // go back and insert the frame at the right pos.
@@ -146,17 +145,21 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             // check if predictions are correct
             prediction := utils.get_at_frame(mannager.input_buffer,front_ptr.frame)
             if prediction.input == front_ptr.input {
-                queue.pop_front(input_queue)
+            	log.debug("correct prediction")
+             	
+             	input := queue.pop_front(input_queue)
+                utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
                 // our prediction was right no need to rollback
                 return 0
             }
+            log.debug("rollbackkkkkk")
             log.debug(frame)
             log.debug(front_ptr)
             // assert(false,"rollback")
-            queue.pop_front(input_queue)
+            input := queue.pop_front(input_queue)
             //predict
 
-            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
             return front_ptr.frame
         }
         if frame < front_ptr.frame {
@@ -197,7 +200,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
 }
 
 
-get_next_input :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
+get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {

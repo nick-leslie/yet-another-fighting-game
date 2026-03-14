@@ -161,25 +161,31 @@ game_update :: proc() {
     if g.run == false {
         return
     }
+
     if g.network_mannager.should_run == true {
         // the remote player should be the only one that decides when roll back
         rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
         rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,g.frame,false)
-        p1_input := get_next_input(&g.p1_input_mannager,g.frame)
-        p2_input := get_next_input(&g.p2_input_mannager,g.frame)
         if rollback_to_p1 > 0 {
             //this feels kinda dumb very messy not a fan
-            rollback_correct_frame(rollback_to_p1,p1_input,true)
+            rollback_correct_frame(rollback_to_p1,
+            	get_input_at_frame(&g.p1_input_mannager,rollback_to_p1),
+            	get_input_at_frame(&g.p2_input_mannager,rollback_to_p1),
+            )
             rollback_to_p1 = push_to_input_stack(&g.p1_input_mannager,g.frame,true)
-            p1_input = get_next_input(&g.p1_input_mannager,g.frame)
-            p2_input = get_next_input(&g.p2_input_mannager,g.frame)
         }
         if rollback_to_p2 > 0 {
-            rollback_correct_frame(rollback_to_p2,p2_input,true)
-            rollback_to_p2 = push_to_input_stack(&g.p2_input_mannager,g.frame,false)
-            p1_input = get_next_input(&g.p1_input_mannager,g.frame)
-            p2_input = get_next_input(&g.p1_input_mannager,g.frame)
+        	log.debug("we rolling back")
+        	log.debug(rollback_to_p2)
+        	log.debug(get_input_at_frame(&g.p2_input_mannager,rollback_to_p2))
+        	// assert(false,"we have a rollback")
+	        rollback_correct_frame(rollback_to_p2,
+	        	get_input_at_frame(&g.p1_input_mannager,rollback_to_p2),
+	        	get_input_at_frame(&g.p2_input_mannager,rollback_to_p2),
+	        )
         }
+        p1_input := get_input_at_frame(&g.p1_input_mannager,g.frame)
+        p2_input := get_input_at_frame(&g.p2_input_mannager,g.frame)
 
 
         if ODIN_DEBUG == true {
@@ -359,7 +365,7 @@ game_init :: proc() {
 	log.debug(network_mannager)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
-	g.rollback_state = create_new_rollback_queue()
+	g.rollback_state = create_new_rollback_queue(&g.p1_input_mannager,&g.p2_input_mannager)
 	game_hot_reloaded(g)
 }
 

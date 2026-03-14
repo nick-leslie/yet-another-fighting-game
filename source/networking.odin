@@ -115,8 +115,6 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
     for mannager.should_run {
 	    buffer := [150]u8{}
 	    net.recv_udp(mannager.socket,buffer[:])
-		log.debug(buffer)
-		log.debug("got message")
 
 		// remove me we want to make our own queue
 	    msg:NetworkMessage = {}
@@ -130,7 +128,6 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
                 input=state.input,
             })
         }
-		log.debug(msg)
 	    if err != nil {
 	   		continue // love the continue here
 	    }
@@ -151,10 +148,8 @@ send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_wr
         log.debug(encode_err)
         return 0,encode_err// todo return err
     }
-    log.debug(buffer)
     test_msg:NetworkMessage = {}
     cbor.unmarshal_from_bytes(buffer,&test_msg)
-    log.debug(test_msg)
     bytes,net_err := net.send_udp(mannager.socket,buffer,mannager.endpoint)
     if net_err == net.UDP_Send_Error.None {
         return bytes,nil
