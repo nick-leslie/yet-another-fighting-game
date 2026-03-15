@@ -73,7 +73,7 @@ setup_charecter :: proc(char: ^CharecterBase) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase,input_buffer:InputBuffer,w:^World) {
+charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World) {
 	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	character.move_dir = {}
@@ -155,7 +155,7 @@ charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State(Ch
 
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
-InputBfrPtrArr :: ^[2]^utils.Buffer
+InputBfrPtrArr :: ^[2]^utils.Buffer(INPUT_BUFFER_LENGTH,Input)
 HitBoxCtx :: struct($T:typeid) {
 	charecters:   CharPtrArr,
 	input_buffers:InputBfrPtrArr, // todo this may be bad
@@ -242,7 +242,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 }
 
 charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
-	input := input_buffer.buffer[input_buffer.input_index]
+	input := input_buffer.buffer[input_buffer.index]
 	#partial switch input.dir {
 	case Direction.Back:
 		return true

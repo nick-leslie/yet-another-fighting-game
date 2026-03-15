@@ -12,9 +12,9 @@ FrameTrackedBuffer :: struct($N:int,$T:typeid) {
 }
 
 push :: proc(buffer:^Buffer($N,$T),item:T) {
-    buffer.buffer[input_buffer.index] = input
+    buffer.buffer[buffer.index] = item
     buffer.index += 1
-    buffer.index = input_buffer.index %% len(input_buffer.buffer)
+    buffer.index = buffer.index %% len(buffer.buffer)
 }
 
 insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) {

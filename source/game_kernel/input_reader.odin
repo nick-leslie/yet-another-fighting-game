@@ -46,19 +46,19 @@ delete_pattern :: proc(pattern:^Pattern) {
 // gets the controls for the player that frame
 
 
-update_input_buffer :: proc(input_buffer:^utils.Buffer,input:Input) {
+update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),input:Input) {
 	utils.push(input_buffer,input)
 }
 // this is still too buggy
 //todo test this becca
 INPUT_BUFFER_LENGTH :: 25
 // could we speed this up with a binary tree
-pick_state :: proc(buffer:utils.Buffer,pattern_list:[dynamic]Pattern) -> int {
+pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
-    i:= buffer.input_index-1
-    for i != buffer.input_index {
+    i:= buffer.index-1
+    for i != buffer.index {
         // log.debug(i)
         //
         i = i %% len(buffer.buffer)
@@ -87,7 +87,7 @@ pick_state :: proc(buffer:utils.Buffer,pattern_list:[dynamic]Pattern) -> int {
             }
         }
         i-=1
-        if i %% len(buffer.buffer) == buffer.input_index {
+        if i %% len(buffer.buffer) == buffer.index {
             break
         }
     }
@@ -162,7 +162,7 @@ test_quarter_circle :: proc(t: ^testing.T) {
 	append(&patterns,pattern_quarter_circle)
 	append(&patterns,pattern_2_quarter_circle)
 
-	input_buffer := InputBuffer {}
+	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})

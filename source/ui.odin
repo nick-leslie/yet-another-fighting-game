@@ -44,7 +44,7 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
     return clay.EndLayout()
 }
 
-input_history :: proc(buffer:utils.Buffer) {
+input_history :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,gk.Input)) {
 	if clay.UI()({
 		layout = {
 			sizing = {
@@ -55,13 +55,13 @@ input_history :: proc(buffer:utils.Buffer) {
     		layoutDirection = .LeftToRight,
 		},
 	}) {
-		i := buffer.input_index-1
+		i := buffer.index-1
 		// todo infinite loop fix me its bc of not using mod
-		for i != buffer.input_index {
+		for i != buffer.index {
 	  		i = i %% len(buffer.buffer)
 			input_ui(buffer.buffer[i])
 	        i-=1
-            if i %% len(buffer.buffer) == buffer.input_index {
+            if i %% len(buffer.buffer) == buffer.index {
                 break
             }
 		}
