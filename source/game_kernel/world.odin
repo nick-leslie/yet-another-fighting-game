@@ -3,6 +3,7 @@ package game_kernel
 import "core:log"
 import "base:runtime"
 import psy "../physics"
+import "../utils"
 
 
 CAMERA_DISTANCE :: 60
@@ -35,8 +36,8 @@ SerlizedWorld :: struct {
     p2_entity_pool:[dynamic]SerlizedEntityState,
     hit_stop:u32,
     combo_counter:int,
-   	p1_input_buffer:   InputBuffer,
-	p2_input_buffer:   InputBuffer,
+   	p1_input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),
+    p2_input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),
     // p1_entitys:[dynamic],
 }
 
@@ -83,8 +84,8 @@ destroy_world :: proc(w:World) {
 FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
 
 world_tic ::proc(w:^World,p1_input:Input,p2_input:Input) {
-	update_input_buffer(&w.p1_input_buffer, p1_input)
-	update_input_buffer(&w.p2_input_buffer, p2_input)
+	utils.push(&w.p1_input_buffer, p1_input)
+	utils.push(&w.p2_input_buffer, p2_input)
 
 	if w.hit_stop > 0 {
 		w.hit_stop -=1

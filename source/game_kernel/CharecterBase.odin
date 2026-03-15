@@ -4,6 +4,7 @@ import "base:runtime"
 import vmem "core:mem/virtual"
 import psy "../physics"
 import fixed "core:math/fixed"
+import "../utils"
 
 
 // this is just a type alieas so I can define it in multiple places
@@ -154,7 +155,7 @@ charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State(Ch
 
 // may want to put this in moves
 CharPtrArr :: ^[2]^CharecterBase
-InputBfrPtrArr :: ^[2]^InputBuffer
+InputBfrPtrArr :: ^[2]^utils.Buffer
 HitBoxCtx :: struct($T:typeid) {
 	charecters:   CharPtrArr,
 	input_buffers:InputBfrPtrArr, // todo this may be bad
@@ -240,7 +241,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
     }
 }
 
-charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:InputBuffer) -> bool {
+charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.input_index]
 	#partial switch input.dir {
 	case Direction.Back:

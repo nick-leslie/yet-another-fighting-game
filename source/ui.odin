@@ -5,6 +5,7 @@ import gk "game_kernel"
 import "core:fmt"
 import "core:unicode/utf8"
 import psy "./physics"
+import "./utils"
 @(require)import "core:log"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
@@ -43,7 +44,7 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
     return clay.EndLayout()
 }
 
-input_history :: proc(buffer:gk.InputBuffer) {
+input_history :: proc(buffer:utils.Buffer) {
 	if clay.UI()({
 		layout = {
 			sizing = {

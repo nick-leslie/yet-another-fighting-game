@@ -2,6 +2,7 @@
 package game_kernel
 
 import "core:testing"
+import "../utils"
 // import "core:log"
 
 Direction :: enum {
@@ -41,24 +42,18 @@ delete_pattern :: proc(pattern:^Pattern) {
     delete(pattern.inputs)
 }
 
-InputBuffer ::struct {
-    buffer:     [INPUT_BUFFER_LENGTH]Input,
-    input_index:int,
-}
 // seperate this out to another layer
 // gets the controls for the player that frame
 
 
-update_input_buffer :: proc(input_buffer:^InputBuffer,input:Input) {
-    input_buffer.buffer[input_buffer.input_index] = input
-    input_buffer.input_index +=1
-    input_buffer.input_index = input_buffer.input_index %% len(input_buffer.buffer)
+update_input_buffer :: proc(input_buffer:^utils.Buffer,input:Input) {
+	utils.push(input_buffer,input)
 }
 // this is still too buggy
 //todo test this becca
 INPUT_BUFFER_LENGTH :: 25
 // could we speed this up with a binary tree
-pick_state :: proc(buffer:InputBuffer,pattern_list:[dynamic]Pattern) -> int {
+pick_state :: proc(buffer:utils.Buffer,pattern_list:[dynamic]Pattern) -> int {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
