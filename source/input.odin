@@ -203,6 +203,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
 
 //this sucks
 get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
+    // why are we out of sync
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {
@@ -215,5 +216,6 @@ get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     log.debug(frame)
     log.debug(input)
     log.debug("no input at frame rollback may happen")
+    assert(false,"test")
     return mannager.input_stack.last_input.input
 }
