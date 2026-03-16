@@ -37,11 +37,37 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p2)
 		}
 		input_history(g.world.p1_input_buffer)
+		network_input_hisory(g.p1_input_mannager.input_buffer)
 		input_history(g.world.p2_input_buffer)
+		network_input_hisory(g.p2_input_mannager.input_buffer)
 		//todo fix these to the left and right
 	}
 
     return clay.EndLayout()
+}
+
+network_input_hisory :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame)) {
+    if clay.UI()({
+		layout = {
+			sizing = {
+				width = clay.SizingGrow(),
+				height = clay.SizingFit(),
+			},
+      			padding = { 10,10,10,10 },
+       		layoutDirection = .LeftToRight,
+		},
+	}) {
+		i := buffer.index-1
+		// todo infinite loop fix me its bc of not using mod
+		for i != buffer.index {
+	  		i = i %% len(buffer.buffer)
+			input_ui(buffer.buffer[i].input)
+	        i-=1
+               if i %% len(buffer.buffer) == buffer.index {
+                   break
+               }
+		}
+	}
 }
 
 input_history :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,gk.Input)) {

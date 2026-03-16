@@ -129,6 +129,7 @@ run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
     p2_input := get_input_at_frame(rollback_mannager.p2_input_mannager,rollback_mannager.current_frame)
     nutral_input := gk.Input {dir=gk.Direction.Neutral}
     if p2_input == nutral_input {
+        log.debug(rollback_mannager.p2_input_mannager)
     	assert(false,"found u")
     }
    	gk.world_tic(world,p1_input,p2_input)
