@@ -37,7 +37,7 @@ InputWithFrame :: struct {
 
 InputStack :: struct {
     stack:[dynamic]InputWithFrame,
-    last_input:gk.Input,
+    last_input:InputWithFrame,
 }
 // this handles handing inputs from the game to the kernal
 // it does not contain a buffer but it allows for delay
@@ -54,9 +54,7 @@ InputMannager :: struct {
 make_input_stack:: proc(allocator:runtime.Allocator) -> InputStack {
     return InputStack {
         stack = make([dynamic]InputWithFrame,allocator),
-        last_input = gk.Input {
-            dir=gk.Direction.Neutral,
-        },
+        last_input = {},
     }
 }
 
@@ -203,15 +201,19 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
     // todo we may want to move this into net
 }
 
-
+//this sucks
 get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {
         // if so return and pop
+        mannager.last_input = input
         return input.input
     }
     // if not reuturn what we were doing last frame
     // awsome prediction
-    return mannager.input_stack.last_input
+    log.debug(frame)
+    log.debug(input)
+    log.debug("no input at frame rollback may happen")
+    return mannager.input_stack.last_input.input
 }
