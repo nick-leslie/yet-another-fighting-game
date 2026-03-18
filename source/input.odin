@@ -146,7 +146,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             //predict
 
             utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
-            return front_ptr.frame
+            //insert a prediction as well
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            log.debug(input.frame)
+            return input.frame
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back

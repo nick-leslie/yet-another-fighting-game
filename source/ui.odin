@@ -36,9 +36,14 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p1)
 			charecter_debug_ui(g.world.p2)
 		}
+		//todo reduce the distance between stuff
+		clay.Text("buffer p1",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		input_history(g.world.p1_input_buffer)
-		network_input_hisory(g.p1_input_mannager.input_buffer)
+		clay.Text("buffer p2",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		input_history(g.world.p2_input_buffer)
+		clay.Text("net buffer p1",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
+		network_input_hisory(g.p1_input_mannager.input_buffer)
+		clay.Text("net buffer p2",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		network_input_hisory(g.p2_input_mannager.input_buffer)
 		//todo fix these to the left and right
 	}

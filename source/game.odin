@@ -165,7 +165,7 @@ game_update :: proc() {
     if g.network_mannager.should_run == true {
         // the remote player should be the only one that decides when roll back
         rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,g.frame,true)
-        rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,g.frame,false)
+        rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,g.frame,true)
         if rollback_to_p1 > 0 {
             rollback_correct_frame(&g.rollback_state,&g.world,rollback_to_p1)
         }
@@ -174,6 +174,8 @@ game_update :: proc() {
         	log.debug("we rolling back")
         	log.debug(rollback_to_p2)
         	log.debug(get_input_at_frame(&g.p2_input_mannager,rollback_to_p2))
+        	log.debug(get_input_at_frame(&g.p1_input_mannager,rollback_to_p2))
+        	log.debug(get_input_at_frame(&g.p1_input_mannager,rollback_to_p2-1))
         	// assert(false,"we have a rollback")
 	        rollback_correct_frame(&g.rollback_state,&g.world,rollback_to_p2)
         }
@@ -269,13 +271,13 @@ game_init :: proc() {
 	}
 	p2 := gk.CharecterBase {
 		health=100,
-		body = psy.body_init({10, 10}),
+		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
 		move_speed = 7,
 		air_drag = 0.5,
 		air_move_speed = 15,
 		jump_height = 50,
-		p1_side = false,
+		p1_side = true,
 	}
 	old_allocator := context.allocator
 	gk.initilize_charecter_memory(&p1)

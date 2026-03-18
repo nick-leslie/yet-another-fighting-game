@@ -19,7 +19,7 @@ NetworkMessage :: struct {
 MessageType :: union #no_nil {
     ConnectToOther,
     SendInput,
-
+    AckInput,
 }
 ConnectToOther :: struct {
     character:u8,
@@ -28,6 +28,8 @@ ConnectToOther :: struct {
 SendInput :: struct {
     input:gk.Input,
 }
+AckInput :: struct {} // todo see what we need to send with the acc
+
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 NetworkMannager :: struct {
     address:net.Address,
@@ -127,6 +129,8 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
                 frame=msg.frame,
                 input=state.input,
             })
+		case AckInput:
+		    log.debug("got input")
         }
 	    if err != nil {
 	   		continue // love the continue here
