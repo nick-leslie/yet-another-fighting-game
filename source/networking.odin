@@ -7,7 +7,6 @@ import "core:thread"
 import "core:log"
 import gk "game_kernel"
 import "core:encoding/cbor"
-import "core:container/queue"
 import "./utils"
 
 MESSAGE_VERSION :: 0
@@ -42,7 +41,7 @@ NetworkMannager :: struct {
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
     //todo remove me we want to decouple this
-    message_queue:utils.RingBuffer(InputWithFrame),
+    message_queue:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
@@ -76,7 +75,7 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:
     	socket = udp_socket,
     	address = addr,
      	port = port,
-     	message_queue = utils.RingBuffer {},
+     	message_queue = utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
         endpoint=net.Endpoint {
             address = other_addr,
             port = other_port,
@@ -127,7 +126,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 		case ConnectToOther:
             log.debug("connecting")
 		case SendInput:
-            queue.push_back(&mannager.message_queue,InputWithFrame {
+            utils.push(&mannager.message_queue.inner,InputWithFrame {
                 frame=msg.frame,
                 input=state.input,
             })

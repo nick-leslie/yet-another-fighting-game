@@ -13,7 +13,7 @@ FrameTrackedBuffer :: struct($N:int,$T:typeid) {
 
 RingBuffer :: struct($N:int,$T:typeid) {
 	using inner: Buffer(N,T),
-	read_index:int
+	read_index:int,
 }
 
 push :: proc(buffer:^Buffer($N,$T),item:T) {
@@ -22,7 +22,7 @@ push :: proc(buffer:^Buffer($N,$T),item:T) {
     buffer.index = buffer.index %% len(buffer.buffer)
 }
 
-pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
+ring_pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
 	item := buffer.buffer[buffer.read_index]
 	buffer.read_index+=1
 	buffer.read_index = buffer.read_index %% len(buffer.buffer)
@@ -31,6 +31,15 @@ pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
 			assert(false,"not consuming fast enough")
 		}
 	}
+	return item
+}
+
+ring_peek ::proc(buffer:^RingBuffer($N,$T)) -> T {
+	return buffer.buffer[buffer.read_index]
+}
+
+ring_len :: proc(buffer:^RingBuffer($N,$T)) -> int{
+	return abs(buffer.index - buffer.read_index)
 }
 
 insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) {
