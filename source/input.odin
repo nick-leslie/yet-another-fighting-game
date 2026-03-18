@@ -1,7 +1,6 @@
 package game
 
 import "core:container/queue"
-import "base:runtime"
 import gk "game_kernel"
 import rl "vendor:raylib"
 import "./utils"
@@ -34,29 +33,18 @@ InputWithFrame :: struct {
     frame:int,
     input:gk.Input,
 }
-
-InputStack :: struct {
-    stack:[dynamic]InputWithFrame,
-    last_input:InputWithFrame,
-}
 // this handles handing inputs from the game to the kernal
 // it does not contain a buffer but it allows for delay
 InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
-	input_stack: InputStack,
 	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame),
 	last_input: InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
 }
 
-make_input_stack:: proc(allocator:runtime.Allocator) -> InputStack {
-    return InputStack {
-        stack = make([dynamic]InputWithFrame,allocator),
-        last_input = {},
-    }
-}
+
 
 poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
     switch &controls in controls {
@@ -175,9 +163,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
-        input = gk.Input {
-       		dir=gk.Direction.Forward,
-        }
         msg := NetworkMessage {
             packet_version=0,
             frame=frame+mannager.delay,
@@ -216,6 +201,6 @@ get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     log.debug(frame)
     log.debug(input)
     log.debug("no input at frame rollback may happen")
-    assert(false,"test")
-    return mannager.input_stack.last_input.input
+    // assert(false,"test")
+    return mannager.last_input.input
 }
