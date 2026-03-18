@@ -197,7 +197,7 @@ game_update :: proc() {
 
     if g.network_mannager.should_run == true {
         // the remote player should be the only one that decides when roll back
-        run_game_sim()
+        run_game_sim(&g.world,g.frame)
     }
     // log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz

@@ -110,6 +110,8 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
     case GamePad:
         assert(false,"not implemented")
         return {}
+    case DebugControls:
+        return {}
     }
     return {}
 }

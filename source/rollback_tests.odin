@@ -1,5 +1,6 @@
 package game
 import psy "./physics"
+import "core:log"
 import gk "game_kernel"
 
 
@@ -40,10 +41,12 @@ rollback_test :: proc () {
             delay = 0,
 	}
 	p2_input_mannager:=InputMannager {
-            controls=p1_controls,
+            controls=p2_controls,
             remote = true,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 	}
-
+	log.debug(world)
+	log.debug(p1_input_mannager)
+	log.debug(p2_input_mannager)
 }

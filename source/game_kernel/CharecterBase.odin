@@ -76,7 +76,6 @@ setup_charecter :: proc(char: ^CharecterBase) {
 charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World) {
 	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
-	character.move_dir = {}
 	// character.addional_velocity = {} // do we want to reset this here
 
 	// log.debug("getting current state")
@@ -279,7 +278,6 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 	// new_velocity += character.addional_velocity
 	// set the velocity to the character
-	// log.debug(character.move_dir)
 	// log.debug(psy.unfix_body(character.body))
 	psy.move_by_vel(&character.body) // this moves by vel_tmp
 	// log.debug(psy.unfix_body(character.body))
