@@ -40,6 +40,7 @@ NetworkMannager :: struct {
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
     //todo remove me we want to decouple this
+    // this is LIKELY A MEMORY LEAK
     message_queue:queue.Queue(InputWithFrame),
     endpoint:net.Endpoint,
     other_player_connected:bool,
