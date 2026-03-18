@@ -3,10 +3,10 @@
 * [x] input sync over network
 * [x] 7 frame debug rollback.
 * [x] state serlizable
-* [ ] Network debug fucktions delay+drop packet
-* [ ] Rollback on bad perdition
+* [ ] Network debug functions delay+drop packet
+* [x] Rollback on bad perdition
 * [ ] ask for dropped input
-* [ ] better input queue and window
+* [x] better input queue and window
 * [ ] serlize on validated that input is good.
 * [ ] show that inputs are correct
 * [ ] lobbys

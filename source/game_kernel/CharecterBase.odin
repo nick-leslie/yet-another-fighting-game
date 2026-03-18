@@ -182,13 +182,26 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 		check_hit(hitbox_context)
 	}
 	// should we make this a function in entity
-	// for &entity in characters[0].entity_pool {
-	// 	if entity.active {
-	// 		// enity_state := entity.states[entity.current_state]
-	// 		// enity_frame := enity_state.frames[entity.current_frame]
-	// 		//todo sub in non jolt physics collision
-	// 	}
-	// }
+	for &entity in characters[0].entity_pool {
+		if entity.active {
+			enity_state := entity.states[entity.current_state]
+			enity_frame := enity_state.frames[entity.current_frame]
+			//todo sub in non jolt physics collision
+			for &hitbox_index in enity_frame.hitbox_list {
+				hit_box := enity_state.hit_boxes[hitbox_index]
+				hitbox_context := HitBoxCtx(Entity) {
+					self_state = enity_state,
+					charecters   = characters,
+					hitbox       = &hit_box,
+					hitbox_index = hitbox_index,
+					hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
+					input_buffers = input_buffers,
+					world 	   	 = w,
+				}
+				check_hit_entity(hitbox_context)
+			}
+		}
+	}
 }
 
 
