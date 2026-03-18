@@ -11,6 +11,11 @@ import "./utils"
 Controls :: union {
     Keyboard,
     GamePad,
+    DebugControls, // used for testing
+}
+
+DebugControls :: struct {
+
 }
 
 Keyboard :: struct {
@@ -187,6 +192,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
     }
     return 0
     // todo we may want to move this into net
+}
+
+insert_input_at_frame ::proc (mannager:^InputMannager,frame:int, input:gk.Input) {
+    utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
 }
 
 //this sucks

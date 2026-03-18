@@ -127,7 +127,7 @@ run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
 
    	p1_input := get_input_at_frame(rollback_mannager.p1_input_mannager,rollback_mannager.current_frame)
     p2_input := get_input_at_frame(rollback_mannager.p2_input_mannager,rollback_mannager.current_frame)
-    
+
    	gk.world_tic(world,p1_input,p2_input)
    	gk.world_physics_tic(world)
 
