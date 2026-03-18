@@ -36,12 +36,43 @@ create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p1)
 			charecter_debug_ui(g.world.p2)
 		}
+		//todo reduce the distance between stuff
+		clay.Text("buffer p1",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		input_history(g.world.p1_input_buffer)
+		clay.Text("buffer p2",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		input_history(g.world.p2_input_buffer)
+		clay.Text("net buffer p1",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
+		network_input_hisory(g.p1_input_mannager.input_buffer)
+		clay.Text("net buffer p2",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
+		network_input_hisory(g.p2_input_mannager.input_buffer)
 		//todo fix these to the left and right
 	}
 
     return clay.EndLayout()
+}
+
+network_input_hisory :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame)) {
+    if clay.UI()({
+		layout = {
+			sizing = {
+				width = clay.SizingGrow(),
+				height = clay.SizingFit(),
+			},
+      			padding = { 10,10,10,10 },
+       		layoutDirection = .LeftToRight,
+		},
+	}) {
+		i := buffer.index-1
+		// todo infinite loop fix me its bc of not using mod
+		for i != buffer.index {
+	  		i = i %% len(buffer.buffer)
+			input_ui(buffer.buffer[i].input)
+	        i-=1
+               if i %% len(buffer.buffer) == buffer.index {
+                   break
+               }
+		}
+	}
 }
 
 input_history :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,gk.Input)) {

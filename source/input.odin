@@ -1,7 +1,6 @@
 package game
 
 import "core:container/queue"
-import "base:runtime"
 import gk "game_kernel"
 import rl "vendor:raylib"
 import "./utils"
@@ -12,6 +11,11 @@ import "./utils"
 Controls :: union {
     Keyboard,
     GamePad,
+    DebugControls, // used for testing
+}
+
+DebugControls :: struct {
+
 }
 
 Keyboard :: struct {
@@ -34,31 +38,18 @@ InputWithFrame :: struct {
     frame:int,
     input:gk.Input,
 }
-
-InputStack :: struct {
-    stack:[dynamic]InputWithFrame,
-    last_input:gk.Input,
-}
 // this handles handing inputs from the game to the kernal
 // it does not contain a buffer but it allows for delay
 InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
-	input_stack: InputStack,
 	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame),
 	last_input: InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
 }
 
-make_input_stack:: proc(allocator:runtime.Allocator) -> InputStack {
-    return InputStack {
-        stack = make([dynamic]InputWithFrame,allocator),
-        last_input = gk.Input {
-            dir=gk.Direction.Neutral,
-        },
-    }
-}
+
 
 poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
     switch &controls in controls {
@@ -119,6 +110,8 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
     case GamePad:
         assert(false,"not implemented")
         return {}
+    case DebugControls:
+        return {}
     }
     return {}
 }
@@ -160,7 +153,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             //predict
 
             utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
-            return front_ptr.frame
+            //insert a prediction as well
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            log.debug(input.frame)
+            return input.frame
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back
@@ -177,9 +173,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
-        input = gk.Input {
-       		dir=gk.Direction.Forward,
-        }
         msg := NetworkMessage {
             packet_version=0,
             frame=frame+mannager.delay,
@@ -203,15 +196,25 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
     // todo we may want to move this into net
 }
 
+insert_input_at_frame ::proc (mannager:^InputMannager,frame:int, input:gk.Input) {
+    utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+}
 
+//this sucks
 get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
+    // why are we out of sync
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {
         // if so return and pop
+        mannager.last_input = input
         return input.input
     }
     // if not reuturn what we were doing last frame
     // awsome prediction
-    return mannager.input_stack.last_input
+    log.debug(frame)
+    log.debug(input)
+    log.debug("no input at frame rollback may happen")
+    // assert(false,"test")
+    return mannager.last_input.input
 }

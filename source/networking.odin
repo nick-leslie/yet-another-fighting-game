@@ -1,5 +1,6 @@
 package game
 import "core:net"
+// import "core:time"
 import "base:runtime"
 // import "core:sync"
 import "core:thread"
@@ -20,7 +21,8 @@ NetworkMessage :: struct {
 MessageType :: union #no_nil {
     ConnectToOther,
     SendInput,
-
+    AckInput,
+    EndSession,
 }
 ConnectToOther :: struct {
     character:u8,
@@ -29,6 +31,10 @@ ConnectToOther :: struct {
 SendInput :: struct {
     input:gk.Input,
 }
+AckInput :: struct {} // todo see what we need to send with the acc
+
+EndSession :: struct {}
+
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 NetworkMannager :: struct {
     address:net.Address,
@@ -93,14 +99,13 @@ destory_lobby :: proc(mannager:^NetworkMannager) {
     log.debug("cleaning")
 	// we are using termincate here bcause we have an infinite loop
 	if mannager.thread != nil {
-	    local_endpoint,ok := net.parse_endpoint("127.0.0.1")
-		if ok == false {
-		    thread.terminate(mannager.thread,0)
-			return
-		}
-		buffer := [256]u8{}
-	    net.send_udp(mannager.socket,buffer[:],local_endpoint)
+		send_messsage(&g.network_mannager,NetworkMessage {
+            packet_version = 0,
+            frame = g.frame,
+            message_type = EndSession{},
+        })
 	    mannager.should_run = false
+	    thread.terminate(mannager.thread,0)
     	thread.join(mannager.thread)
     	thread.destroy(mannager.thread)
 	}
@@ -126,6 +131,10 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
                 frame=msg.frame,
                 input=state.input,
             })
+		case AckInput:
+		    log.debug("got input")
+		case EndSession:
+		    log.debug("end session")
         }
 	    if err != nil {
 	   		continue // love the continue here
@@ -142,13 +151,15 @@ SendMesageErr :: union {
 
 
 send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_written: int, err: SendMesageErr) {
+    // options := time.Benchmark_Options {
+
+    // }
+    // time.benchmark(&options)
     buffer,encode_err := encode_message(msg)
     if encode_err != nil {
         log.debug(encode_err)
         return 0,encode_err// todo return err
     }
-    test_msg:NetworkMessage = {}
-    cbor.unmarshal_from_bytes(buffer,&test_msg)
     bytes,net_err := net.send_udp(mannager.socket,buffer,mannager.endpoint)
     if net_err == net.UDP_Send_Error.None {
         return bytes,nil
