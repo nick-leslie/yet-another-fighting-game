@@ -194,6 +194,10 @@ game_update :: proc() {
     if g.run == false {
         return
     }
+    if rl.IsKeyPressed(.P) {
+        // this sucks
+        g.network_mannager.should_run = !g.network_mannager.should_run
+    }
 
     if g.network_mannager.should_run == true {
         // the remote player should be the only one that decides when roll back
@@ -266,20 +270,20 @@ game_init :: proc() {
 		health=200,
 		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = 7,
-		air_drag = 0.5,
-		air_move_speed = 15,
-		jump_height = 50,
+		move_speed = psy.f64_to_fixed(7),
+		air_drag = psy.f64_to_fixed(0.5),
+		air_move_speed = psy.f64_to_fixed(15.0),
+		jump_height = psy.f64_to_fixed(50.0),
 		p1_side = true,
 	}
 	p2 := gk.CharecterBase {
 		health=100,
 		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = 7,
-		air_drag = 0.5,
-		air_move_speed = 15,
-		jump_height = 50,
+		move_speed = psy.f64_to_fixed(7),
+		air_drag = psy.f64_to_fixed(0.5),
+		air_move_speed = psy.f64_to_fixed(15.0),
+		jump_height = psy.f64_to_fixed(50.0),
 		p1_side = true,
 	}
 	old_allocator := context.allocator
@@ -322,7 +326,7 @@ game_init :: proc() {
             controls=p1_controls,
             remote = false,
             network_mannager_ptr = &g.network_mannager,
-            delay = 1,
+            delay = 0,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,

@@ -43,8 +43,8 @@ state_forward ::proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
-			if char.p1_side do char.body.velocity.x = psy.f64_to_fixed(1 * char.move_speed)
-			if !char.p1_side do char.body.velocity.x = psy.f64_to_fixed(-1 * char.move_speed)
+			if char.p1_side do char.body.velocity.x = char.move_speed
+			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
 		},
 		check_exit = gk.free_cancel,
 	}
@@ -66,8 +66,8 @@ state_backward ::proc(char: ^gk.CharecterBase) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {
-    		if char.p1_side do char.body.velocity.x = psy.f64_to_fixed(-1 * char.move_speed)
-    		if !char.p1_side do char.body.velocity.x = psy.f64_to_fixed(1 * char.move_speed)
+    		if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
+    		if !char.p1_side do char.body.velocity.x = char.move_speed
 		},
 		check_exit = gk.free_cancel,
 	}

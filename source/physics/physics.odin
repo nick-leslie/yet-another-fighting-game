@@ -96,6 +96,10 @@ set_box_by_body :: proc(box:FixedBox,body:FixedBody) -> FixedBox {
     return box
 }
 
+invert_fixed :: proc(val:Fixed12_4) -> Fixed12_4 {
+    return fixed.mul(val, f64_to_fixed(-1.0))
+}
+
 add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
     vec_fixed := float_vec3_to_fixed(vec)
 	body.velocity = Vec2Fixed {

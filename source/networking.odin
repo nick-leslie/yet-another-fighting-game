@@ -1,5 +1,6 @@
 package game
 import "core:net"
+// import "core:time"
 import "base:runtime"
 // import "core:sync"
 import "core:thread"
@@ -152,13 +153,15 @@ SendMesageErr :: union {
 
 
 send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_written: int, err: SendMesageErr) {
+    // options := time.Benchmark_Options {
+
+    // }
+    // time.benchmark(&options)
     buffer,encode_err := encode_message(msg)
     if encode_err != nil {
         log.debug(encode_err)
         return 0,encode_err// todo return err
     }
-    test_msg:NetworkMessage = {}
-    cbor.unmarshal_from_bytes(buffer,&test_msg)
     bytes,net_err := net.send_udp(mannager.socket,buffer,mannager.endpoint)
     if net_err == net.UDP_Send_Error.None {
         return bytes,nil

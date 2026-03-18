@@ -21,10 +21,10 @@ CharecterSerlizedState :: struct {
    	move_dir:          Vec3,
    	jump_requested:    bool,
    	in_air:            bool,
-   	jump_height:       f64,
-   	move_speed:        f64,
-   	air_move_speed:    f64,
-   	air_drag:          f64,
+   	jump_height:       psy.Fixed12_4,
+   	move_speed:        psy.Fixed12_4,
+   	air_move_speed:    psy.Fixed12_4,
+   	air_drag:          psy.Fixed12_4,
    	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
    	entity_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of what entitys are active
    	current_frame:     int,
