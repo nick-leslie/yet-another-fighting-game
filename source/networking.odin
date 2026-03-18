@@ -20,6 +20,7 @@ MessageType :: union #no_nil {
     ConnectToOther,
     SendInput,
     AckInput,
+    EndSession,
 }
 ConnectToOther :: struct {
     character:u8,
@@ -29,6 +30,8 @@ SendInput :: struct {
     input:gk.Input,
 }
 AckInput :: struct {} // todo see what we need to send with the acc
+
+EndSession :: struct {}
 
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 NetworkMannager :: struct {
@@ -96,14 +99,13 @@ destory_lobby :: proc(mannager:^NetworkMannager) {
     log.debug("cleaning")
 	// we are using termincate here bcause we have an infinite loop
 	if mannager.thread != nil {
-	    local_endpoint,ok := net.parse_endpoint("127.0.0.1")
-		if ok == false {
-		    thread.terminate(mannager.thread,0)
-			return
-		}
-		buffer := [256]u8{}
-	    net.send_udp(mannager.socket,buffer[:],local_endpoint)
+		send_messsage(&g.network_mannager,NetworkMessage {
+            packet_version = 0,
+            frame = g.frame,
+            message_type = EndSession{},
+        })
 	    mannager.should_run = false
+	    thread.terminate(mannager.thread,0)
     	thread.join(mannager.thread)
     	thread.destroy(mannager.thread)
 	}
@@ -131,6 +133,8 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
             })
 		case AckInput:
 		    log.debug("got input")
+		case EndSession:
+		    log.debug("end session")
         }
 	    if err != nil {
 	   		continue // love the continue here
