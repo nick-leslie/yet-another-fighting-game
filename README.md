@@ -26,6 +26,22 @@ the ui is covered by clay.
 # sound 
 todo but hopefuly we will use fmod
 
+### code style
+
+# memory and arenas
+Please read up on the odin memory arena style of programing before setting up. 
+Each memory arena should be for a spesific life cycle
+
+## Game Arena 
+Any alocation that lasts the entire runtime of the game. INCLUDING main menues.
+
+## Charecter arena
+Any alocation that has the same life cycle as the charecter. this includes patterns,states,entitys
+
+## Frame arena(temporary allocation)
+this is where any memory that needs to last the duration of the frame should go.
+this is cleared every frame
+
 # TODO. 
 [ ] rollback top prio
 * [x] input sync over network
