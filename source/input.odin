@@ -1,6 +1,5 @@
 package game
 
-import "core:container/queue"
 import gk "game_kernel"
 import rl "vendor:raylib"
 import "./utils"
@@ -119,8 +118,8 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 
 push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
-        input_queue := &mannager.network_mannager_ptr.message_queue
-        length := queue.len(input_queue^)
+        input_queue := &mannager.network_mannager_ptr.rcvd_inputs
+        length := utils.ring_len(input_queue)
         if length <= 0 {
             log.debug("predicting")
             // assert(false,"predciting")
@@ -130,7 +129,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             return 0
         }
 
-        front_ptr := queue.front_ptr(input_queue)
+        front_ptr := utils.ring_peek(input_queue)
         if frame > front_ptr.frame {
             // rollback!!!!!!
             // go back and insert the frame at the right pos.
@@ -140,7 +139,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             if prediction.input == front_ptr.input {
             	log.debug("correct prediction")
 
-             	input := queue.pop_front(input_queue)
+             	input := utils.ring_pop(input_queue)
                 utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
                 // our prediction was right no need to rollback
                 return 0
@@ -149,7 +148,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             log.debug(frame)
             log.debug(front_ptr)
             // assert(false,"rollback")
-            input := queue.pop_front(input_queue)
+           	input := utils.ring_pop(input_queue)
             //predict
 
             utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
@@ -167,7 +166,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             return 0
         }
         log.debug("getting input")
-        msg := queue.pop_front(input_queue)
+        msg := utils.ring_pop(input_queue)
         log.debug(msg)
         log.debug(msg.frame == frame)
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
@@ -182,6 +181,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         }
         if mannager.remote == false && g.network_mannager.should_run == true {
             size,err := send_messsage(mannager.network_mannager_ptr,msg)
+            utils.insert_at_frame(&mannager.network_mannager_ptr.sent_inputs,InputWithFrame{
+                frame+mannager.delay, // add delay frames
+                input,
+            },frame+mannager.delay)
             if err != nil {
                 log.debug(size)
                 log.debug(err)

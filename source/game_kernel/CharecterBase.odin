@@ -32,6 +32,7 @@ CharecterSerlizedState :: struct {
     hit_stun_frames:   u32,
     block_stun_frames: u32,
     p1_side:           bool,
+    combo_scaling:     u32,
    	charecter_flags: bit_field u64 {
 
 	}, // lots of flags for various states.. tuble extc
@@ -48,10 +49,7 @@ CharecterBase :: struct {
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_index:  int,
     entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
-	update:            proc(self:^CharecterBase,world:^World),
-	physcis_update:    proc(self:^CharecterBase,world:^World),
-	on_hit:			   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
-	on_block:		   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
+    using hooks:CharecterHooks,
 }
 
 
@@ -91,6 +89,7 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INP
 		if(character.current_state == character.hit_stun_index) {
 			//this is the recovery point
 			w.combo_counter = 0
+			character.combo_scaling = 100
 		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
@@ -113,6 +112,9 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INP
 	}
 
 	frame.on_frame(character,w) // run frame update
+	for &updates in character.on_update {
+		updates(character,w)
+	}
 	character.current_frame += 1 // incrment the fraem by 1
 	for &entity in character.entity_pool {
 		if entity.active == true {
@@ -182,13 +184,26 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 		check_hit(hitbox_context)
 	}
 	// should we make this a function in entity
-	// for &entity in characters[0].entity_pool {
-	// 	if entity.active {
-	// 		// enity_state := entity.states[entity.current_state]
-	// 		// enity_frame := enity_state.frames[entity.current_frame]
-	// 		//todo sub in non jolt physics collision
-	// 	}
-	// }
+	for &entity in characters[0].entity_pool {
+		if entity.active {
+			enity_state := entity.states[entity.current_state]
+			enity_frame := enity_state.frames[entity.current_frame]
+			//todo sub in non jolt physics collision
+			for &hitbox_index in enity_frame.hitbox_list {
+				hit_box := enity_state.hit_boxes[hitbox_index]
+				hitbox_context := HitBoxCtx(Entity) {
+					self_state = enity_state,
+					charecters   = characters,
+					hitbox       = &hit_box,
+					hitbox_index = hitbox_index,
+					hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
+					input_buffers = input_buffers,
+					world 	   	 = w,
+				}
+				check_hit_entity(hitbox_context)
+			}
+		}
+	}
 }
 
 
@@ -228,8 +243,19 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 			other.hit_stun_frames = hit_ctx.self_state.hitstun
 			other.block_stun_frames=0
 			hit_ctx.world.combo_counter += 1
+			if self.combo_scaling == 0 {
+				//do we want to do this to avoid 0% scalling
+				self.combo_scaling = 100
+			}
 			//set in hit_stun
-			other.health-= hit_ctx.self_state.damage
+			other.health-= self.damage_formula(self^,
+				other^,
+				hit_ctx.world^,
+				self.charecter_check_counterhit(self^,other^), // is counter hit todo detect counterhit
+				hit_ctx.self_state,
+				hit_ctx.hitbox^,
+			)
+
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
 			other.block_stun_frames = hit_ctx.self_state.blockstun
@@ -239,6 +265,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
         //check if blocking and set to block or hit_stun
     }
 }
+
 
 charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.index]
@@ -286,7 +313,9 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 	// read the new position into our structure
 	//todo all this is gonna get removed
-
+	for &physcis_update in character.on_physics_update {
+		physcis_update(character,w)
+	}
 	for &entity in character.entity_pool {
 		if entity.active {
 			entity_physics_update(&entity,character,w)

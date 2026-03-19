@@ -7,7 +7,7 @@ import "core:thread"
 import "core:log"
 import gk "game_kernel"
 import "core:encoding/cbor"
-import "core:container/queue"
+import "./utils"
 
 MESSAGE_VERSION :: 0
 NetworkMessage :: struct {
@@ -41,8 +41,8 @@ NetworkMannager :: struct {
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
     //todo remove me we want to decouple this
-    // this is LIKELY A MEMORY LEAK
-    message_queue:queue.Queue(InputWithFrame),
+    rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+    sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
@@ -72,13 +72,12 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:
     	return nil,LobbyCreateError.SocketBindErr
     }
     log.debug(udp_socket)
-    message_queue: queue.Queue(InputWithFrame) = {}
-    queue.init(&message_queue,allocator=allocator)
     mannager := NetworkMannager {
     	socket = udp_socket,
     	address = addr,
      	port = port,
-     	message_queue = message_queue,
+     	rcvd_inputs = utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
+     	sent_inputs = utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
         endpoint=net.Endpoint {
             address = other_addr,
             port = other_port,
@@ -129,12 +128,20 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 		case ConnectToOther:
             log.debug("connecting")
 		case SendInput:
-            queue.push_back(&mannager.message_queue,InputWithFrame {
+			input:=InputWithFrame {
                 frame=msg.frame,
                 input=state.input,
+            }
+            utils.push(&mannager.rcvd_inputs.inner,input)
+            //sent acc
+            send_messsage(mannager,NetworkMessage {
+           		packet_version =0,
+           		frame=msg.frame,
+            	message_type=AckInput{},
             })
 		case AckInput:
-		    log.debug("got input")
+		    log.debug("got acc")
+			//conform input
 		case EndSession:
 		    log.debug("end session")
         }
