@@ -32,6 +32,7 @@ CharecterSerlizedState :: struct {
     hit_stun_frames:   u32,
     block_stun_frames: u32,
     p1_side:           bool,
+    combo_scaling:     u32,
    	charecter_flags: bit_field u64 {
 
 	}, // lots of flags for various states.. tuble extc
@@ -91,6 +92,7 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INP
 		if(character.current_state == character.hit_stun_index) {
 			//this is the recovery point
 			w.combo_counter = 0
+			character.combo_scaling = 100
 		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
@@ -241,8 +243,12 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 			other.hit_stun_frames = hit_ctx.self_state.hitstun
 			other.block_stun_frames=0
 			hit_ctx.world.combo_counter += 1
+			if self.combo_scaling == 0 {
+				//do we want to do this to avoid 0% scalling
+				self.combo_scaling = 100
+			}
 			//set in hit_stun
-			other.health-= hit_ctx.self_state.damage
+			other.health-= hit_ctx.self_state.damage/self.combo_scaling
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
 			other.block_stun_frames = hit_ctx.self_state.blockstun
