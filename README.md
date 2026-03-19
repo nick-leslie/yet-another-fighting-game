@@ -28,6 +28,8 @@ todo but hopefuly we will use fmod
 
 ### code style
 
+# pointers and mutability
+
 # memory and arenas
 Please read up on the odin memory arena style of programing before setting up. 
 Each memory arena should be for a spesific life cycle
