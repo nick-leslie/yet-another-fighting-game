@@ -8,9 +8,11 @@ the game kernel is the core game engine. it currently supports charecters entity
 
 ### charecter base
 
-### move
+### State
+A state is a charecter state with frames. to transition between states you need to pass the exit check. the exit check is a callback per frame. 
 
 ### pattern
+patterns are a list of inputs. They also include a priority so inputs that have overlap higher priority will win.
 
 # physics
 This is the fixed floating point physics library. it has basic collision and vector adding. 
@@ -20,6 +22,9 @@ Rendering is covered by raylib. it also covers loading of a assets.
 
 # ui 
 the ui is covered by clay.
+
+# sound 
+todo but hopefuly we will use fmod
 
 # TODO. 
 [ ] rollback top prio
