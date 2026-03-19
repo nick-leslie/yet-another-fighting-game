@@ -118,7 +118,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 
 push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
-        input_queue := &mannager.network_mannager_ptr.message_queue
+        input_queue := &mannager.network_mannager_ptr.rcvd_inputs
         length := utils.ring_len(input_queue)
         if length <= 0 {
             log.debug("predicting")
@@ -181,6 +181,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         }
         if mannager.remote == false && g.network_mannager.should_run == true {
             size,err := send_messsage(mannager.network_mannager_ptr,msg)
+            utils.insert_at_frame(&mannager.network_mannager_ptr.sent_inputs,InputWithFrame{
+                frame+mannager.delay, // add delay frames
+                input,
+            },frame+mannager.delay)
             if err != nil {
                 log.debug(size)
                 log.debug(err)
