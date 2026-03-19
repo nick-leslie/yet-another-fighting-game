@@ -3,6 +3,7 @@
 * [x] input sync over network
 * [x] 7 frame debug rollback.
 * [x] state serlizable
+* [ ] send acs
 * [ ] Network debug functions delay+drop packet
 * [x] Rollback on bad perdition
 * [ ] ask for dropped input
@@ -25,6 +26,7 @@
 
 [ ] gameplay/modes
 * [ ] combo scalling
+* [x] hook system
 * [ ] local vs
 * [ ] remote vs
 * [ ] remaping controls 

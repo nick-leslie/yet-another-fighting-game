@@ -49,10 +49,7 @@ CharecterBase :: struct {
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_index:  int,
     entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
-	update:            proc(self:^CharecterBase,world:^World),
-	physcis_update:    proc(self:^CharecterBase,world:^World),
-	on_hit:			   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
-	on_block:		   proc(self:^CharecterBase,hit_ctx:HitBoxCtx(CharecterBase)),
+    using hooks:CharecterHooks,
 }
 
 
@@ -115,6 +112,9 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INP
 	}
 
 	frame.on_frame(character,w) // run frame update
+	for &updates in character.on_update {
+		updates(character,w)
+	}
 	character.current_frame += 1 // incrment the fraem by 1
 	for &entity in character.entity_pool {
 		if entity.active == true {
@@ -248,7 +248,14 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 				self.combo_scaling = 100
 			}
 			//set in hit_stun
-			other.health-= hit_ctx.self_state.damage/self.combo_scaling
+			other.health-= self.damage_formula(self^,
+				other^,
+				hit_ctx.world^,
+				self.charecter_check_counterhit(self^,other^), // is counter hit todo detect counterhit
+				hit_ctx.self_state,
+				hit_ctx.hitbox^,
+			)
+
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
 			other.block_stun_frames = hit_ctx.self_state.blockstun
@@ -258,6 +265,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
         //check if blocking and set to block or hit_stun
     }
 }
+
 
 charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.index]
@@ -305,7 +313,9 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 
 	// read the new position into our structure
 	//todo all this is gonna get removed
-
+	for &physcis_update in character.on_physics_update {
+		physcis_update(character,w)
+	}
 	for &entity in character.entity_pool {
 		if entity.active {
 			entity_physics_update(&entity,character,w)
