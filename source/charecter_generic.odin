@@ -9,7 +9,23 @@ import gk "game_kernel"
 import vmem "core:mem/virtual"
 import psy "./physics"
 
-
+create_generic_charecter :: proc() -> gk.CharecterBase {
+   	charecter := gk.CharecterBase {
+		health=200,
+		body = psy.body_init({0, 10}),
+		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
+		move_speed = psy.f64_to_fixed(7),
+		air_drag = psy.f64_to_fixed(0.5),
+		air_move_speed = psy.f64_to_fixed(15.0),
+		jump_height = psy.f64_to_fixed(50.0),
+		p1_side = true,
+		hooks = {
+            damage_formula = gk.default_dammage_formula,
+            charecter_check_counterhit = gk.default_counterhit_check,
+		},
+	}
+	return charecter
+}
 
 state_neutral ::proc(char: ^gk.CharecterBase) {
 	using gk
