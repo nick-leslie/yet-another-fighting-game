@@ -150,15 +150,17 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 				},
             }
             log.debug(send_msg)
+
             send_messsage(mannager,send_msg)
 		case AcceptGameStart:
 			// rtt := time.diff(
 			// 	state.now(),
 			// 	mannager.game_start_sent_at,
 			// )
+			g.game_run = true
 			remote_now := state.now
    			now := time.now()
-      		start_time := time.time_add(now,time.Millisecond * 3000)
+      		start_time := time.time_add(now,time.Second * 3)
             send_msg := NetworkMessage {
 			   	packet_version=MESSAGE_VERSION,
 			    frame=-1,
@@ -171,6 +173,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
             g.start_time = start_time
             send_messsage(mannager,send_msg)
 		case SetStartTime:
+			g.game_run = true
 			g.start_time = state.start_time
 			log.debug(state.start_time)
 			// g.game_run = true

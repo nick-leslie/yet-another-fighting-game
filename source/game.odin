@@ -204,7 +204,9 @@ game_update :: proc() {
 
     if g.game_run == true {
         // the remote player should be the only one that decides when roll back
-        run_game_sim(&g.world,g.frame)
+        if g.start_time != nil && time.diff(time.now(),g.start_time.?) < 0 {
+   	        run_game_sim(&g.world,g.frame)
+        }
     }
     // log.debug("---------------------------")
     // todo go back 7 and resimulate in debug zzzz
@@ -359,7 +361,7 @@ game_init :: proc() {
 			other_port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port,"10.0.0.80",other_port,arena_alocator)
+	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
 	log.debug(network_mannager)
 	if network_mannager == nil || err != nil {
 		log.debug("failed to connect")

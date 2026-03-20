@@ -5,6 +5,7 @@ import gk "game_kernel"
 import "core:fmt"
 import "core:unicode/utf8"
 import psy "./physics"
+import "core:time"
 import "./utils"
 @(require)import "core:log"
 
@@ -114,6 +115,15 @@ network_mannagment_ui :: proc() {
 		callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
 			if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
 				context = g_context
+				now := time.now()
+				send_messsage(&g.network_mannager,NetworkMessage {
+					packet_version=MESSAGE_VERSION,
+					frame=-1,
+					message_type=RequestGameStart {
+						character=0,
+						now=now,
+					},
+				})
 				network_mannager_start_listening(&g.network_mannager)
 			}
 		}
