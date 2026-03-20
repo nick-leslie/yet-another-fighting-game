@@ -38,6 +38,7 @@ import clay "../libs/clay-odin"
 import psy "./physics"
 import vmem "core:mem/virtual"
 import "core:os"
+import "core:time"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -47,9 +48,11 @@ USE_PROFILING :: #config(USE_PROFILING, false)
 PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
 Game_Memory :: struct {
-	run:            bool,
-	arena:     vmem.Arena,
+	app_run:        bool,
+	game_run: 		bool,
+	arena:     		vmem.Arena,
 	frame:          int,
+	start_time:		Maybe(time.Time),
 	world: 		    gk.World,
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
@@ -189,9 +192,9 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
 @(export)
 game_update :: proc() {
     if rl.IsKeyPressed(.ESCAPE) {
-  		g.run = false
+  		g.app_run = false
    	}
-    if g.run == false {
+    if g.app_run == false {
         return
     }
     if rl.IsKeyPressed(.P) {
@@ -199,7 +202,7 @@ game_update :: proc() {
         g.network_mannager.should_run = !g.network_mannager.should_run
     }
 
-    if g.network_mannager.should_run == true {
+    if g.game_run == true {
         // the remote player should be the only one that decides when roll back
         run_game_sim(&g.world,g.frame)
     }
@@ -316,7 +319,7 @@ game_init :: proc() {
 	// does this work
 	arena_alocator := vmem.arena_allocator(&g.arena)
 	g^ = Game_Memory {
-		run = true,
+		app_run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 		clay_arena=clay_arena,
@@ -337,6 +340,7 @@ game_init :: proc() {
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
 		fonts = fonts,
+		game_run = false,
 	}
 	log.debug("connecting to network")
 	port := 3636
@@ -355,7 +359,7 @@ game_init :: proc() {
 			other_port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
+	network_mannager,err := make_network_mannager(port,"10.0.0.80",other_port,arena_alocator)
 	log.debug(network_mannager)
 	if network_mannager == nil || err != nil {
 		log.debug("failed to connect")
@@ -378,7 +382,7 @@ game_should_run :: proc() -> bool {
 		}
 	}
 
-	return g.run
+	return g.app_run
 }
 
 

@@ -1,6 +1,6 @@
 package game
 import "core:net"
-// import "core:time"
+import "core:time"
 import "base:runtime"
 // import "core:sync"
 import "core:thread"
@@ -18,13 +18,25 @@ NetworkMessage :: struct {
 }
 
 MessageType :: union #no_nil {
-    ConnectToOther,
+    RequestGameStart,
+    AcceptGameStart,
+    SetStartTime,
     SendInput,
     AckInput,
     EndSession,
 }
-ConnectToOther :: struct {
+RequestGameStart :: struct {
     character:u8,
+    now:time.Time,
+}
+
+AcceptGameStart :: struct {
+	character:u8,
+	now:time.Time,
+}
+
+SetStartTime :: struct {
+	start_time:time.Time,
 }
 
 SendInput :: struct {
@@ -46,6 +58,7 @@ NetworkMannager :: struct {
     endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
+    game_start_sent_at:time.Time,
 }
 
 LobbyCreateError :: enum {
@@ -125,8 +138,42 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 	    msg:NetworkMessage = {}
 		err := cbor.unmarshal_from_bytes(buffer[:],&msg)
 		switch state in msg.message_type {
-		case ConnectToOther:
+		case RequestGameStart:
             log.debug("connecting")
+            now := time.now()
+            send_msg := NetworkMessage {
+	           	packet_version=MESSAGE_VERSION,
+	            frame=-1,
+	            message_type=AcceptGameStart {
+					character=0,
+					now=now,
+				},
+            }
+            log.debug(send_msg)
+            send_messsage(mannager,send_msg)
+		case AcceptGameStart:
+			// rtt := time.diff(
+			// 	state.now(),
+			// 	mannager.game_start_sent_at,
+			// )
+			remote_now := state.now
+   			now := time.now()
+      		start_time := time.time_add(now,time.Millisecond * 3000)
+            send_msg := NetworkMessage {
+			   	packet_version=MESSAGE_VERSION,
+			    frame=-1,
+			    message_type=SetStartTime {
+					start_time=start_time,
+				},
+			}
+			log.debug(remote_now)
+            log.debug(send_msg)
+            g.start_time = start_time
+            send_messsage(mannager,send_msg)
+		case SetStartTime:
+			g.start_time = state.start_time
+			log.debug(state.start_time)
+			// g.game_run = true
 		case SendInput:
 			input:=InputWithFrame {
                 frame=msg.frame,
