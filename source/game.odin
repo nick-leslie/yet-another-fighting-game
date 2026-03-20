@@ -175,7 +175,7 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
 
 
     if ODIN_DEBUG == true {
-        debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
+        // debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
     }
 
     // last_world_state := get_current_state(&g.rollback_state)
@@ -337,7 +337,7 @@ game_init :: proc() {
             controls=p1_controls,
             remote = true,
             network_mannager_ptr = &g.network_mannager,
-            delay = 0,
+            delay = 1,
 		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
