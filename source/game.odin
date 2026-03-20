@@ -199,7 +199,8 @@ game_update :: proc() {
     }
     if rl.IsKeyPressed(.P) {
         // this sucks
-        g.network_mannager.should_run = !g.network_mannager.should_run
+        // g.network_mannager.should_run = !g.network_mannager.should_run
+        g.game_run = !g.game_run
     }
 
     if g.game_run == true {

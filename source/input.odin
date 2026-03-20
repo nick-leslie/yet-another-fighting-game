@@ -132,7 +132,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         front_ptr := utils.ring_peek(input_queue)
         earlyest_frame := front_ptr.frame
         // drain if if we are behind
-        for frame > front_ptr.frame {
+        for frame > front_ptr.frame  && input_queue.read_index+1 != input_queue.inner.index{
             // rollback!!!!!!
             // go back and insert the frame at the right pos.
             // then resimulate
@@ -158,8 +158,8 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
                 utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
                 //insert a prediction as well
                 log.debug(input.frame)
-                front_ptr = utils.ring_peek(input_queue)
             }
+            front_ptr = utils.ring_peek(input_queue)
             // return input.frame
         }
         if earlyest_frame != frame {
