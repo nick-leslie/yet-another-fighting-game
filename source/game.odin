@@ -331,13 +331,13 @@ game_init :: proc() {
             controls=p1_controls,
             remote = false,
             network_mannager_ptr = &g.network_mannager,
-            delay = 1,
+            delay = 0,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
             remote = true,
             network_mannager_ptr = &g.network_mannager,
-            delay = 1,
+            delay = 0,
 		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
 		cam = game_camera(),
@@ -361,7 +361,7 @@ game_init :: proc() {
 			other_port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port,"10.0.0.80",other_port,arena_alocator)
+	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
 	log.debug(network_mannager)
 	if network_mannager == nil || err != nil {
 		log.debug("failed to connect")

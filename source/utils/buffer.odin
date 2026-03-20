@@ -28,6 +28,7 @@ ring_pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
 	buffer.read_index = buffer.read_index %% len(buffer.buffer)
 	if buffer.read_index == buffer.index {
 		if ODIN_DISABLE_ASSERT == true {
+
 			assert(false,"not consuming fast enough")
 		}
 	}
@@ -51,6 +52,8 @@ insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) {
 }
 
 get_at_frame :: proc(buffer:FrameTrackedBuffer($N,$T),frame:int) -> T {
+    log.debug(buffer.current_frame-frame)
+    log.debug(cap(buffer.buffer))
     ensure(buffer.current_frame-frame <= cap(buffer.buffer),"you cant search back further than the frame requires")
     index := frame %% N
     return buffer.buffer[index]

@@ -130,7 +130,9 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         }
 
         front_ptr := utils.ring_peek(input_queue)
-        if frame > front_ptr.frame {
+        earlyest_frame := front_ptr.frame
+        // drain if if we are behind
+        for frame > front_ptr.frame {
             // rollback!!!!!!
             // go back and insert the frame at the right pos.
             // then resimulate
@@ -142,20 +144,27 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
              	input := utils.ring_pop(input_queue)
                 utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
                 // our prediction was right no need to rollback
-                return 0
-            }
-            log.debug("rollbackkkkkk")
-            log.debug(frame)
-            log.debug(front_ptr)
-            // assert(false,"rollback")
-           	input := utils.ring_pop(input_queue)
-            //predict
+            } else {
+                log.debug("rollbackkkkkk")
+                log.debug(frame)
+                log.debug(front_ptr)
+                // assert(false,"rollback")
 
-            utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
-            //insert a prediction as well
-            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            log.debug(input.frame)
-            return input.frame
+               	input := utils.ring_pop(input_queue)
+                //predict
+                if input.frame < earlyest_frame {
+                    earlyest_frame=input.frame
+                }
+                utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
+                //insert a prediction as well
+                log.debug(input.frame)
+                front_ptr = utils.ring_peek(input_queue)
+            }
+            // return input.frame
+        }
+        if earlyest_frame != frame {
+            log.debug(earlyest_frame)
+            return earlyest_frame
         }
         if frame < front_ptr.frame {
             // missing inputs we are predciting ask for input back
