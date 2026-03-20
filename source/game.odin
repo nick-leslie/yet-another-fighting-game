@@ -331,7 +331,7 @@ game_init :: proc() {
             controls=p1_controls,
             remote = false,
             network_mannager_ptr = &g.network_mannager,
-            delay = 0,
+            delay = 1,
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
@@ -361,7 +361,7 @@ game_init :: proc() {
 			other_port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
+	network_mannager,err := make_network_mannager(port,"10.0.0.80",other_port,arena_alocator)
 	log.debug(network_mannager)
 	if network_mannager == nil || err != nil {
 		log.debug("failed to connect")
