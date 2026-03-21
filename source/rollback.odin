@@ -66,7 +66,8 @@ free_rollback_state_queue :: proc(queue:^RollbackMannager	) {
 
 DEBUG_ROLLBACK_FRAMES :: 7
 //icrement current frame
-add_new_state :: proc(queue:^RollbackMannager,world:gk.World) {
+save_current_world_state :: proc(queue:^RollbackMannager,world:gk.World) {
+    queue.current_frame+=1
     index :=  queue.current_frame %% (len(queue.buffer)) // rollback windwo
     queue.current_index = index
     old := &queue.buffer[index]
@@ -79,7 +80,6 @@ add_new_state :: proc(queue:^RollbackMannager,world:gk.World) {
         frame_number = queue.current_frame,
    	}
     queue.buffer[queue.current_index] = state
-    queue.current_frame+=1
     //todo pop the state
 }
 
@@ -131,7 +131,7 @@ run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
    	gk.world_tic(world,p1_input,p2_input)
    	gk.world_physics_tic(world)
 
-   	add_new_state(rollback_mannager,world^)
+   	save_current_world_state(rollback_mannager,world^)
 }
 
 // go back to frame

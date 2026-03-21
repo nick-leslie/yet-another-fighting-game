@@ -161,13 +161,8 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
         rollback_correct_frame(&g.rollback_state,world,rollback_to_p1)
     }
     if rollback_to_p2 > 0 {
-    //we have a rollback issue where we are not pusing fully to buffer
-    	log.debug("we rolling back")
-    	log.debug(rollback_to_p2)
-    	log.debug(get_input_at_frame(&g.p2_input_mannager,rollback_to_p2))
-    	log.debug(get_input_at_frame(&g.p1_input_mannager,rollback_to_p2))
-    	log.debug(get_input_at_frame(&g.p1_input_mannager,rollback_to_p2-1))
-    	// assert(false,"we have a rollback")
+            //we have a rollback issue where we are not pusing fully to buffer
+    	    // assert(false,"we have a rollback")
 	        rollback_correct_frame(&g.rollback_state,world,rollback_to_p2)
     }
     p1_input := get_input_at_frame(&g.p1_input_mannager,frame)
@@ -175,7 +170,7 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
 
 
     if ODIN_DEBUG == true {
-        // debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
+        debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
     }
 
     // last_world_state := get_current_state(&g.rollback_state)
@@ -184,7 +179,7 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
 
    	gk.world_tic(world,p1_input,p2_input)
    	gk.world_physics_tic(world)
-   	add_new_state(&g.rollback_state,world^)
+   	save_current_world_state(&g.rollback_state,world^)
    	g.frame +=1
 }
 
@@ -336,7 +331,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
-            remote = true,
+            remote = false,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

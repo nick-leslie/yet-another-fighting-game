@@ -53,6 +53,7 @@ NetworkMannager :: struct {
     socket:  net.UDP_Socket,
    	thread: ^thread.Thread,
     //todo remove me we want to decouple this
+    // could these be linked lists
     rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     endpoint:net.Endpoint,
