@@ -128,8 +128,14 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
             return 0
         }
-
+        if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
+            //prediction
+            // this is bad we need to work on it
+            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+            return 0
+        }
         front_ptr := utils.ring_peek(input_queue)
+        // we keep peeking
         earlyest_frame := front_ptr.frame
         // drain if if we are behind
         for frame > front_ptr.frame  && input_queue.read_index+1 != input_queue.inner.index{
