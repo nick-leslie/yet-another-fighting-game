@@ -177,7 +177,7 @@ run_game_sim :: proc(world:^gk.World,frame:int) {
     // log.debug(g.rollback_state.current_index)
     // gk.deserlize_world(last_world_state.world_state,&g.world)
 
-   	gk.world_tic(world,p1_input,p2_input)
+   	gk.world_tic(world,p1_input,p2_input,frame)
    	gk.world_physics_tic(world)
    	save_current_world_state(&g.rollback_state,world^)
    	g.frame +=1
@@ -331,7 +331,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p1_controls,
-            remote = false,
+            remote = true,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

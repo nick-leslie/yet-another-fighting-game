@@ -36,8 +36,8 @@ SerlizedWorld :: struct {
     p2_entity_pool:[dynamic]SerlizedEntityState,
     hit_stop:u32,
     combo_counter:int,
-   	p1_input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),
-    p2_input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),
+   	p1_input_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
+    p2_input_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
     // p1_entitys:[dynamic],
 }
 
@@ -48,8 +48,8 @@ World :: struct {
 	// rollbackable
 	p1:                CharecterBase, // these should be charecters
 	p2:                CharecterBase,
-	p1_input_buffer:   utils.Buffer(INPUT_BUFFER_LENGTH,Input),
-	p2_input_buffer:   utils.Buffer(INPUT_BUFFER_LENGTH,Input),
+	p1_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
+	p2_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	hit_stop:		u32,
 	//todo we may need to make this go to the charecters
 	combo_counter: 	   int, // this needs to check when the enemy recovers   trades will make this goto 2
@@ -83,9 +83,9 @@ destroy_world :: proc(w:World) {
 
 FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
 
-world_tic ::proc(w:^World,p1_input:Input,p2_input:Input) {
-	utils.push(&w.p1_input_buffer, p1_input)
-	utils.push(&w.p2_input_buffer, p2_input)
+world_tic ::proc(w:^World,p1_input:Input,p2_input:Input,frame:int) {
+	utils.insert_at_frame(&w.p1_input_buffer, p1_input, frame)
+	utils.insert_at_frame(&w.p2_input_buffer, p2_input, frame)
 
 	if w.hit_stop > 0 {
 		w.hit_stop -=1

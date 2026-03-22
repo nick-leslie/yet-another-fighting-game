@@ -52,6 +52,11 @@ insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) {
 }
 
 get_at_frame :: proc(buffer:FrameTrackedBuffer($N,$T),frame:int) -> T {
+    // if buffer.current_frame-frame <= cap(buffer.buffer) {
+    //     log.debug(frame)
+    //     log.debug(buffer.current_frame-frame)
+    //     log.debug(buffer)
+    // }
     ensure(buffer.current_frame-frame <= cap(buffer.buffer),"you cant search back further than the frame requires")
     index := frame %% N
     return buffer.buffer[index]

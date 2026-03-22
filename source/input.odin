@@ -218,6 +218,7 @@ get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {
+        log.debug("gaming")
         // if so return and pop
         mannager.last_input = input
         return input.input
