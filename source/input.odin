@@ -143,6 +143,9 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             // go back and insert the frame at the right pos.
             // then resimulate
             // check if predictions are correct
+            if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
+                break
+            }
             prediction := utils.get_at_frame(mannager.input_buffer,front_ptr.frame)
             if prediction.input == front_ptr.input {
             	log.debug("correct prediction")

@@ -19,6 +19,10 @@ setup_base() {
 }
 
 case $1 in
+  bad-no-loss)
+    setup_base
+    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 80ms 10ms
+    echo "Bad connection on port $PORT";;
   bad)
     setup_base
     sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 80ms 10ms loss 1%
