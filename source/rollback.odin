@@ -120,7 +120,7 @@ rollback_correct_frame :: proc(rollback_mannager:^RollbackMannager($C,$C2),world
 }
 
 
-run_frame :: proc(rollback_mannager:^RollbackMannager,world:^gk.World) {
+run_frame :: proc(rollback_mannager:^RollbackMannager($C,$C2),world:^gk.World(C,C2)) {
 
 	world_state := get_current_state(rollback_mannager)
     gk.deserlize_world(world_state.world_state,world)

@@ -34,7 +34,7 @@ create_generic_charecter :: proc($C:typeid,$C2:typeid) -> gk.CharecterBase(C,C2)
 	return charecter
 }
 
-state_neutral ::proc(char: ^gk.CharecterBase) {
+state_neutral ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	unfixed_box := psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}}
 	fixed := psy.fix_box(unfixed_box)
@@ -56,7 +56,7 @@ state_neutral ::proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.states, move)
 }
-state_forward ::proc(char: ^gk.CharecterBase) {
+state_forward ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(gk.CharecterBase) {
 		frame_type = gk.FrameType.Active,
@@ -77,7 +77,7 @@ state_forward ::proc(char: ^gk.CharecterBase) {
 }
 
 
-state_backward ::proc(char: ^gk.CharecterBase) {
+state_backward ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase) {
@@ -155,7 +155,7 @@ state_jump_forward ::proc(char: ^gk.CharecterBase) {
 
 	append(&char.states, move)
 }
-state_jump_backward ::proc(char: ^gk.CharecterBase) {
+state_jump_backward ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase) {
@@ -196,7 +196,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase) {
 	append(&char.states, move)
 }
 
-pattern_neutral ::proc(char: ^gk.CharecterBase) {
+pattern_neutral ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -216,7 +216,7 @@ pattern_forward ::proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_backward ::proc(char: ^gk.CharecterBase) {
+pattern_backward ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -226,7 +226,7 @@ pattern_backward ::proc(char: ^gk.CharecterBase) {
 	}
 	append(&char.patterns, pattern)
 }
-pattern_jump ::proc(char: ^gk.CharecterBase) {
+pattern_jump ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -258,7 +258,7 @@ pattern_jump_backward ::proc(char: ^gk.CharecterBase) {
 }
 
 
-add_state_movement ::proc(char: ^gk.CharecterBase) {
+add_state_movement ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	log.debug("in add movement")
 	state_neutral(char)
 	state_forward(char)
@@ -281,7 +281,7 @@ add_state_movement ::proc(char: ^gk.CharecterBase) {
 
 
 
-state_light_attack ::proc(char: ^gk.CharecterBase) {
+state_light_attack ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	hit_box := gk.Hit_box {
@@ -386,7 +386,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase) {
 }
 
 
-pattern_light_attack ::proc(char: ^gk.CharecterBase) {
+pattern_light_attack ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -409,12 +409,12 @@ pattern_light_attack ::proc(char: ^gk.CharecterBase) {
 	append(&char.patterns, pattern3)
 }
 
-add_state_light_attack ::proc(char: ^gk.CharecterBase) {
+add_state_light_attack ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	state_light_attack(char)
 	pattern_light_attack(char)
 }
 
-state_light_fireball ::proc(char: ^gk.CharecterBase) {
+state_light_fireball ::proc(char: ^gk.CharecterBase($C,$C2)) {
     context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State(gk.CharecterBase) {
@@ -657,7 +657,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase) {
 }
 
 
-pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
+pattern_light_fireball ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -705,7 +705,7 @@ pattern_light_fireball ::proc(char: ^gk.CharecterBase) {
 	append(&char.patterns, pattern_4)
 }
 
-entity_fireball ::proc(char: ^gk.CharecterBase) {
+entity_fireball ::proc(char: ^gk.CharecterBase($C,$C2)) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	append(&char.entity_pool,gk.Entity {
@@ -744,34 +744,34 @@ entity_fireball ::proc(char: ^gk.CharecterBase) {
 				},
 			},
 		},
-		activate=  proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){
+		activate=  proc(self:^gk.Entity,charecter:^gk.CharecterBase($C,$C2),world:^gk.World){
 			self.body.position = charecter.body.position
 		}, // this runs onetime
-		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
+		update=            proc(self:^gk.Entity,charecter:^gk.CharecterBase($C,$C2),world:^gk.World){},
 		on_hit=			   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){
 			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
 		},
 		on_block=		   proc(self:^gk.Entity,hit_ctx:gk.HitBoxCtx(gk.Entity)){
 			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
 		},
-		physcis_update=    proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World){},
-		deactivate=        proc(self:^gk.Entity,charecter:^gk.CharecterBase,world:^gk.World) {},
+		physcis_update=    proc(self:^gk.Entity,charecter:^gk.CharecterBase($C,$C2),world:^gk.World){},
+		deactivate=        proc(self:^gk.Entity,charecter:^gk.CharecterBase($C,$C2),world:^gk.World) {},
 	})
 	log.debug(char.entity_pool)
 }
 
-add_state_light_fireball ::proc(char: ^gk.CharecterBase) {
+add_state_light_fireball ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	state_light_fireball(char)
 	pattern_light_fireball(char)
 	entity_fireball(char)
 }
 
-add_state_stun::proc(char: ^gk.CharecterBase) {
+add_state_stun::proc(char: ^gk.CharecterBase($C,$C2)) {
 	state_hit_stun(char)
 	state_block_stun(char)
 }
 
-state_block_stun ::proc(char: ^gk.CharecterBase) {
+state_block_stun ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State(gk.CharecterBase) {
@@ -780,7 +780,7 @@ state_block_stun ::proc(char: ^gk.CharecterBase) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 			hitbox_list = {},
-			on_frame =proc(char: ^gk.CharecterBase,w:^gk.World) {},
+			on_frame =proc(char: ^gk.CharecterBase($C,$C2),w:^gk.World) {},
 			check_exit = gk.exit_block_stun, // todo change me
 		}},
 		isAttack  = false,
@@ -789,7 +789,7 @@ state_block_stun ::proc(char: ^gk.CharecterBase) {
 	index := len(char.states)-1
 	char.block_stun_index = index
 }
-state_hit_stun ::proc(char: ^gk.CharecterBase) {
+state_hit_stun ::proc(char: ^gk.CharecterBase($C,$C2)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State(gk.CharecterBase) {
