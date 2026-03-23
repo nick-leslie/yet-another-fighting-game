@@ -6,7 +6,7 @@ import rl  "vendor:raylib"
 import psy "./physics"
 
 
-charecter_draw :: proc(character: gk.CharecterBase($C,$C2)) {
+charecter_draw :: proc(character: gk.CharecterBase($C)) {
 	_,frame := gk.charecter_get_current_state_frame(character)
 	char_body := psy.unfix_body(character.body)
 	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
@@ -60,7 +60,7 @@ charecter_draw :: proc(character: gk.CharecterBase($C,$C2)) {
 	}
 }
 
-charecter_draw_hit_boxes :: proc(character:gk.CharecterBase($C,$C2)) {
+charecter_draw_hit_boxes :: proc(character:gk.CharecterBase($C)) {
 	state,frame := gk.charecter_get_current_state_frame(character)
 	char_body := psy.unfix_body(character.body)
 	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}

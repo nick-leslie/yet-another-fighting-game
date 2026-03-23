@@ -27,29 +27,29 @@ SerlizedEntityState :: struct {
 
 //todo could make a factory
 // this may suck
-Entity :: struct($C:typeid,$C2:typeid) {
+Entity :: struct($C:typeid) {
    	using serlized_state: SerlizedEntityState,
-	charecter_ptr: 	   ^CharecterBase(C,C2),
+	charecter_ptr: 	   ^CharecterBase(C),
 	//not stored for rollbacks
 	// can we have a compile time amount of states
 	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
-	states:            [dynamic]State(Entity(C,C2),C,C2), // should this be state
-	activate:          proc(self:^Entity(C,C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)), // this runs onetime
-	update:            proc(self:^Entity(C,C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)),
-	on_hit:            proc(self:^Entity(C,C2),hit_ctx:HitBoxCtx(Entity(C,C2),C,C2)),
-	on_block:          proc(self:^Entity(C,C2),hit_ctx:HitBoxCtx(Entity(C,C2),C,C2)),
-	physcis_update:    proc(self:^Entity(C,C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)),
-	deactivate:        proc(self:^Entity(C,C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)),
+	states:            [dynamic]State(Entity(C)), // should this be state
+	activate:          proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)), // this runs onetime
+	update:            proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
+	on_hit:            proc(self:^Entity(C),hit_ctx:HitBoxCtx(Entity(C),C)),
+	on_block:          proc(self:^Entity(C),hit_ctx:HitBoxCtx(Entity(C),C)),
+	physcis_update:    proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
+	deactivate:        proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
 }
 
 
-setup_entity :: proc(entity:^Entity($C,$C2),charecter:^CharecterBase(C,C2)) {
+setup_entity :: proc(entity:^Entity($C),charecter:^CharecterBase(C)) {
     log.debug("setups")
 	entity.charecter_ptr = charecter
 }
 
 // do we want to
-activate_entity :: proc(character:^CharecterBase($C,$C2),entity_index:int,world:^World(C,C2)) {
+activate_entity :: proc(character:^CharecterBase($C),entity_index:int,world:^World) {
 	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
 	entity.current_state_flags = {} // reset current state flags
@@ -59,7 +59,7 @@ activate_entity :: proc(character:^CharecterBase($C,$C2),entity_index:int,world:
 	// assert(false)
 }
 
-entity_update :: proc(entity:^Entity($C,$C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)) {
+entity_update :: proc(entity:^Entity($C),charecter:^CharecterBase(C),world:^World) {
 	state := entity.states[entity.current_state]
 	frame := state.frames[entity.current_frame]
 	exit := frame.check_exit(entity,entity.current_frame)
@@ -76,7 +76,7 @@ entity_update :: proc(entity:^Entity($C,$C2),charecter:^CharecterBase(C,C2),worl
 }
 
 
-entity_physics_update::proc(entity:^Entity($C,$C2),charecter:^CharecterBase(C,C2),world:^World(C,C2)) {
+entity_physics_update::proc(entity:^Entity($C),charecter:^CharecterBase(C),world:^World) {
 	log.debug("started entity physics update")
 	// state := entity.states[entity.current_state]
 	// frame := state.frames[entity.current_frame]
@@ -87,7 +87,7 @@ entity_physics_update::proc(entity:^Entity($C,$C2),charecter:^CharecterBase(C,C2
 }
 
 
-deactivate_entity :: proc(entity:^Entity($C,$C2),character:^CharecterBase(C,C2),world:^World(C,C2)) {
+deactivate_entity :: proc(entity:^Entity($C),character:^CharecterBase(C),world:^World) {
 	entity.active = false
 	entity.current_state = 0
 	entity.current_frame = 0
@@ -98,7 +98,7 @@ deactivate_entity :: proc(entity:^Entity($C,$C2),character:^CharecterBase(C,C2),
 
 
 //todo this is realy stinky and I dont like this get rid of it
-check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C,$C2),C,C2)) {
+check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
     self := hit_ctx.self
 	other := hit_ctx.other
 
@@ -147,9 +147,9 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C,$C2),C,C2)) {
 }
 
 
-serlize_entity :: proc(char:Entity($C,$C2)) -> SerlizedEntityState {
+serlize_entity :: proc(char:Entity($C)) -> SerlizedEntityState {
     return char.serlized_state
 }
-deserlize_entity :: proc(state:SerlizedEntityState,entity:^Entity($C,$C2)) {
+deserlize_entity :: proc(state:SerlizedEntityState,entity:^Entity($C)) {
     entity.serlized_state = state
 }

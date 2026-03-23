@@ -1,22 +1,22 @@
 package game_kernel
 
 
-CharecterHooks :: struct($C:typeid,$C2:typeid) {
+CharecterHooks :: struct($C:typeid) {
 	//required
-	damage_formula:proc(self:CharecterBase(C,C2),other:CharecterBase(C,C2),world:World(C,C2),isCounter:bool,state:State(CharecterBase(C,C2),C,C2),hitbox:Hit_box) -> u32,
-	charecter_check_counterhit: proc(self:CharecterBase(C,C2),other:CharecterBase(C,C2)) -> bool,
+	damage_formula:proc(self:CharecterBase(C),other:CharecterBase(C),world:World(C,any),isCounter:bool,state:State(CharecterBase(C)),hitbox:Hit_box) -> u32,
+	charecter_check_counterhit: proc(self:CharecterBase(C),other:CharecterBase(C)) -> bool,
 	// on tic
-	on_update:[dynamic]proc(self:^CharecterBase(C,C2),world:^World(C,C2)),
-	on_physics_update:[dynamic]proc(self:^CharecterBase(C,C2),world:^World(C,C2)),
-	on_self_hit_other:[dynamic]proc(self:^CharecterBase(C,C2),other:^CharecterBase(C,C2),world:^World(C,C2),isCounter:bool,hitbox:Hit_box),
+	on_update:[dynamic]proc(self:^CharecterBase(C),world:^World(C,any)),
+	on_physics_update:[dynamic]proc(self:^CharecterBase(C),world:^World(any,any)),
+	on_self_hit_other:[dynamic]proc(self:^CharecterBase(C),other:^CharecterBase(C),world:^World(C,any),isCounter:bool,hitbox:Hit_box),
 	// onBlocks
-	onSelfBlocked:[dynamic]proc(self:^CharecterBase(C,C2),other:^CharecterBase(C,C2),world:^World(C,C2)),
+	onSelfBlocked:[dynamic]proc(self:^CharecterBase(C),other:^CharecterBase(any),world:^World(any,any)),
 	// onHit
-	onSelfGotHit:[dynamic]proc(self:^CharecterBase(C,C2),other:^CharecterBase(C,C2),world:^World(C,C2)),
+	onSelfGotHit:[dynamic]proc(self:^CharecterBase(C),other:^CharecterBase(any),world:^World(any,any)),
 	// spawn projectile?
-	selfSpawnProjectile:[dynamic]proc(self:^CharecterBase(C,C2),other:^CharecterBase(C,C2),world:^World(C,C2)),
+	selfSpawnProjectile:[dynamic]proc(self:^CharecterBase(C),other:^CharecterBase(any),world:^World(any,any)),
 	// onState change this one we may need to rework
-	onSelfStateChange:[dynamic]proc(self:^CharecterBase(C,C2),world:^World(C,C2)),
+	onSelfStateChange:[dynamic]proc(self:^CharecterBase(C),world:^World(any,any)),
 }
 
 // RenderHooks :: struct {
@@ -33,12 +33,12 @@ CharecterHooks :: struct($C:typeid,$C2:typeid) {
 // }
 
 
-default_dammage_formula :: proc(self:CharecterBase($C,$C2),other:CharecterBase(C2,C),world:World(C,C2),isCounter:bool,state:State(CharecterBase(C,C2),C,C2),hitbox:Hit_box) -> u32 {
+default_dammage_formula :: proc(self:CharecterBase($C),other:CharecterBase(any),world:World(C,any),isCounter:bool,state:State(CharecterBase(C)),hitbox:Hit_box) -> u32 {
     if self.combo_scaling > 0 do return state.damage / self.combo_scaling
     return 0
 }
 
-default_counterhit_check :: proc(self:CharecterBase($C,$C2),other:CharecterBase(C2,C)) -> bool {
+default_counterhit_check :: proc(self:CharecterBase($C),other:CharecterBase(any)) -> bool {
     _, struck_frame := charecter_get_current_state_frame(other)
     return struck_frame.frame_type == .Startup || struck_frame.frame_type == .Active
 }

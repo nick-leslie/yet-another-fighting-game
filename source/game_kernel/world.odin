@@ -46,8 +46,8 @@ World :: struct($C:typeid,$C2:typeid) {
 	stage:             Stage,
 
 	// rollbackable
-	p1:                CharecterBase(C,C2), // these should be charecters
-	p2:                CharecterBase(C2,C),
+	p1:                CharecterBase(C), // these should be charecters
+	p2:                CharecterBase(C2),
 	p1_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	p2_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	hit_stop:		u32,
@@ -58,7 +58,7 @@ World :: struct($C:typeid,$C2:typeid) {
 
 g_context: runtime.Context
 
-world_init :: proc(p1:CharecterBase($C,$C2),p2:CharecterBase(C,C2)) -> World(C,C2) {
+world_init :: proc(p1:CharecterBase($C),p2:CharecterBase($C2)) -> World(C,C2) {
 	log.info("creating world")
 	g_context = context
 	p1 := p1 //todo figure out this

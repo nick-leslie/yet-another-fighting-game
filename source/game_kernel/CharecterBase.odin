@@ -40,28 +40,28 @@ CharecterSerlizedState :: struct($C:typeid) {
 }
 
 //rename to charecter base
-CharecterBase :: struct($C:typeid,$C2:typeid) {
+CharecterBase :: struct($C:typeid) {
 	arena:             vmem.Arena,
 	//do I want to add an arena here
 	using serlized_state: CharecterSerlizedState(C),
 	collision_box:     psy.FixedBox,
-	states:            [dynamic]State(CharecterBase(C,C2),C,C2), // should this be state
+	states:            [dynamic]State(CharecterBase(C)), // should this be state
 	patterns:          [dynamic]Pattern,
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_index:  int,
-    entity_pool:   	   [dynamic]Entity(C,C2), // this is the pool of entitys that we can spawn
-    using hooks:CharecterHooks(C,C2),
+    entity_pool:   	   [dynamic]Entity(C), // this is the pool of entitys that we can spawn
+    using hooks:CharecterHooks(C),
 }
 
 
-initilize_charecter_memory :: proc(char: ^CharecterBase($C,$C2)) {
+initilize_charecter_memory :: proc(char: ^CharecterBase($C)) {
 	arena_alocator := vmem.arena_allocator(&char.arena)
 	char.patterns = make([dynamic]Pattern,arena_alocator)
-	char.states = make([dynamic]State(CharecterBase(C,C2),C,C2),arena_alocator)
+	char.states = make([dynamic]State(CharecterBase(C)),arena_alocator)
 	char.entity_pool = make([dynamic]Entity(C,C2),arena_alocator)
 }
 
-setup_charecter :: proc(char: ^CharecterBase($C,$C2)) {
+setup_charecter :: proc(char: ^CharecterBase($C)) {
 	for &entity in char.entity_pool {
 		log.debug("setting up enitty")
 		//
@@ -132,7 +132,7 @@ charecter_update :: proc(character: ^CharecterBase($C,$C2),input_buffer:utils.Bu
 	// log.debug("done with charecter update")
 }
 
-charecer_change_state :: proc(character:^CharecterBase($C,$C2),state:int) -> (State(CharecterBase(C,C2),C,C2),Frame(CharecterBase(C,C2),C,C2)) {
+charecer_change_state :: proc(character:^CharecterBase($C),state:int) -> (State(CharecterBase(C)),Frame(CharecterBase(C))) {
 	character.current_state = state
 	character.current_frame = 0
 	character.jump_requested = false
@@ -142,7 +142,7 @@ charecer_change_state :: proc(character:^CharecterBase($C,$C2),state:int) -> (St
 	return state,frame
 }
 
-charecter_get_current_state_frame :: proc(character: CharecterBase($C,$C2)) -> (State(CharecterBase(C,C2),C,C2), Frame(CharecterBase(C,C2),C,C2)) {
+charecter_get_current_state_frame :: proc(character: CharecterBase($C)) -> (State(CharecterBase(C)),Frame(CharecterBase(C))) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
 	state_frame_len := len(state.frames)
@@ -157,24 +157,24 @@ charecter_get_current_state_frame :: proc(character: CharecterBase($C,$C2)) -> (
 
 // may want to put this in moves
 InputBfrPtrArr :: ^[2]^utils.Buffer(INPUT_BUFFER_LENGTH,Input)
-HitBoxCtx :: struct($T,$C:typeid,$C2:typeid) {
-	self:   ^CharecterBase(C,C2),
-	other:   ^CharecterBase(C,C2),
+HitBoxCtx :: struct($T,$C:typeid) {
+	self:   ^CharecterBase(C),
+	other:   ^CharecterBase(any),
 	self_buffer: ^utils.Buffer(INPUT_BUFFER_LENGTH,Input),
 	other_buffer: ^utils.Buffer(INPUT_BUFFER_LENGTH,Input),
 	hitbox_tracker_ptr: ^bit_set[0..<64; u64],
 	hitbox_index: int,
 	hitbox:       ^Hit_box,
-	world: 		  ^World(C,C2),
-	self_state:State(T,C,C2),
+	world: 		  ^World(any,any),
+	self_state:State(T),
 }
 //bruh this shit about to get funky
-character_check_hit :: proc(self: CharecterBase($C,$C2),other:^CharecterBase(C,C2),self_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),other_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input), w:^World) {
+character_check_hit :: proc(self: CharecterBase($C),other:^CharecterBase(any),self_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),other_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input), w:^World(any,any)) {
 	state, frame := charecter_get_current_state_frame(characters[0]^)
 	for &hitbox_index in frame.hitbox_list {
 		//todo make me a function once we unify
 		hit_box := state.hit_boxes[hitbox_index]
-		hitbox_context := HitBoxCtx(CharecterBase,C,C2) {
+		hitbox_context := HitBoxCtx(CharecterBase(C),C) {
 			self_state = state,
 			self   = self,
 			other   = other,
@@ -213,7 +213,7 @@ character_check_hit :: proc(self: CharecterBase($C,$C2),other:^CharecterBase(C,C
 }
 
 
-check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase,$C,$C2)) {
+check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($C),C)) {
 	self := hit_ctx.self
 	other := hit_ctx.other
 
@@ -338,7 +338,7 @@ delete_charecter :: proc(char: ^CharecterBase) {
 
 
 
-serlize_charecter :: proc(char:CharecterBase($C,$C2),allocator:runtime.Allocator) -> (CharecterSerlizedState(C),[dynamic]SerlizedEntityState) {
+serlize_charecter :: proc(char:CharecterBase($C),allocator:runtime.Allocator) -> (CharecterSerlizedState(C),[dynamic]SerlizedEntityState) {
     entitys := make([dynamic]SerlizedEntityState,allocator)
     for i := 0 ; i<len(char.entity_pool);i+=1 {
         append_elem(&entitys,serlize_entity(char.entity_pool[i]))
