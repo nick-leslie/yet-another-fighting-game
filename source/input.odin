@@ -190,19 +190,10 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
-        msg := NetworkMessage {
-            packet_version=0,
-            frame=frame+mannager.delay,
-            message_type=SendInput {
-                input,
-            },
-        }
+
         if mannager.remote == false && g.network_mannager.should_run == true {
-            size,err := send_messsage(mannager.network_mannager_ptr,msg)
-            utils.insert_at_frame(&mannager.network_mannager_ptr.sent_inputs,InputWithFrame{
-                frame+mannager.delay, // add delay frames
-                input,
-            },frame+mannager.delay)
+            size,err := send_input(mannager.network_mannager_ptr,input,frame,mannager.delay)
+
             if err != nil {
                 log.debug(size)
                 log.debug(err)

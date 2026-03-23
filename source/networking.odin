@@ -42,9 +42,16 @@ SetStartTime :: struct {
 SendInput :: struct {
     input:gk.Input,
 }
-AckInput :: struct {} // todo see what we need to send with the acc
+AckInput :: struct {
+    input:gk.Input,
+} // todo see what we need to send with the acc
 
 EndSession :: struct {}
+
+AckedInput :: struct {
+    acked:bool,
+    using inner:InputWithFrame,
+}
 
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 NetworkMannager :: struct {
@@ -55,7 +62,7 @@ NetworkMannager :: struct {
     //todo remove me we want to decouple this
     // could these be linked lists
     rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
-    sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+    sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,AckedInput),
     endpoint:net.Endpoint,
     other_player_connected:bool,
     should_run:bool,
@@ -91,7 +98,7 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:
     	address = addr,
      	port = port,
      	rcvd_inputs = utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
-     	sent_inputs = utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
+     	sent_inputs = utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,AckedInput) {},
         endpoint=net.Endpoint {
             address = other_addr,
             port = other_port,
@@ -188,11 +195,18 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
             send_messsage(mannager,NetworkMessage {
            		packet_version =0,
            		frame=msg.frame,
-            	message_type=AckInput{},
+            	message_type=AckInput{
+                  input=state.input,
+                },
             })
 		case AckInput:
+		    // if
 		    log.debug("got acc")
-			//conform input
+			input_ack := utils.get_at_frame_prt(&mannager.sent_inputs, msg.frame)
+			if state.input == input_ack.input {
+			    input_ack.acked = true
+			}
+				//conform input
 		case EndSession:
 		    log.debug("end session")
         }
@@ -226,6 +240,22 @@ send_messsage :: proc(mannager:^NetworkMannager,msg:NetworkMessage) -> (bytes_wr
     }
     return bytes,net_err
 
+}
+
+send_input :: proc(mannager:^NetworkMannager, input:gk.Input, frame: int,delay:int) -> (bytes_written: int, err: SendMesageErr) {
+    msg := NetworkMessage {
+        packet_version=MESSAGE_VERSION,
+        frame=frame+delay,
+        message_type=SendInput {
+            input,
+        },
+    }
+    utils.insert_at_frame(&mannager.sent_inputs,AckedInput{
+        acked=false,
+        frame=frame+delay, // add delay frames
+        input=input,
+    },frame+delay)
+    return send_messsage(mannager, msg)
 }
 
 

@@ -20,16 +20,18 @@ setup_base() {
 
 case $1 in
   bad-no-loss)
+    # 40 ms ping
     setup_base
-    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 80ms 10ms
+    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 20ms 10ms
     echo "Bad connection on port $PORT";;
   bad)
     setup_base
-    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 80ms 10ms loss 1%
+    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 20ms 10ms loss 1%
     echo "Bad connection on port $PORT";;
   worse)
+    # 120 ms ping
     setup_base
-    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 150ms 30ms loss 5% duplicate 1%
+    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 60ms 30ms loss 5% duplicate 1%
     echo "Worse connection on port $PORT";;
   terrible)
     setup_base
