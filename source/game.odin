@@ -35,7 +35,7 @@ import rl "vendor:raylib"
 import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
-import psy "./physics"
+// import psy "./physics"
 import vmem "core:mem/virtual"
 import "core:os"
 import "core:time"
@@ -47,17 +47,24 @@ USE_PROFILING :: #config(USE_PROFILING, false)
 
 PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
-Game_Memory :: struct($C:typeid,$C2:typeid) {
+
+Charecters :: struct {
+    charecter_spesific_data: union {
+        TestCharecterData,
+    },
+}
+
+Game_Memory :: struct {
 	app_run:        bool,
 	game_run: 		bool,
 	arena:     		vmem.Arena,
 	frame:          int,
 	start_time:		Maybe(time.Time),
-	world: 		    gk.World(C,C2),
+	world: 		    gk.World(Charecters),
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
-	rollback_state: RollbackMannager(C,C2),
+	rollback_state: RollbackMannager(Charecters),
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
@@ -83,11 +90,7 @@ UP :: Vec3{0, 1, 0}
 FLOOR_EXTENT: Vec3={150, 0.05, 10}
 debugModeEnabled := false
 //this kinda sucks but isnt the worst
-game_memory_new :: proc($C: typeid, $C2: typeid) -> ^Game_Memory(C, C2) {
-    return new(Game_Memory(C, C2))
-}
-TestCharGame :: Game_Memory(TestCharecterData,TestCharecterData)
-g: ^TestCharGame
+g: ^Game_Memory
 
 g_context: runtime.Context
 
@@ -158,7 +161,7 @@ draw :: proc() {
 //
 
 
-run_game_sim :: proc(world:^gk.World($C,$C2),frame:int) {
+run_game_sim :: proc(world:^gk.World($C),frame:int) {
     rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,frame,true)
     rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,frame,true)
     if rollback_to_p1 > 0 {
@@ -259,7 +262,7 @@ game_init :: proc() {
 
 	utf_font := rl.LoadFont("./assets/nishiki-teki-font/NishikiTeki-MVxaJ.ttf")
 	g_context = context
-	g = new(TestCharGame)	//TODO investigate why we cant move you below the setup of G
+	//TODO investigate why we cant move you below the setup of G
 	p1_controls := Keyboard {
 		up_key = rl.KeyboardKey.W,
 		down_key = rl.KeyboardKey.S,
@@ -270,8 +273,8 @@ game_init :: proc() {
 		heavy_key = rl.KeyboardKey.L,
 	}
 
-	p1 := create_generic_charecter(TestCharecterData,TestCharecterData)
-	p2 := create_generic_charecter(TestCharecterData,TestCharecterData)
+	p1 := create_generic_charecter(Charecters)
+	p2 := create_generic_charecter(Charecters)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
@@ -290,8 +293,8 @@ game_init :: proc() {
 
 	// does this work
 	arena_alocator := vmem.arena_allocator(&g.arena)
-	g = new(Game_Memory(TestCharGame,TestCharGame))
-	g^ = Game_Memory(TestCharGame,TestCharGame) {
+	g = new(Game_Memory)
+	g^ = Game_Memory {
 		app_run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
@@ -342,7 +345,7 @@ game_init :: proc() {
 	log.debug(network_mannager)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
-	g.rollback_state = create_new_rollback_queue(&g.p1_input_mannager,&g.p2_input_mannager)
+	g.rollback_state = create_new_rollback_queue(g.world,&g.p1_input_mannager,&g.p2_input_mannager)
 	game_hot_reloaded(g)
 }
 

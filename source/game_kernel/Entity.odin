@@ -27,29 +27,29 @@ SerlizedEntityState :: struct {
 
 //todo could make a factory
 // this may suck
-Entity :: struct($C:typeid) {
+Entity :: struct($CU:typeid) {
    	using serlized_state: SerlizedEntityState,
-	charecter_ptr: 	   ^CharecterBase(C),
+	charecter_ptr: 	   ^CharecterBase(CU),
 	//not stored for rollbacks
 	// can we have a compile time amount of states
 	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
-	states:            [dynamic]State(Entity(C)), // should this be state
-	activate:          proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)), // this runs onetime
-	update:            proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
-	on_hit:            proc(self:^Entity(C),hit_ctx:HitBoxCtx(Entity(C),C)),
-	on_block:          proc(self:^Entity(C),hit_ctx:HitBoxCtx(Entity(C),C)),
-	physcis_update:    proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
-	deactivate:        proc(self:^Entity(C),charecter:^CharecterBase(C),world:^World(C,any)),
+	states:            [dynamic]State(Entity(CU),CU), // should this be state
+	activate:          proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)), // this runs onetime
+	update:            proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
+	on_hit:            proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
+	on_block:          proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
+	physcis_update:    proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
+	deactivate:        proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
 }
 
 
-setup_entity :: proc(entity:^Entity($C),charecter:^CharecterBase(C)) {
+setup_entity :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU)) {
     log.debug("setups")
 	entity.charecter_ptr = charecter
 }
 
 // do we want to
-activate_entity :: proc(character:^CharecterBase($C),entity_index:int,world:^World) {
+activate_entity :: proc(character:^CharecterBase($CU),entity_index:int,world:^World(CU)) {
 	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
 	entity.current_state_flags = {} // reset current state flags
@@ -59,7 +59,7 @@ activate_entity :: proc(character:^CharecterBase($C),entity_index:int,world:^Wor
 	// assert(false)
 }
 
-entity_update :: proc(entity:^Entity($C),charecter:^CharecterBase(C),world:^World) {
+entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	state := entity.states[entity.current_state]
 	frame := state.frames[entity.current_frame]
 	exit := frame.check_exit(entity,entity.current_frame)
@@ -76,7 +76,7 @@ entity_update :: proc(entity:^Entity($C),charecter:^CharecterBase(C),world:^Worl
 }
 
 
-entity_physics_update::proc(entity:^Entity($C),charecter:^CharecterBase(C),world:^World) {
+entity_physics_update::proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	log.debug("started entity physics update")
 	// state := entity.states[entity.current_state]
 	// frame := state.frames[entity.current_frame]
@@ -87,7 +87,7 @@ entity_physics_update::proc(entity:^Entity($C),charecter:^CharecterBase(C),world
 }
 
 
-deactivate_entity :: proc(entity:^Entity($C),character:^CharecterBase(C),world:^World) {
+deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world:^World(CU)) {
 	entity.active = false
 	entity.current_state = 0
 	entity.current_frame = 0
