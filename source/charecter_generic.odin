@@ -36,6 +36,10 @@ create_generic_charecter :: proc($CU:typeid) -> gk.CharecterBase(CU) {
 	return charecter
 }
 
+free_cancel :: proc(char: ^gk.CharecterBase($CU), cancel_index: int) -> bool {
+	return true
+}
+
 state_neutral ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	unfixed_box := psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}}
@@ -50,7 +54,7 @@ state_neutral ::proc(char: ^gk.CharecterBase($CU)) {
 			// we are going to have to change this
 			char.body.velocity.x = psy.Fixed12_4 {}
 		},
-		check_exit = gk.free_cancel,
+		check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(CU)),
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="neutral",
@@ -68,7 +72,7 @@ state_forward ::proc(char: ^gk.CharecterBase($CU)) {
 			if char.p1_side do char.body.velocity.x = char.move_speed
 			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
 		},
-		check_exit = gk.free_cancel,
+		check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(CU)),
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="forward",
@@ -90,7 +94,7 @@ state_backward ::proc(char: ^gk.CharecterBase($CU)) {
     		if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
     		if !char.p1_side do char.body.velocity.x = char.move_speed
 		},
-		check_exit = gk.free_cancel,
+		check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(CU)),
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="backward",
@@ -304,7 +308,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -312,7 +316,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -320,7 +324,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -328,7 +332,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Active,
@@ -337,7 +341,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 				},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Active,
@@ -345,7 +349,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Active,
@@ -353,7 +357,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Active,
@@ -361,7 +365,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -369,7 +373,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -377,7 +381,7 @@ state_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.free_cancel, // todo change me
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 		},
 		isAttack  = true,
@@ -431,7 +435,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 					char.body.velocity = {}
 				},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -439,7 +443,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -447,7 +451,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -455,7 +459,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -464,7 +468,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 				},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -472,7 +476,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Startup,
@@ -480,7 +484,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Active,
@@ -492,7 +496,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 					gk.activate_entity(char,0,w) // activate fireball
 					log.debug("gaming")
 				},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -502,7 +506,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 					log.debug("gaming2")
 				},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -510,7 +514,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -518,7 +522,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -526,7 +530,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -534,7 +538,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -542,7 +546,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -550,7 +554,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -558,7 +562,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -566,7 +570,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -574,7 +578,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -582,7 +586,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -590,7 +594,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -598,7 +602,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -606,7 +610,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -614,7 +618,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -622,7 +626,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -630,7 +634,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -638,7 +642,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {},
-				check_exit = gk.no_cancel, // todo change me
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 			gk.Frame(gk.CharecterBase(CU),CU) {
 				frame_type = gk.FrameType.Recovery,
@@ -648,7 +652,7 @@ state_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 				on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 				    log.debug("bruh fuck")
 				},
-				check_exit = gk.free_cancel, // todo change me
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 			},
 		},
 		isAttack  = true,

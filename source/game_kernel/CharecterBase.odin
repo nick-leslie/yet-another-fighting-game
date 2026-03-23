@@ -343,10 +343,14 @@ serlize_charecter :: proc(char:CharecterBase($CU),allocator:runtime.Allocator) -
     for i := 0 ; i<len(char.entity_pool);i+=1 {
         append_elem(&entitys,serlize_entity(char.entity_pool[i]))
     }
+    log.debug(entitys[:])
     return char.serlized_state,entitys
 }
 deserlize_charecter :: proc(state:CharecterSerlizedState($CU),entitys_states:[dynamic]SerlizedEntityState,char:^CharecterBase(CU)) {
+    log.debug(char.entity_pool[:])
     char.serlized_state = state
+    log.debug(len(entitys_states))
+    log.debug(len(char.entity_pool))
     assert(len(entitys_states) == len(char.entity_pool),"entity pool must match the size of the serlized state")
     for i := 0 ; i<len(char.entity_pool);i+=1 {
     	// log.debug("deserlizing entity")
