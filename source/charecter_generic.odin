@@ -8,8 +8,12 @@ import gk "game_kernel"
 import vmem "core:mem/virtual"
 import psy "./physics"
 
-create_generic_charecter :: proc() -> gk.CharecterBase {
-   	charecter := gk.CharecterBase {
+TestCharecterData :: struct {
+
+}
+
+create_generic_charecter :: proc($C:typeid,$C2:typeid) -> gk.CharecterBase(C,C2) {
+   	charecter := gk.CharecterBase(C,C2) {
 		health=200,
 		body = psy.body_init({0, 10}),
 		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
@@ -23,6 +27,10 @@ create_generic_charecter :: proc() -> gk.CharecterBase {
             charecter_check_counterhit = gk.default_counterhit_check,
 		},
 	}
+	gk.initilize_charecter_memory(&charecter)
+	add_state_movement(&charecter) // the nill is tmp
+	add_state_light_attack(&charecter)
+	add_state_light_fireball(&charecter)
 	return charecter
 }
 

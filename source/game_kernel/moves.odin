@@ -2,9 +2,9 @@ package game_kernel
 
 import "core:log"
 import psy "../physics"
-State :: struct($T:typeid) {
+State :: struct($T:typeid,$C:typeid,$C2:typeid) {
 	name:		   string,
-	frames:        [dynamic]Frame(T),
+	frames:        [dynamic]Frame(T,C,C2),
 	hit_boxes: 	   [dynamic]Hit_box,
 	// should all this be in a seprate struct
 	canBlock:      bool,
@@ -14,12 +14,12 @@ State :: struct($T:typeid) {
 	damage:        u32,
 }
 
-Frame :: struct($T:typeid) {
+Frame :: struct($T:typeid,$C:typeid,$C2:typeid) {
 	frame_type:    FrameType,
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]psy.FixedBox, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
-	on_frame:      proc(_: ^T,world:^World),
+	on_frame:      proc(_: ^T,world:^World(C,C2)),
 	check_exit:    proc(_: ^T, _: int) -> bool, // takes char pointer and proposed state
 }
 
