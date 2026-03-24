@@ -178,7 +178,7 @@ input_ui:: proc(input:gk.Input) {
 	)
 }
 
-charecter_debug_ui :: proc(charecter:gk.CharecterBase) {
+charecter_debug_ui :: proc(charecter:gk.CharecterBase($CU)) {
 	//todo add id
 	if clay.UI()({
 		layout = {

@@ -7,6 +7,27 @@ into a framework. The project currently supports a fully deterministic game kern
 the game kernel is the core game engine. it currently supports charecters entitys, hit and hurt box detection. You Will need to modify the kernal for spesific rules of your game. however for more general things callback functions are exposed that must be filled in. 
 
 ### charecter base
+The way that you add extra data to charecters is through the charecter union generic. Create a struct like below
+
+```
+Charecters :: struct {
+    // put all the every charecter data here
+    charecter_spesific_data: union {
+        TestCharecterData, // create structs in this union for charecters
+    },
+}
+```
+
+the major trade off of this style is for moves you need to ether hard code in the hooks/callbacks. or create a constructer like below.
+
+```
+make_no_cancel_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
+    return proc(char: T, cancel_index: int) -> bool {
+        return false
+    }
+}
+
+```
 
 ### State
 A state is a charecter state with frames. to transition between states you need to pass the exit check. the exit check is a callback per frame. 

@@ -10,7 +10,7 @@ import psy "../physics"
 	they have states and frames like a charecter.
 	they also have hooks like a charecter.
 */
-
+//entity state should be stored  in the charecter
 SerlizedEntityState :: struct {
 	active:			   bool,
 	id: 		   	   int,
@@ -26,29 +26,30 @@ SerlizedEntityState :: struct {
 }
 
 //todo could make a factory
-Entity :: struct {
+// this may suck
+Entity :: struct($CU:typeid) {
    	using serlized_state: SerlizedEntityState,
-	charecter_ptr: 	   ^CharecterBase,
-	//not stored for rollback
+	charecter_ptr: 	   ^CharecterBase(CU),
+	//not stored for rollbacks
 	// can we have a compile time amount of states
 	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
-	states:            [dynamic]State(Entity), // should this be state
-	activate:          proc(self:^Entity,charecter:^CharecterBase,world:^World), // this runs onetime
-	update:            proc(self:^Entity,charecter:^CharecterBase,world:^World),
-	on_hit:			   proc(self:^Entity,hit_ctx:HitBoxCtx(Entity)),
-	on_block:		   proc(self:^Entity,hit_ctx:HitBoxCtx(Entity)),
-	physcis_update:    proc(self:^Entity,charecter:^CharecterBase,world:^World),
-	deactivate:        proc(self:^Entity,charecter:^CharecterBase,world:^World),
+	states:            [dynamic]State(Entity(CU),CU), // should this be state
+	activate:          proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)), // this runs onetime
+	update:            proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
+	on_hit:            proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
+	on_block:          proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
+	physcis_update:    proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
+	deactivate:        proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
 }
 
 
-setup_entity :: proc(entity:^Entity,charecter:^CharecterBase) {
+setup_entity :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU)) {
     log.debug("setups")
 	entity.charecter_ptr = charecter
 }
 
 // do we want to
-activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) {
+activate_entity :: proc(character:^CharecterBase($CU),entity_index:int,world:^World(CU)) {
 	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
 	entity.current_state_flags = {} // reset current state flags
@@ -58,7 +59,7 @@ activate_entity :: proc(character:^CharecterBase,entity_index:int,world:^World) 
 	// assert(false)
 }
 
-entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
+entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	state := entity.states[entity.current_state]
 	frame := state.frames[entity.current_frame]
 	exit := frame.check_exit(entity,entity.current_frame)
@@ -75,7 +76,7 @@ entity_update :: proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
 }
 
 
-entity_physics_update::proc(entity:^Entity,charecter:^CharecterBase,world:^World) {
+entity_physics_update::proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	log.debug("started entity physics update")
 	// state := entity.states[entity.current_state]
 	// frame := state.frames[entity.current_frame]
@@ -86,7 +87,7 @@ entity_physics_update::proc(entity:^Entity,charecter:^CharecterBase,world:^World
 }
 
 
-deactivate_entity :: proc(entity:^Entity,character:^CharecterBase,world:^World) {
+deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world:^World(CU)) {
 	entity.active = false
 	entity.current_state = 0
 	entity.current_frame = 0
@@ -97,12 +98,12 @@ deactivate_entity :: proc(entity:^Entity,character:^CharecterBase,world:^World) 
 
 
 //todo this is realy stinky and I dont like this get rid of it
-check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity)) {
-	self := CharPtrArr(hit_ctx.charecters)[0]
-	other := CharPtrArr(hit_ctx.charecters)[1]
+check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
+    self := hit_ctx.self
+	other := hit_ctx.other
 
-	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
-	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
+	// self_buffer := hit_ctx.self_buffer
+	other_buffer := hit_ctx.other_buffer
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
@@ -146,9 +147,9 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity)) {
 }
 
 
-serlize_entity :: proc(char:Entity) -> SerlizedEntityState {
+serlize_entity :: proc(char:Entity($C)) -> SerlizedEntityState {
     return char.serlized_state
 }
-deserlize_entity :: proc(state:SerlizedEntityState,entity:^Entity) {
+deserlize_entity :: proc(state:SerlizedEntityState,entity:^Entity($C)) {
     entity.serlized_state = state
 }

@@ -29,10 +29,10 @@ Stage :: struct {
 	// todo add wall
 }
 
-SerlizedWorld :: struct {
-    p1:CharecterSerlizedState,
+SerlizedWorld :: struct($CU:typeid) {
+    p1:CharecterSerlizedState(CU),
     p1_entity_pool:[dynamic]SerlizedEntityState,
-    p2:CharecterSerlizedState,
+    p2:CharecterSerlizedState(CU),
     p2_entity_pool:[dynamic]SerlizedEntityState,
     hit_stop:u32,
     combo_counter:int,
@@ -40,14 +40,14 @@ SerlizedWorld :: struct {
     p2_input_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
     // p1_entitys:[dynamic],
 }
-
-World :: struct {
+// C MUST BE A UNION OF ALL THE CHARECTERS
+World :: struct($CU:typeid) {
 	// Physics_Manager should be global and percist between frames take these out
 	stage:             Stage,
 
 	// rollbackable
-	p1:                CharecterBase, // these should be charecters
-	p2:                CharecterBase,
+	p1:                CharecterBase(CU), // these should be charecters
+	p2:                CharecterBase(CU),
 	p1_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	p2_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	hit_stop:		u32,
@@ -58,12 +58,12 @@ World :: struct {
 
 g_context: runtime.Context
 
-world_init :: proc(p1:CharecterBase,p2:CharecterBase) -> World {
+world_init :: proc(p1:CharecterBase($CU),p2:CharecterBase(CU)) -> World(CU) {
 	log.info("creating world")
 	g_context = context
 	p1 := p1 //todo figure out this
 	p2 := p2
-	world := World{}
+	world := World(CU){}
 	world.p1_input_buffer = {}
 	world.p2_input_buffer = {}
 	world.p1=p1
@@ -74,7 +74,7 @@ world_init :: proc(p1:CharecterBase,p2:CharecterBase) -> World {
 	return world
 }
 
-destroy_world :: proc(w:World) {
+destroy_world :: proc(w:World($CU)) {
 	w:=w
 	delete_charecter(&w.p1) // we may want to
 	delete_charecter(&w.p2) // we may want to
@@ -83,7 +83,7 @@ destroy_world :: proc(w:World) {
 
 FIXED_STEP: f32 = 1.0 / 60.0 // do we need this here or should we put this in the update
 
-world_tic ::proc(w:^World,p1_input:Input,p2_input:Input,frame:int) {
+world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 	utils.insert_at_frame(&w.p1_input_buffer, p1_input, frame)
 	utils.insert_at_frame(&w.p2_input_buffer, p2_input, frame)
 
@@ -95,12 +95,12 @@ world_tic ::proc(w:^World,p1_input:Input,p2_input:Input,frame:int) {
 	charecter_update(&w.p1, w.p1_input_buffer,w)
 	charecter_update(&w.p2, w.p2_input_buffer,w)
 
-	character_check_hit(&{&w.p1, &w.p2},&{&w.p1_input_buffer,&w.p2_input_buffer}, w)
-	character_check_hit(&{&w.p2, &w.p1},&{&w.p2_input_buffer,&w.p1_input_buffer}, w)
+	character_check_hit(&w.p1, &w.p2,&w.p1_input_buffer,&w.p2_input_buffer, w)
+	character_check_hit(&w.p2, &w.p1,&w.p2_input_buffer,&w.p1_input_buffer, w)
 }
 
 
-world_physics_tic ::proc(w:^World) {
+world_physics_tic ::proc(w:^World($CU)) {
 	//move me out
 	charecter_physics_update(&w.p1, w)
 	charecter_physics_update(&w.p2, w)
@@ -108,20 +108,26 @@ world_physics_tic ::proc(w:^World) {
 }
 
 
-serlize_world :: proc (w:World,allocator:runtime.Allocator) -> SerlizedWorld {
-    serlized_world := SerlizedWorld {
+serlize_world :: proc (w:World($CU),allocator:runtime.Allocator) -> SerlizedWorld(CU) {
+    serlized_world := SerlizedWorld(CU) {
         hit_stop=w.hit_stop,
         combo_counter=w.combo_counter,
        	p1_input_buffer=w.p1_input_buffer,
         p2_input_buffer=w.p2_input_buffer,
     }
-    serlized_world.p1,serlized_world.p1_entity_pool=serlize_charecter(w.p1,allocator)
-    serlized_world.p2,serlized_world.p2_entity_pool=serlize_charecter(w.p2,allocator)
+    p1,p1_entitys:=serlize_charecter(w.p1,allocator)
+    p2,p2_entitys:=serlize_charecter(w.p2,allocator)
+    
+    if p2_entitys == nil || len(p2_entitys) == 0 || p1_entitys == nil || len(p1_entitys) == 0{
+        assert(false,"huhhhhh")
+    }
+    serlized_world.p1,serlized_world.p1_entity_pool=p1,p1_entitys
+    serlized_world.p2,serlized_world.p2_entity_pool=p2,p2_entitys
     // ,allocator:runtime.Allocator
     return serlized_world
 }
 // this is for the rollback deselization to resimulate
-deserlize_world :: proc (serlized:SerlizedWorld,percistent:^World) -> ^World {
+deserlize_world :: proc (serlized:SerlizedWorld($CU),percistent:^World(CU)) -> ^World(CU) {
     deserlize_charecter(serlized.p1,serlized.p1_entity_pool,&percistent.p1)
     deserlize_charecter(serlized.p2,serlized.p2_entity_pool,&percistent.p2)
     percistent.p1_input_buffer = serlized.p1_input_buffer
