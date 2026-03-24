@@ -299,13 +299,15 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 		jump_pressed = false // there is a better way to do this
 	}
 	// Add gravity
-	gravity := psy.f64_to_fixed(-.02) // todo change me
+	gravity := psy.f64_to_fixed(-0.3) // todo change me
     character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
-
-	if psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),w.stage.floor.y,false) {
+    ground_collision := psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),w.stage.floor.y,false)
+	character.in_air = !ground_collision
+	if ground_collision && jump_pressed == false {
 	    // resolve collisions
 		// character.body.position.y = fixed.add(w.stage.floor.position.y,psy.f64_to_fixed(CHARACTER_CAPSULE_HALF_HEIGHT))
 		character.body.velocity.y = psy.Fixed12_4 {}
+
 	}
 	// log.debug(character.velocity)
 

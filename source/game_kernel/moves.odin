@@ -79,12 +79,11 @@ make_air_state_cancel :: proc($T: typeid) -> proc(char: ^T, cancel_index: int) -
     return proc(char: ^T, cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
-
-	if char.in_air == false {
-		return true
-	}
-	// assert(false,"not implmented")
-	return false
+    	if char.in_air == false {
+    		return true
+    	}
+    	// assert(false,"not implmented")
+    	return false
     }
 }
 

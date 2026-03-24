@@ -22,7 +22,7 @@ create_generic_charecter :: proc($CU:typeid) -> gk.CharecterBase(CU) {
 		move_speed = psy.f64_to_fixed(7),
 		air_drag = psy.f64_to_fixed(0.5),
 		air_move_speed = psy.f64_to_fixed(15.0),
-		jump_height = psy.f64_to_fixed(50.0),
+		jump_height = psy.f64_to_fixed(-10.0),
 		p1_side = true,
 		hooks = {
             damage_formula = gk.default_dammage_formula,
@@ -110,10 +110,10 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
-			char.jump_requested = true
-			log.debug("are you running again")
+		    char.jump_requested = true
+			char.body.velocity.y = psy.invert_fixed(char.jump_height)
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
+		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 	}
 	one_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
@@ -123,7 +123,7 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 			char.jump_requested = true
 			log.debug("are you running again")
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
+		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 	}
 	two_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
