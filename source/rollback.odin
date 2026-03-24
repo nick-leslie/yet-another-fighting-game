@@ -28,7 +28,7 @@ RollbackMannager ::struct($CU:typeid) {
     p1_input_mannager:^InputMannager,
     p2_input_mannager:^InputMannager,
 }
-
+ROLLBACK_STATE_SIZE ::mem.Kilobyte*2
 create_new_rollback_queue :: proc(w:gk.World($CU),p1_input_mannager:^InputMannager,p2_input_mannager:^InputMannager) -> RollbackMannager(CU) {
 	arena: vmem.Arena
 	//todo shrink me
@@ -42,7 +42,8 @@ create_new_rollback_queue :: proc(w:gk.World($CU),p1_input_mannager:^InputMannag
 	}
 	arena_allocator := vmem.arena_allocator(&arena)
 	for i := 0 ; i < MAX_ROLLBACK_WINDOW; i+=1 {
-		backing := make([]byte,mem.Kilobyte,arena_allocator)
+	    // we may need to increse this
+		backing := make([]byte,ROLLBACK_STATE_SIZE,arena_allocator)
 		slot_arena: vmem.Arena
 
 		static_err := vmem.arena_init_buffer(&slot_arena, backing[:])

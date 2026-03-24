@@ -75,9 +75,8 @@ check_cancel_options :: proc(char: ^CharecterBase($CU), cancel_index: int) -> bo
 	}
 	return false
 }
-
-
-jump_state_cancel :: proc(char: ^CharecterBase($CU), cancel_index: int) -> bool {
+make_air_state_cancel :: proc($T: typeid) -> proc(char: ^T, cancel_index: int) -> bool {
+    return proc(char: ^T, cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
 
@@ -86,7 +85,9 @@ jump_state_cancel :: proc(char: ^CharecterBase($CU), cancel_index: int) -> bool 
 	}
 	// assert(false,"not implmented")
 	return false
+    }
 }
+
 
 make_free_cancel_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
     return proc(char: T, cancel_index: int) -> bool {

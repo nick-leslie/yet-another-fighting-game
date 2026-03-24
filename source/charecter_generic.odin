@@ -113,7 +113,7 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 			char.jump_requested = true
 			log.debug("are you running again")
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	one_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
@@ -123,7 +123,7 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 			char.jump_requested = true
 			log.debug("are you running again")
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	two_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
@@ -131,7 +131,7 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="nutral jump",
@@ -152,7 +152,7 @@ state_jump_forward ::proc(char: ^gk.CharecterBase($CU)) {
 			if char.p1_side do char.move_dir = Vec364{1, 1, 0}
 			if !char.p1_side do char.move_dir = Vec364{-1, 1, 0}
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="jump forward",
@@ -172,7 +172,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 			char.jump_requested = true
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	one_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
@@ -182,7 +182,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 			char.jump_requested = true
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	two_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
@@ -191,7 +191,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 		},
-		check_exit = gk.jump_state_cancel, // todo change me
+		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="jump back",
