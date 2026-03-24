@@ -35,7 +35,7 @@ import rl "vendor:raylib"
 import gk "game_kernel"
 // import "vendor:raylib/rlgl"
 import clay "../libs/clay-odin"
-import psy "./physics"
+// import psy "./physics"
 import vmem "core:mem/virtual"
 import "core:os"
 import "core:time"
@@ -47,17 +47,24 @@ USE_PROFILING :: #config(USE_PROFILING, false)
 
 PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
+
+Charecters :: struct {
+    charecter_spesific_data: union {
+        TestCharecterData,
+    },
+}
+
 Game_Memory :: struct {
 	app_run:        bool,
 	game_run: 		bool,
 	arena:     		vmem.Arena,
 	frame:          int,
 	start_time:		Maybe(time.Time),
-	world: 		    gk.World,
+	world: 		    gk.World(Charecters),
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
-	rollback_state: RollbackMannager,
+	rollback_state: RollbackMannager(Charecters),
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
@@ -82,7 +89,7 @@ VEC3_ZERO: Vec3 = 0
 UP :: Vec3{0, 1, 0}
 FLOOR_EXTENT: Vec3={150, 0.05, 10}
 debugModeEnabled := false
-
+//this kinda sucks but isnt the worst
 g: ^Game_Memory
 
 g_context: runtime.Context
@@ -154,7 +161,7 @@ draw :: proc() {
 //
 
 
-run_game_sim :: proc(world:^gk.World,frame:int) {
+run_game_sim :: proc(world:^gk.World($C),frame:int) {
     rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,frame,true)
     rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,frame,true)
     if rollback_to_p1 > 0 {
@@ -255,7 +262,6 @@ game_init :: proc() {
 
 	utf_font := rl.LoadFont("./assets/nishiki-teki-font/NishikiTeki-MVxaJ.ttf")
 	g_context = context
-	g = new(Game_Memory)
 	//TODO investigate why we cant move you below the setup of G
 	p1_controls := Keyboard {
 		up_key = rl.KeyboardKey.W,
@@ -267,38 +273,9 @@ game_init :: proc() {
 		heavy_key = rl.KeyboardKey.L,
 	}
 
-	p1 := gk.CharecterBase {
-		health=200,
-		body = psy.body_init({0, 10}),
-		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = psy.f64_to_fixed(7),
-		air_drag = psy.f64_to_fixed(0.5),
-		air_move_speed = psy.f64_to_fixed(15.0),
-		jump_height = psy.f64_to_fixed(50.0),
-		p1_side = true,
-	}
-	p2 := gk.CharecterBase {
-		health=100,
-		body = psy.body_init({0, 10}),
-		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = psy.f64_to_fixed(7),
-		air_drag = psy.f64_to_fixed(0.5),
-		air_move_speed = psy.f64_to_fixed(15.0),
-		jump_height = psy.f64_to_fixed(50.0),
-		p1_side = true,
-	}
+	p1 := create_generic_charecter(Charecters)
+	p2 := create_generic_charecter(Charecters)
 	old_allocator := context.allocator
-	gk.initilize_charecter_memory(&p1)
-	log.debug(p1.entity_pool)
-	gk.initilize_charecter_memory(&p2)
-	//we need this to be in a predictable order factory time
-	add_state_movement(&p1) // the nill is tmp
-	add_state_light_attack(&p1)
-	add_state_light_fireball(&p1)
-	log.debug(p1.entity_pool)
-	add_state_stun(&p1)
-	add_state_movement(&p2) // the nill is tmp
-	add_state_stun(&p2)
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
 		1280,
@@ -316,6 +293,7 @@ game_init :: proc() {
 
 	// does this work
 	arena_alocator := vmem.arena_allocator(&g.arena)
+	g = new(Game_Memory)
 	g^ = Game_Memory {
 		app_run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
@@ -367,7 +345,7 @@ game_init :: proc() {
 	log.debug(network_mannager)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
-	g.rollback_state = create_new_rollback_queue(&g.p1_input_mannager,&g.p2_input_mannager)
+	g.rollback_state = create_new_rollback_queue(g.world,&g.p1_input_mannager,&g.p2_input_mannager)
 	game_hot_reloaded(g)
 }
 
@@ -419,8 +397,8 @@ game_memory_size :: proc() -> int {
 
 @(export)
 game_hot_reloaded :: proc(mem: rawptr) {
-	g = (^Game_Memory)(mem)
-	g_context = context
+	// g = (^Game_Memory)(mem)
+	// g_context = context
 	// Here you can also set your own global variables. A good idea is to make
 	// your global variables into pointers that point to something inside `g`.
 }

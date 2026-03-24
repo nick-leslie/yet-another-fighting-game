@@ -185,8 +185,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         }
         log.debug("getting input")
         msg := utils.ring_pop(input_queue)
-        log.debug(msg)
-        log.debug(msg.frame == frame)
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
@@ -218,16 +216,13 @@ get_input_at_frame :: proc (mannager:^InputMannager,frame:int) -> gk.Input {
     // check if we have an input this frame.
     input := utils.get_at_frame(mannager.input_buffer,frame)
     if input.frame == frame {
-        log.debug("gaming")
         // if so return and pop
         mannager.last_input = input
         return input.input
     }
     // if not reuturn what we were doing last frame
     // awsome prediction
-    log.debug(frame)
-    log.debug(input)
-    log.debug("no input at frame rollback may happen")
+    // log.debug("no input at frame rollback may happen")
     // assert(false,"test")
     return mannager.last_input.input
 }

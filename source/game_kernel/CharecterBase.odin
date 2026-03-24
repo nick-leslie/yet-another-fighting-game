@@ -15,7 +15,7 @@ CHARACTER_CAPSULE_RADIUS: f64 : 1
 
 HIT_BOX_MAX :: 64 // we may want to change this
 
-CharecterSerlizedState :: struct {
+CharecterSerlizedState :: struct($CU:typeid) {
    	health: 		   u32,
 	body:              psy.FixedBody,
    	move_dir:          Vec3,
@@ -33,34 +33,35 @@ CharecterSerlizedState :: struct {
     block_stun_frames: u32,
     p1_side:           bool,
     combo_scaling:     u32,
+    charecter_info: CU,
    	charecter_flags: bit_field u64 {
 
 	}, // lots of flags for various states.. tuble extc
 }
 
 //rename to charecter base
-CharecterBase :: struct {
+CharecterBase :: struct($CU:typeid) {
 	arena:             vmem.Arena,
 	//do I want to add an arena here
-	using serlized_state: CharecterSerlizedState,
+	using serlized_state: CharecterSerlizedState(CU),
 	collision_box:     psy.FixedBox,
-	states:            [dynamic]State(CharecterBase), // should this be state
+	states:            [dynamic]State(CharecterBase(CU),CU), // should this be state
 	patterns:          [dynamic]Pattern,
 	hit_stun_index:    int, // we may replace this with a constent
 	block_stun_index:  int,
-    entity_pool:   	   [dynamic]Entity, // this is the pool of entitys that we can spawn
-    using hooks:CharecterHooks,
+    entity_pool:   	   [dynamic]Entity(CU), // this is the pool of entitys that we can spawn
+    using hooks:CharecterHooks(CU),
 }
 
 
-initilize_charecter_memory :: proc(char: ^CharecterBase) {
+initilize_charecter_memory :: proc(char: ^CharecterBase($CU)) {
 	arena_alocator := vmem.arena_allocator(&char.arena)
 	char.patterns = make([dynamic]Pattern,arena_alocator)
-	char.states = make([dynamic]State(CharecterBase),arena_alocator)
-	char.entity_pool = make([dynamic]Entity,arena_alocator)
+	char.states = make([dynamic]State(CharecterBase(CU),CU),arena_alocator)
+	char.entity_pool = make([dynamic]Entity(CU),arena_alocator)
 }
 
-setup_charecter :: proc(char: ^CharecterBase) {
+setup_charecter :: proc(char: ^CharecterBase($CU)) {
 	for &entity in char.entity_pool {
 		log.debug("setting up enitty")
 		//
@@ -71,7 +72,7 @@ setup_charecter :: proc(char: ^CharecterBase) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World) {
+charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World(CU)) {
 	// log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	// character.addional_velocity = {} // do we want to reset this here
@@ -131,7 +132,7 @@ charecter_update :: proc(character: ^CharecterBase,input_buffer:utils.Buffer(INP
 	// log.debug("done with charecter update")
 }
 
-charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State(CharecterBase),Frame(CharecterBase)) {
+charecer_change_state :: proc(character:^CharecterBase($CU),state:int) -> (State(CharecterBase(CU),CU),Frame(CharecterBase(CU),CU)) {
 	character.current_state = state
 	character.current_frame = 0
 	character.jump_requested = false
@@ -141,7 +142,7 @@ charecer_change_state :: proc(character:^CharecterBase,state:int) -> (State(Char
 	return state,frame
 }
 
-charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State(CharecterBase), Frame(CharecterBase)) {
+charecter_get_current_state_frame :: proc(character: CharecterBase($CU)) -> (State(CharecterBase(CU),CU),Frame(CharecterBase(CU),CU)) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
 	state_frame_len := len(state.frames)
@@ -155,49 +156,54 @@ charecter_get_current_state_frame :: proc(character: CharecterBase) -> (State(Ch
 // should we inline this
 
 // may want to put this in moves
-CharPtrArr :: ^[2]^CharecterBase
 InputBfrPtrArr :: ^[2]^utils.Buffer(INPUT_BUFFER_LENGTH,Input)
-HitBoxCtx :: struct($T:typeid) {
-	charecters:   CharPtrArr,
-	input_buffers:InputBfrPtrArr, // todo this may be bad
+HitBoxCtx :: struct($T,$CU:typeid) {
+	self:   ^CharecterBase(CU),
+	other:   ^CharecterBase(CU),
+	self_buffer: ^utils.Buffer(INPUT_BUFFER_LENGTH,Input),
+	other_buffer: ^utils.Buffer(INPUT_BUFFER_LENGTH,Input),
 	hitbox_tracker_ptr: ^bit_set[0..<64; u64],
 	hitbox_index: int,
 	hitbox:       ^Hit_box,
-	world: 		  ^World,
-	self_state:State(T),
+	world: 		  ^World(CU),
+	self_state:State(T,CU),
 }
 //bruh this shit about to get funky
-character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr, w:^World) {
-	state, frame := charecter_get_current_state_frame(characters[0]^)
+character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),self_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),other_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input), w:^World(CU)) {
+	state, frame := charecter_get_current_state_frame(self^)
 	for &hitbox_index in frame.hitbox_list {
 		//todo make me a function once we unify
 		hit_box := state.hit_boxes[hitbox_index]
-		hitbox_context := HitBoxCtx(CharecterBase) {
-			self_state = state,
-			charecters   = characters,
-			hitbox       = &hit_box,
-			hitbox_index = hitbox_index,
-			hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
-			input_buffers = input_buffers,
-			world 	   	 = w,
+		hitbox_context := HitBoxCtx(CharecterBase(CU),CU) {
+			self_state         = state,
+			self               = self,
+			other              = other,
+			hitbox             = &hit_box,
+			hitbox_index       = hitbox_index,
+			hitbox_tracker_ptr = &self.hit_box_tracker_bit_mask,
+			self_buffer        = self_buffer,
+			other_buffer       = other_buffer,
+			world              = w,
 		}
 		check_hit(hitbox_context)
 	}
 	// should we make this a function in entity
-	for &entity in characters[0].entity_pool {
+	for &entity in self.entity_pool {
 		if entity.active {
 			enity_state := entity.states[entity.current_state]
 			enity_frame := enity_state.frames[entity.current_frame]
 			//todo sub in non jolt physics collision
 			for &hitbox_index in enity_frame.hitbox_list {
 				hit_box := enity_state.hit_boxes[hitbox_index]
-				hitbox_context := HitBoxCtx(Entity) {
+				hitbox_context := HitBoxCtx(Entity(CU),CU) {
 					self_state = enity_state,
-					charecters   = characters,
+					self   = self,
+					other   = other,
 					hitbox       = &hit_box,
 					hitbox_index = hitbox_index,
-					hitbox_tracker_ptr = &characters[0].hit_box_tracker_bit_mask,
-					input_buffers = input_buffers,
+					hitbox_tracker_ptr = &self.hit_box_tracker_bit_mask,
+					self_buffer = self_buffer,
+					other_buffer = other_buffer,
 					world 	   	 = w,
 				}
 				check_hit_entity(hitbox_context)
@@ -207,12 +213,13 @@ character_check_hit :: proc(characters: CharPtrArr,input_buffers:InputBfrPtrArr,
 }
 
 
-check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
-	self := CharPtrArr(hit_ctx.charecters)[0]
-	other := CharPtrArr(hit_ctx.charecters)[1]
+check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
+	self := hit_ctx.self
+	other := hit_ctx.other
 
-	// self_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[0]
-	other_buffer := InputBfrPtrArr(hit_ctx.input_buffers)[1]
+	// self_buffer := hit_ctx.self_buffer
+	other_buffer := hit_ctx.other_buffer
+
 	_, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
@@ -267,7 +274,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase)) {
 }
 
 
-charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
+charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.index]
 	#partial switch input.dir {
 	case Direction.Back:
@@ -284,7 +291,7 @@ charecter_check_block ::proc(charecter:  ^CharecterBase,input_buffer:utils.Buffe
 
 
 //todo fully move the velocity control to the moves
-charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
+charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) {
 	character.body.prev_position = character.body.position
 	character.body.prev_velocity = character.body.velocity
 	jump_pressed := character.jump_requested
@@ -324,22 +331,26 @@ charecter_physics_update :: proc(character: ^CharecterBase, w: ^World) {
 }
 
 
-delete_charecter :: proc(char: ^CharecterBase) {
+delete_charecter :: proc(char: ^CharecterBase($CU)) {
 	log.debug("delting charecers")
 	vmem.arena_destroy(&char.arena)
 }
 
 
 
-serlize_charecter :: proc(char:CharecterBase,allocator:runtime.Allocator) -> (CharecterSerlizedState,[dynamic]SerlizedEntityState) {
+serlize_charecter :: proc(char:CharecterBase($CU),allocator:runtime.Allocator) -> (CharecterSerlizedState(CU),[dynamic]SerlizedEntityState) {
     entitys := make([dynamic]SerlizedEntityState,allocator)
     for i := 0 ; i<len(char.entity_pool);i+=1 {
         append_elem(&entitys,serlize_entity(char.entity_pool[i]))
     }
+    log.debug(entitys[:])
     return char.serlized_state,entitys
 }
-deserlize_charecter :: proc(state:CharecterSerlizedState,entitys_states:[dynamic]SerlizedEntityState,char:^CharecterBase) {
+deserlize_charecter :: proc(state:CharecterSerlizedState($CU),entitys_states:[dynamic]SerlizedEntityState,char:^CharecterBase(CU)) {
+    log.debug(char.entity_pool[:])
     char.serlized_state = state
+    log.debug(len(entitys_states))
+    log.debug(len(char.entity_pool))
     assert(len(entitys_states) == len(char.entity_pool),"entity pool must match the size of the serlized state")
     for i := 0 ; i<len(char.entity_pool);i+=1 {
     	// log.debug("deserlizing entity")
