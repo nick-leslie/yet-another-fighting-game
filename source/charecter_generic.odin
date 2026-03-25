@@ -120,22 +120,12 @@ state_jump ::proc(char: ^gk.CharecterBase($CU)) {
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
-			char.jump_requested = true
-			log.debug("are you running again")
-		},
-		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
-	}
-	two_frame := gk.Frame(gk.CharecterBase(CU),CU) {
-		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
-		hitbox_list = {},
-		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 		},
 		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="nutral jump",
-		frames = {zero_frame, one_frame, two_frame},
+		frames = {zero_frame, one_frame},
 	}
 
 	append(&char.states, move)
@@ -149,14 +139,23 @@ state_jump_forward ::proc(char: ^gk.CharecterBase($CU)) {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 			char.jump_requested = true
-			if char.p1_side do char.move_dir = Vec364{1, 1, 0}
-			if !char.p1_side do char.move_dir = Vec364{-1, 1, 0}
+			char.body.velocity.y = psy.invert_fixed(char.jump_height)
+			if char.p1_side do char.body.velocity.x = char.move_speed
+			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
+		},
+		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
+	}
+	one_frame := gk.Frame(gk.CharecterBase(CU),CU) {
+		frame_type = gk.FrameType.Active,
+		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hitbox_list = {},
+		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 		},
 		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
 	}
 	move := gk.State(gk.CharecterBase(CU),CU) {
 		name="jump forward",
-		frames = {zero_frame},
+		frames = {zero_frame,one_frame},
 	}
 
 	append(&char.states, move)
@@ -166,27 +165,18 @@ state_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 
 	zero_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
 			char.jump_requested = true
+			char.body.velocity.y = psy.invert_fixed(char.jump_height)
+			if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
+			if !char.p1_side do char.body.velocity.x = char.move_speed
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
+		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(CU)), // todo change me
 	}
 	one_frame := gk.Frame(gk.CharecterBase(CU),CU) {
 		frame_type = gk.FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
-		hitbox_list = {},
-		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
-			char.jump_requested = true
-		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(CU)), // todo change me
-	}
-	two_frame := gk.Frame(gk.CharecterBase(CU),CU) {
-		frame_type = gk.FrameType.Active,
-		//I think inline allocations of dynamics is causing leaks
 		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(CU),w:^gk.World(CU)) {
@@ -197,7 +187,7 @@ state_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 		name="jump back",
 		// model_ptr=model_prt,
 		// animation_ptr=animation_ptr,
-		frames = {zero_frame, one_frame, two_frame},
+		frames = {zero_frame, one_frame},
 	}
 	append(&char.states, move)
 }
