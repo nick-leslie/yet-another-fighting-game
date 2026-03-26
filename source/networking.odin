@@ -61,6 +61,7 @@ NetworkMannager :: struct {
    	thread: ^thread.Thread,
     //todo remove me we want to decouple this
     // could these be linked lists
+    //todo addapt these to be for all messages
     rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,AckedInput),
     endpoint:net.Endpoint,
@@ -157,6 +158,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 	    msg:NetworkMessage = {}
 		err := cbor.unmarshal_from_bytes(buffer[:],&msg)
 		switch state in msg.message_type {
+		//TODO game start not working of we packet loss
 		case RequestGameStart:
             log.debug("connecting")
             now := time.now()
