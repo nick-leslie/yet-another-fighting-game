@@ -187,6 +187,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
    	gk.world_tic(world,p1_input,p2_input,frame)
    	gk.world_physics_tic(world)
    	save_current_world_state(&g.rollback_state,world^)
+    resend_packets(&g.network_mannager,frame) // is here the right place for it
    	g.frame +=1
 }
 

@@ -26,7 +26,7 @@ case $1 in
     echo "Bad connection on port $PORT";;
   bad)
     setup_base
-    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 20ms 10ms loss 1%
+    sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay 20ms 10ms loss 20%
     echo "Bad connection on port $PORT";;
   worse)
     # 120 ms ping

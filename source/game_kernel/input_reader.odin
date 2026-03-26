@@ -49,8 +49,6 @@ delete_pattern :: proc(pattern:^Pattern) {
 update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),input:Input) {
 	utils.push(input_buffer,input)
 }
-// this is still too buggy
-//todo test this becca
 INPUT_BUFFER_LENGTH :: 25
 // could we speed this up with a binary tree
 pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern) -> int {

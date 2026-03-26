@@ -106,6 +106,17 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:
         other_player_connected = false,
         thread = nil,
     }
+    for i:=0;i<len(mannager.sent_inputs.buffer);i+=1 {
+        // set all the default tickts to true that way we arnt sending
+        // fake inputs from init
+        mannager.sent_inputs.buffer[i] = AckedInput {
+            acked = true,
+            frame = 0,
+            input = gk.Input {
+                dir=.Neutral,
+            },
+        }
+    }
     //todo add logger to context
 
     return mannager,nil
@@ -258,6 +269,28 @@ send_input :: proc(mannager:^NetworkMannager, input:gk.Input, frame: int,delay:i
     return send_messsage(mannager, msg)
 }
 
+resend_packets :: proc(mannager:^NetworkMannager, frame: int) -> (bytes_written: int, err: SendMesageErr) {
+    total_bytes_written := 0
+    for i := 0; i < len(mannager.sent_inputs.buffer); i+=1 {
+        input := mannager.sent_inputs.buffer[i]
+        // if we havent been acked and its 2 frames old
+        if input.acked == false && input.frame+2 >= frame {
+            msg := NetworkMessage {
+                packet_version=MESSAGE_VERSION,
+                frame=input.frame,
+                message_type=SendInput {
+                    input=input.input,
+                },
+            }
+            net_bytes_written,net_err := send_messsage(mannager, msg)
+            if net_err != nil {
+                return net_bytes_written,net_err
+            }
+            total_bytes_written+= net_bytes_written
+        }
+    }
+    return total_bytes_written, nil
+}
 
 //we wrap here so we can add a custom impl if cbor is slow
 encode_message :: proc(msg:NetworkMessage) -> ([]byte,cbor.Marshal_Error) {
