@@ -70,13 +70,12 @@ this is cleared every frame
 * [x] input sync over network
 * [x] 7 frame debug rollback.
 * [x] state serlizable
-* [ ] send acs
-* [ ] Network debug functions delay+drop packet
+* [x] send acs
+* [x] Network debug functions delay+drop packet
 * [x] Rollback on bad perdition
-* [ ] ask for dropped input
+* [x] ack for dropped input
 * [x] better input queue and window
 * [ ] serlize on validated that input is good.
-* [ ] show that inputs are correct
 * [ ] lobbys
 * [ ] nat hole punch
 * [ ] match making servers
