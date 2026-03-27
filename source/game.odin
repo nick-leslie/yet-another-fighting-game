@@ -53,6 +53,11 @@ Charecters :: struct {
         TestCharecterData,
     },
 }
+// do we want this to be a union
+Screen :: enum {
+    InRound,
+    ControllerSelect
+}
 
 Game_Memory :: struct {
 	app_run:        bool,
@@ -148,7 +153,7 @@ draw :: proc() {
         debugModeEnabled = !debugModeEnabled
         clay.SetDebugModeEnabled(debugModeEnabled)
     }
-	commands := create_ui_layout()
+	commands := create_debug_ui_layout()
 
 	//something is going wrong with the interactions between the cam and clay
 	clay_raylib_render(&commands,g.fonts,context.temp_allocator)

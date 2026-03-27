@@ -13,7 +13,7 @@ error_handler :: proc "c" (errorData: clay.ErrorData) {
     // Do something with the error data.
 }
 
-create_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
+create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 	clay.BeginLayout()
 
 	if clay.UI()({

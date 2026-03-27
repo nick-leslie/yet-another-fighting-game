@@ -28,6 +28,11 @@ Keyboard :: struct {
 }
 
 GamePad :: struct {
+    gamepad:int, // gamepad number from 0-4
+    up_key:rl.GamepadButton,
+    down_key:rl.GamepadButton,
+    left_key:rl.GamepadButton,
+    right_key:rl.GamepadButton,
     light_key:rl.GamepadButton,
     medium_key:rl.GamepadButton,
     heavy_key:rl.GamepadButton,
