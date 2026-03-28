@@ -32,13 +32,18 @@ CharecterHooks :: struct($CU:typeid) {
 // 	onStateChange:proc(self:^CharecterBase,other:^CharecterBase,world:^World),
 // }
 
-
-default_dammage_formula :: proc(self:CharecterBase($CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32 {
-    if self.combo_scaling > 0 do return state.damage / self.combo_scaling
-    return 0
+make_default_dammage_formula :: proc($CU:typeid) -> proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32{
+    return proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32 {
+        //TODO FIX ME
+        if self.combo_scaling > 0 do return u32(self.combo_scaling / state.damage)
+        return 0
+    }
 }
 
-default_counterhit_check :: proc(self:CharecterBase($CU),other:CharecterBase(CU)) -> bool {
-    _, struck_frame := charecter_get_current_state_frame(other)
-    return struck_frame.frame_type == .Startup || struck_frame.frame_type == .Active
+
+make_default_counterhit_check :: proc($CU:typeid) -> proc(self:CharecterBase(CU),other:CharecterBase(CU)) -> bool {
+    return proc(self:CharecterBase(CU),other:CharecterBase(CU)) -> bool {
+        _, struck_frame := charecter_get_current_state_frame(other)
+        return struck_frame.frame_type == .Startup || struck_frame.frame_type == .Active
+    }
 }

@@ -18,9 +18,7 @@ SerlizedEntityState :: struct {
 	current_state: 	   int,
 	current_frame: 	   int,
 	move_speed:        f32,
-	current_state_flags: struct { // we may want to remove this
-		hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
-	},
+	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	// physics
 	body:              psy.FixedBody,
 }
@@ -52,7 +50,7 @@ setup_entity :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU)) {
 activate_entity :: proc(character:^CharecterBase($CU),entity_index:int,world:^World(CU)) {
 	// log.debug(character.entity_pool)
 	entity := &character.entity_pool[entity_index]
-	entity.current_state_flags = {} // reset current state flags
+	entity.hit_box_tracker_bit_mask = {} // reset current state flags
 	entity.activate(entity,character,world)
 	entity.active = true
 	log.debug(entity.active)
@@ -99,8 +97,9 @@ deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world
 
 //todo this is realy stinky and I dont like this get rid of it
 check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
-    self := hit_ctx.self
+    // self := hit_ctx.self
 	other := hit_ctx.other
+	entity := hit_ctx.extra
 
 	// self_buffer := hit_ctx.self_buffer
 	other_buffer := hit_ctx.other_buffer
@@ -109,25 +108,28 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 
 
 
-	side_mod: f64 = 1.
-	if other.p1_side == false do side_mod = -1.
+	side_mod: f64 = -1.
+	if other.p1_side == false do side_mod = 1.
 
 
    	for &hurt_box in frameOther.hurtbox_list {
-    col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
+        col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,entity.body)
         log.debug(col_check_res)
         if col_check_res == false{
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
+        log.debug(block == false)
+        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false)
+        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr)
+        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false && block == false)
 		knockback := hit_ctx.hitbox.blockKnockback
 		knockback.x *= side_mod
 		pushback := hit_ctx.hitbox.blockPushback
 		pushback.x *= side_mod
 		psy.add_float_vec2_to_vel(&other.body,knockback)
-		psy.add_float_vec2_to_vel(&self.body,pushback)
+		// psy.add_float_vec2_to_vel(&self.body,pushback)
 		//this sets it so we dont hit with the same hitbox for multiple frames
-		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
             // hit
@@ -137,11 +139,14 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 			hit_ctx.world.combo_counter += 1
 			//set in hit_stun
 			other.health-= hit_ctx.self_state.damage
+			entity.on_block(entity,hit_ctx)
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
 			other.block_stun_frames = hit_ctx.self_state.blockstun
 			other.hit_stun_index=0
+			entity.on_hit(entity,hit_ctx)
 		}
+		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
         //check if blocking and set to block or hit_stun
     }
 }

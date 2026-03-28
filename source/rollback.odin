@@ -28,11 +28,11 @@ RollbackMannager ::struct($CU:typeid) {
     p1_input_mannager:^InputMannager,
     p2_input_mannager:^InputMannager,
 }
-ROLLBACK_STATE_SIZE ::mem.Kilobyte*2
+ROLLBACK_STATE_SIZE ::mem.Megabyte*2
 create_new_rollback_queue :: proc(w:gk.World($CU),p1_input_mannager:^InputMannager,p2_input_mannager:^InputMannager) -> RollbackMannager(CU) {
 	arena: vmem.Arena
 	//todo shrink me
-	err := vmem.arena_init_growing(&arena, MAX_ROLLBACK_WINDOW*mem.Kilobyte) // todo grow this
+	err := vmem.arena_init_growing(&arena, MAX_ROLLBACK_WINDOW) // todo grow this
 	if err != nil {
 		assert(false,"failed to make rollback state")
 	}

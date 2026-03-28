@@ -56,11 +56,13 @@ Charecters :: struct {
 // do we want this to be a union
 Screen :: enum {
     InRound,
-    ControllerSelect
+    MainMenue,
+    CharecterSelect,
 }
 
 Game_Memory :: struct {
 	app_run:        bool,
+	screen:         Screen,
 	game_run: 		bool,
 	arena:     		vmem.Arena,
 	frame:          int,
@@ -77,8 +79,8 @@ Game_Memory :: struct {
 	fonts: 			[dynamic]Raylib_Font,
 }
 
-CAMERA_DISTANCE :: 60
-CAMERA_POSITION :: Vec3{0, 10, CAMERA_DISTANCE}
+CAMERA_DISTANCE :: 70
+CAMERA_POSITION :: Vec3{0, 0, CAMERA_DISTANCE}
 CAMERA_TARGET   :: Vec3 {0,25,0}
 Vec3 :: [3]f32
 Vec364 :: [3]f64
@@ -278,9 +280,11 @@ game_init :: proc() {
 		medium_key = rl.KeyboardKey.K,
 		heavy_key = rl.KeyboardKey.L,
 	}
+	p2_controls := DebugControls {
+	}
 
-	p1 := create_generic_charecter(Charecters)
-	p2 := create_generic_charecter(Charecters)
+	p1 := create_generic_charecter(Charecters,{-10,2})
+	p2 := create_generic_charecter(Charecters,{10,2})
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
@@ -314,8 +318,8 @@ game_init :: proc() {
             delay = 0,
 		},
 		p2_input_mannager=InputMannager {
-            controls=p1_controls,
-            remote = true,
+            controls=p2_controls,
+            remote = false,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

@@ -167,6 +167,7 @@ HitBoxCtx :: struct($T,$CU:typeid) {
 	hitbox:       ^Hit_box,
 	world: 		  ^World(CU),
 	self_state:State(T,CU),
+	extra:^T,
 }
 //bruh this shit about to get funky
 character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),self_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),other_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input), w:^World(CU)) {
@@ -184,10 +185,12 @@ character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),s
 			self_buffer        = self_buffer,
 			other_buffer       = other_buffer,
 			world              = w,
+			extra = nil,
 		}
 		check_hit(hitbox_context)
 	}
 	// should we make this a function in entity
+	// todo why is this not working
 	for &entity in self.entity_pool {
 		if entity.active {
 			enity_state := entity.states[entity.current_state]
@@ -201,10 +204,11 @@ character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),s
 					other   = other,
 					hitbox       = &hit_box,
 					hitbox_index = hitbox_index,
-					hitbox_tracker_ptr = &self.hit_box_tracker_bit_mask,
-					self_buffer = self_buffer,
+					hitbox_tracker_ptr = &entity.hit_box_tracker_bit_mask,
+					self_buffer =  self_buffer,
 					other_buffer = other_buffer,
 					world 	   	 = w,
+					extra = &entity,
 				}
 				check_hit_entity(hitbox_context)
 			}
@@ -255,13 +259,15 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 				self.combo_scaling = 100
 			}
 			//set in hit_stun
-			other.health-= self.damage_formula(self^,
+			dammage := self.damage_formula(
+			    self^,
 				other^,
 				hit_ctx.world^,
 				self.charecter_check_counterhit(self^,other^), // is counter hit todo detect counterhit
 				hit_ctx.self_state,
 				hit_ctx.hitbox^,
 			)
+			other.health -= dammage
 
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
@@ -311,6 +317,7 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 		character.body.velocity.y = psy.Fixed12_4 {}
 		if charecter_was_in_air {
 			character.body.velocity.x = psy.Fixed12_4 {}
+			character.body.y = w.stage.floor.y
 		}
 	}
 	// log.debug(character.velocity)
