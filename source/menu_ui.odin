@@ -11,7 +11,7 @@ ControllerUiElement :: struct {
     right:^ControllerUiElement,
 }
 MENUE_INTERACTIVE_ELEMENTS :: 10 // todo expand 
-create_menue_ui_layout :: proc([$N]ControllerUiElement) -> clay.ClayArray(clay.RenderCommand) {
+create_menu_ui_layout :: proc([$N]ControllerUiElement) -> clay.ClayArray(clay.RenderCommand) {
    	clay.BeginLayout()
 
 	if clay.UI()({
