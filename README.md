@@ -57,8 +57,8 @@ todo but hopefully we will use fmod. im going to begin integrating this soon.
 Pointers in function parameters should be used to show that a value is mutable. If you don't need the value to be mutated within the function, just pass it as a pointer. 
 
 # memory and arenas
-Arenas are continuous buffers of memory where objects of the same lifetime live. Ryan Fleury has a great blo poast about this.
-https://www.dgtlgrove.com/p/untangling-lifetimes-the-arena-allocator
+Arenas are continuous buffers of memory where objects of the same lifetime live. Ryan Fleury has a great [blog post](https://www.dgtlgrove.com/p/untangling-lifetimes-the-arena-allocator) about this.
+
 Each memory arena should be for a specific life cycle
 
 ## Game Arena 
