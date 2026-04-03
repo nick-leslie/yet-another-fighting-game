@@ -132,6 +132,11 @@ charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffe
 	// log.debug("done with charecter update")
 }
 
+charecter_side_effect :: proc(character:CharecterBase($CU),world:World(CU),inRollback:bool) {
+    state,frame := charecter_get_current_state_frame(character^)
+    frame.side_effect(character,world,inRollback)
+}
+
 charecer_change_state :: proc(character:^CharecterBase($CU),state:int) -> (State(CharecterBase(CU),CU),Frame(CharecterBase(CU),CU)) {
 	character.current_state = state
 	character.current_frame = 0

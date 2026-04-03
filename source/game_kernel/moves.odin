@@ -20,6 +20,7 @@ Frame :: struct($T:typeid,$CU:typeid) {
 	hurtbox_list:  [dynamic]psy.FixedBox, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
 	on_frame:      proc(self: ^T,world:^World(CU)),
+	side_effect:   proc(self: T, world: World(CU),inRollback:bool),
 	check_exit:    proc(self: ^T, frame: int) -> bool, // takes char pointer and proposed state
 }
 
