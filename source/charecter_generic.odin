@@ -14,7 +14,7 @@ TestCharecterData :: struct {
 
 }
 
-create_generic_charecter :: proc($CU:typeid,pos:Vec264) -> gk.CharecterBase(CU) {
+create_generic_charecter :: proc($CU:typeid,pos:[4]i16) -> gk.CharecterBase(CU) {
     hooks := gk.CharecterHooks(CU) {
               damage_formula = gk.make_default_dammage_formula(CU),
               charecter_check_counterhit = gk.make_default_counterhit_check(CU),
@@ -23,11 +23,11 @@ create_generic_charecter :: proc($CU:typeid,pos:Vec264) -> gk.CharecterBase(CU) 
    	charecter := gk.CharecterBase(Charecters) {
 		health=200,
 		body = psy.body_init(pos),
-		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2}),
-		move_speed = psy.f64_to_fixed(7),
-		air_drag = psy.f64_to_fixed(0.5),
-		air_move_speed = psy.f64_to_fixed(15.0),
-		jump_height = psy.f64_to_fixed(-10.0),
+		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2,0, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,0}),
+		move_speed = psy.init_from_parts(7,0),
+		air_drag =psy.init_from_parts(0,5),
+		air_move_speed = psy.init_from_parts(15,0),
+		jump_height = psy.init_from_parts(-10,0),
 		p1_side = true,
 		hooks = hooks,
 	}
@@ -707,7 +707,7 @@ entity_fireball ::proc(char: ^gk.CharecterBase($CU)) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	append(&char.entity_pool,gk.Entity(CU) {
-		move_speed = 4.0,
+		move_speed = psy.init_from_parts(4,0),
 		states = {
 			gk.State(gk.Entity(CU),CU) {
 				damage = 10,
@@ -732,8 +732,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity(CU),w:^gk.World(CU)) {
-							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(1 * enitity.move_speed))
-							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.f64_to_fixed(f64(-1 * enitity.move_speed))
+							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = enitity.move_speed
+							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.invert_fixed(enitity.move_speed)
 						},
 						check_exit = proc(char: ^gk.Entity(CU), cancel_index: int) -> bool {
 							return false

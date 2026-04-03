@@ -283,8 +283,8 @@ game_init :: proc() {
 	p2_controls := DebugControls {
 	}
 
-	p1 := create_generic_charecter(Charecters,{-10,2})
-	p2 := create_generic_charecter(Charecters,{10,2})
+	p1 := create_generic_charecter(Charecters,{-10,0,2,0})
+	p2 := create_generic_charecter(Charecters,{10,0,2,0})
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
@@ -319,7 +319,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p2_controls,
-            remote = false,
+            remote = true,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

@@ -17,7 +17,7 @@ SerlizedEntityState :: struct {
 	health: 		   u32,
 	current_state: 	   int,
 	current_frame: 	   int,
-	move_speed:        f32,
+	move_speed:        psy.Fixed12_4,
 	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	// physics
 	body:              psy.FixedBody,

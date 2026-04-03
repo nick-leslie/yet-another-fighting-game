@@ -27,17 +27,18 @@ Box :: struct($T:typeid) {
 }
 // general
 
-body_init :: proc(pos:[2]f64) -> FixedBody {
+body_init :: proc(pos:[4]i16) -> FixedBody {
     return FixedBody {
-        position = {f64_to_fixed(pos.x),f64_to_fixed(pos.y)},
+        position = {init_from_parts(pos.x,pos.y),init_from_parts(pos.z,pos.w)},
         velocity = {},
     }
 }
 
-box_init :: proc(extent:[2]f64) -> FixedBox {
+// a float with front back parts
+box_init :: proc(extent:[4]i16) -> FixedBox {
     return FixedBox {
         position = {},
-        extent = {f64_to_fixed(extent.x),f64_to_fixed(extent.y)},
+        extent = {init_from_parts(extent.x,extent.y),init_from_parts(extent.z,extent.w)},
     }
 }
 
@@ -81,7 +82,7 @@ unfix_box :: proc(box:Box(Fixed12_4)) -> Box(f64) {
 }
 // physics
 move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
-    delta := f64_to_fixed(.17)
+    delta := init_from_parts(0,17)
 
 	body.position = Vec2Fixed {
 		fixed.add(body.position.x,fixed.mul(body.velocity.x,delta)),
@@ -97,7 +98,7 @@ set_box_by_body :: proc(box:FixedBox,body:FixedBody) -> FixedBox {
 }
 
 invert_fixed :: proc(val:Fixed12_4) -> Fixed12_4 {
-    return fixed.mul(val, f64_to_fixed(-1.0))
+    return fixed.mul(val, init_from_parts(-1,0))
 }
 
 add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
@@ -138,6 +139,13 @@ float_vec2_to_fixed :: proc(vec:[2]f64) -> [2]Fixed12_4 {
 	fixed.init_from_f64(&vec_fixed.y,vec.y)
     return vec_fixed
 }
+
+init_from_parts :: proc(front:i16,back:i16) -> Fixed12_4{
+	value := Fixed12_4 {}
+	fixed.init_from_parts(&value,front,back)
+	return value
+}
+
 f64_to_fixed :: proc(val:f64) -> Fixed12_4 {
     // log.warn("this should only be called at start of game")
    	val_fixed := Fixed12_4 {}

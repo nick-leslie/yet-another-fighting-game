@@ -9,9 +9,9 @@ import "../utils"
 
 // this is just a type alieas so I can define it in multiple places
 
-
-CHARACTER_CAPSULE_HALF_HEIGHT: f64 : 2
-CHARACTER_CAPSULE_RADIUS: f64 : 1
+//todo we may need to change this
+CHARACTER_CAPSULE_HALF_HEIGHT: i16 : 2
+CHARACTER_CAPSULE_RADIUS: i16 : 1
 
 HIT_BOX_MAX :: 64 // we may want to change this
 
@@ -310,7 +310,8 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 		jump_pressed = false // there is a better way to do this
 	}
 	// Add gravity
-	gravity := psy.f64_to_fixed(-0.3) // todo change me
+	// add me as a charecter peramiter
+	gravity := psy.invert_fixed(psy.init_from_parts(0,20)) // needed bc negitive 0 is stinky
     character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
     ground_collision := psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),w.stage.floor.y,false)
     charecter_was_in_air := character.in_air
