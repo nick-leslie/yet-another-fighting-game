@@ -43,24 +43,24 @@ box_init :: proc(extent:[4]i16) -> FixedBox {
 }
 
 // unfix body should only be used for rendering and should not be used for game play
-fix_body :: proc(body:RiggedBody(f64)) -> RiggedBody(Fixed12_4) {
-    vec_fixed := [8]Fixed12_4 {}
-   	fixed.init_from_f64(&vec_fixed[0],body.position.x)
-    fixed.init_from_f64(&vec_fixed[1],body.position.y)
-   	fixed.init_from_f64(&vec_fixed[2],body.prev_position.x)
-    fixed.init_from_f64(&vec_fixed[3],body.prev_position.y)
-    fixed.init_from_f64(&vec_fixed[4],body.velocity.x)
-    fixed.init_from_f64(&vec_fixed[5],body.velocity.y)
-    fixed.init_from_f64(&vec_fixed[6],body.prev_velocity.x)
-    fixed.init_from_f64(&vec_fixed[7],body.prev_velocity.y)
-    //todo convert the body out of float
-	return RiggedBody(Fixed12_4) {
-		position = {vec_fixed[0],vec_fixed[1]},
-		prev_position = {vec_fixed[2],vec_fixed[3]},
-		velocity = {vec_fixed[4],vec_fixed[5]},
-		prev_velocity = {vec_fixed[6],vec_fixed[7]},
-	}
-}
+// fix_body :: proc(body:RiggedBody(f64)) -> RiggedBody(Fixed12_4) {
+//     vec_fixed := [8]Fixed12_4 {}
+//    	fixed.init_from_f64(&vec_fixed[0],body.position.x)
+//     fixed.init_from_f64(&vec_fixed[1],body.position.y)
+//    	fixed.init_from_f64(&vec_fixed[2],body.prev_position.x)
+//     fixed.init_from_f64(&vec_fixed[3],body.prev_position.y)
+//     fixed.init_from_f64(&vec_fixed[4],body.velocity.x)
+//     fixed.init_from_f64(&vec_fixed[5],body.velocity.y)
+//     fixed.init_from_f64(&vec_fixed[6],body.prev_velocity.x)
+//     fixed.init_from_f64(&vec_fixed[7],body.prev_velocity.y)
+//     //todo convert the body out of float
+// 	return RiggedBody(Fixed12_4) {
+// 		position = {vec_fixed[0],vec_fixed[1]},
+// 		prev_position = {vec_fixed[2],vec_fixed[3]},
+// 		velocity = {vec_fixed[4],vec_fixed[5]},
+// 		prev_velocity = {vec_fixed[6],vec_fixed[7]},
+// 	}
+// }
 
 // unfix body should only be used for rendering and should not be used for game play
 unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
