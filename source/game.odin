@@ -280,8 +280,19 @@ game_init :: proc() {
 		medium_key = rl.KeyboardKey.K,
 		heavy_key = rl.KeyboardKey.L,
 	}
-	p2_controls := DebugControls {
+	p2_controls := GamePad {
+		gamepad = 0,
+		up_key = rl.GamepadButton.LEFT_FACE_UP,
+		down_key = rl.GamepadButton.LEFT_FACE_DOWN,
+		left_key = rl.GamepadButton.LEFT_FACE_LEFT,
+		right_key = rl.GamepadButton.LEFT_FACE_RIGHT,
+		light_key = rl.GamepadButton.RIGHT_FACE_LEFT,
+		medium_key = rl.GamepadButton.RIGHT_FACE_UP,
+		heavy_key = rl.GamepadButton.RIGHT_FACE_RIGHT,
 	}
+	// p2_controls := Remote {
+
+	// }
 
 	p1 := create_generic_charecter(Charecters,{-10,0,2,0})
 	p2 := create_generic_charecter(Charecters,{10,0,2,0})
@@ -319,7 +330,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p2_controls,
-            remote = true,
+            remote = false,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

@@ -10,10 +10,10 @@ import "./utils"
 Controls :: union {
     Keyboard,
     GamePad,
-    DebugControls, // used for testing
+    Remote, // used for testing
 }
 
-DebugControls :: struct {
+Remote :: struct {
 
 }
 
@@ -28,7 +28,7 @@ Keyboard :: struct {
 }
 
 GamePad :: struct {
-    gamepad:int, // gamepad number from 0-4
+    gamepad:i32, // gamepad number from 0-4
     up_key:rl.GamepadButton,
     down_key:rl.GamepadButton,
     left_key:rl.GamepadButton,
@@ -105,16 +105,70 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         }
         if rl.IsKeyPressed(controls.heavy_key) {
             attack = gk.Attack.Heavy
-
         }
         return gk.Input{
             dir=dir,
             attack=attack,
         }
     case GamePad:
-        assert(false,"not implemented")
-        return {}
-    case DebugControls:
+        // assert(false,"not implemented")
+        move_vec := Vec2{}
+        side_mod := 1
+        if rl.IsGamepadAvailable(controls.gamepad) {
+        	log.debug(rl.GetGamepadName(controls.gamepad))
+         	// assert(false,"getting game pad name")
+        }
+        if p1_side == false {
+            side_mod =-1
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.up_key) {
+            move_vec.y += 1
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.down_key) {
+            move_vec.y += -1
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.right_key) {
+            move_vec.x += f32(1 * side_mod)
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.left_key) {
+            move_vec.x += f32(-1 * side_mod)
+        }
+        dir:gk.Direction
+        attack:gk.Attack
+        switch move_vec {
+        case {0,0}:
+            dir = gk.Direction.Neutral
+        case {1,0}:
+            dir = gk.Direction.Forward
+        case {-1,0}:
+            dir = gk.Direction.Back
+        case {0,-1}:
+            dir = gk.Direction.Down
+        case {0,1}:
+            dir = gk.Direction.Up
+        case {1,1}:
+            dir = gk.Direction.UpForward
+        case {-1,1}:
+            dir = gk.Direction.UpBack
+        case {1,-1}:
+            dir = gk.Direction.DownForward
+        case {-1,-1}:
+            dir = gk.Direction.DownBack
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.light_key) {
+            attack = gk.Attack.Light
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.medium_key) {
+            attack = gk.Attack.Medium
+        }
+        if rl.IsGamepadButtonDown(controls.gamepad,controls.heavy_key) {
+            attack = gk.Attack.Heavy
+        }
+        return gk.Input{
+            dir=dir,
+            attack=attack,
+        }
+    case Remote:
         return {}
     }
     return {}
