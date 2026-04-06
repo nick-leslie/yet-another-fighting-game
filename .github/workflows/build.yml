@@ -27,6 +27,7 @@ jobs:
           repository: nick-leslie/Fmod-odin-bindings
           token: ${{ secrets.GH_FMOD_PAT }}
           path: libs/fmod
+          branch: main
 
 
       - name: Build hot reload
@@ -81,7 +82,7 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v14
 
       - uses: actions/checkout@v4
-        
+
       - uses: actions/checkout@v4
         with:
           repository: nick-leslie/Fmod-odin-bindings
