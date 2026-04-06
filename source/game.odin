@@ -41,7 +41,7 @@ import "core:os"
 import "core:time"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
-
+import fmod "../libs/fmod"
 USE_PROFILING :: #config(USE_PROFILING, false)
 
 
@@ -293,7 +293,8 @@ game_init :: proc() {
 	// p2_controls := Remote {
 
 	// }
-
+ 	system: ^fmod.SYSTEM
+    fmod.System_Create(&system, fmod.FMOD_VERSION) 
 	p1 := create_generic_charecter(Charecters,{-10,0,2,0})
 	p2 := create_generic_charecter(Charecters,{10,0,2,0})
 	old_allocator := context.allocator
