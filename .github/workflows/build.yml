@@ -27,7 +27,6 @@ jobs:
           repository: nick-leslie/Fmod-odin-bindings
           token: ${{ secrets.GH_FMOD_PAT }}
           path: libs/fmod
-          branch: main
 
 
       - name: Build hot reload
@@ -70,36 +69,35 @@ jobs:
   #     # - name: Build web
   #     #   run: ./build_web.sh
 
-  build_windows:
-    name: Windows
-    runs-on: windows-latest
-    steps:
-      - uses: laytan/setup-odin@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release: false
+  # build_windows:
+  #   name: Windows
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: laytan/setup-odin@v2
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         release: false
 
-      - uses: mymindstorm/setup-emsdk@v14
+  #     - uses: mymindstorm/setup-emsdk@v14
 
-      - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: nick-leslie/Fmod-odin-bindings
-          token: ${{ secrets.GH_FMOD_PAT }}
-          path: libs/fmod
-          branch: main
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         repository: nick-leslie/Fmod-odin-bindings
+  #         token: ${{ secrets.GH_FMOD_PAT }}
+  #         path: libs/fmod
 
-      - uses: ilammy/msvc-dev-cmd@v1
+  #     - uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Build hot reload
-        run: .\build_hot_reload.bat
+  #     - name: Build hot reload
+  #       run: .\build_hot_reload.bat
 
-      - name: Build release
-        run: .\build_release.bat
+  #     - name: Build release
+  #       run: .\build_release.bat
 
-      - name: Build debug
-        run: .\build_debug.bat
+  #     - name: Build debug
+  #       run: .\build_debug.bat
 
       # - name: Build web
       #   run: .\build_web.bat
