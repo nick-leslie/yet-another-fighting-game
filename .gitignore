@@ -13,3 +13,4 @@ joltc
 assets/tmp
 *.spall
 *.png
+libs/fmod

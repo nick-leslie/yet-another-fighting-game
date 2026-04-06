@@ -33,6 +33,15 @@ esac
 
 # Build the game. Note that the game goes into $OUT_DIR while the exe stays in
 # the root folder.
+FMOD_DIR="./libs/fmod"
+if [ -d "$FMOD_DIR" ]; then
+  echo "Directory $FMOD_DIR exists."
+else
+  echo "Directory $FMOD_DIR does not exist. downloading"
+  git clone https://github.com/nick-leslie/Fmod-odin-bindings.git ./libs/fmod
+fi
+
+cp -a ./libs/fmod/bin/. build/hot_reload
 echo "Building game$DLL_EXT"
 odin build source -extra-linker-flags:"$EXTRA_LINKER_FLAGS" -define:RAYLIB_SHARED=true -build-mode:dll -out:$OUT_DIR/game_tmp$DLL_EXT -strict-style -vet -debug
 
