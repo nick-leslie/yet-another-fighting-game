@@ -118,9 +118,6 @@ serlize_world :: proc (w:World($CU),allocator:runtime.Allocator) -> SerlizedWorl
     p1,p1_entitys:=serlize_charecter(w.p1,allocator)
     p2,p2_entitys:=serlize_charecter(w.p2,allocator)
     
-    if p2_entitys == nil || len(p2_entitys) == 0 || p1_entitys == nil || len(p1_entitys) == 0{
-        assert(false,"huhhhhh")
-    }
     serlized_world.p1,serlized_world.p1_entity_pool=p1,p1_entitys
     serlized_world.p2,serlized_world.p2_entity_pool=p2,p2_entitys
     // ,allocator:runtime.Allocator
