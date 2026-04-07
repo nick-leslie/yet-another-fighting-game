@@ -4,14 +4,15 @@ import clay "../libs/clay-odin"
 
 
 ControllerUiElement :: struct {
+    on_click: Maybe(proc()),
     //do we put an action here
-    up:^ControllerUiElement,
-    down:^ControllerUiElement,
-    left:^ControllerUiElement,
-    right:^ControllerUiElement,
+    up:int,
+    down:int,
+    left:int,
+    right:int,
 }
-MENUE_INTERACTIVE_ELEMENTS :: 10 // todo expand 
-create_menu_ui_layout :: proc([$N]ControllerUiElement) -> clay.ClayArray(clay.RenderCommand) {
+MENU_INTERACTIVE_ELEMENTS :: 10 // todo expand
+create_menu_ui_layout :: proc(controller_map:^[MENU_INTERACTIVE_ELEMENTS]ControllerUiElement) -> clay.ClayArray(clay.RenderCommand) {
    	clay.BeginLayout()
 
 	if clay.UI()({
@@ -31,8 +32,35 @@ create_menu_ui_layout :: proc([$N]ControllerUiElement) -> clay.ClayArray(clay.Re
 				layoutDirection=.LeftToRight,
            	},
 		}) {
-
+		    //todo figure out a better way
+		    callback := proc () {
+				g.screen = InRound {}
+			}
+			clay_callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+       	        context = g_context
+                if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
+                    g.screen = InRound {}
+                }
+            }
+			controller_map[0] = ControllerUiElement {
+			    on_click=callback,
+				left = 0,
+				right = 0,
+				up = 0,
+				down = 0,
+			}
+            static_button("start",false,clay_callback)
 		}
 	}
     return clay.EndLayout()
 }
+
+
+// on_click :: proc(callback:proc()) -> proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+//     return proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+// 		context = g_context
+//         if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
+//             callback()
+//         }
+// 	}
+// }

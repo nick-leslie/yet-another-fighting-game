@@ -54,10 +54,21 @@ Charecters :: struct {
     },
 }
 // do we want this to be a union
-Screen :: enum {
+Screen :: union {
     InRound,
-    MainMenue,
+    MainMenu,
     CharecterSelect,
+}
+InRound :: struct {
+
+}
+MainMenu :: struct {
+    controller_ui_index:int,
+    elements:[MENU_INTERACTIVE_ELEMENTS]ControllerUiElement,
+}
+
+CharecterSelect :: struct {
+
 }
 
 Game_Memory :: struct {
@@ -122,7 +133,7 @@ ui_camera :: proc() -> rl.Camera2D {
 
 free_cam := false
 
-draw :: proc() {
+draw_game :: proc() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.BLACK)
 	if rl.IsKeyPressed(.F) {
@@ -164,6 +175,21 @@ draw :: proc() {
 	rl.EndDrawing()
 }
 
+draw_main_menu :: proc(screen:^MainMenu) {
+   	rl.BeginDrawing()
+   	clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(rl.MouseButton.LEFT))
+    clay.UpdateScrollContainers(false, rl.GetMouseWheelMoveV(), rl.GetFrameTime())
+    clay.SetLayoutDimensions({cast(f32)rl.GetRenderWidth(), cast(f32)rl.GetRenderHeight() })
+	if (rl.IsKeyPressed(.C)) {
+        debugModeEnabled = !debugModeEnabled
+        clay.SetDebugModeEnabled(debugModeEnabled)
+    }
+   	commands := create_menu_ui_layout(&screen.elements)
+
+	//something is going wrong with the interactions between the cam and clay
+	clay_raylib_render(&commands,g.fonts,context.temp_allocator)
+	rl.EndDrawing()
+}
 // last_world_state:gk.SerlizedWorld
 //
 
@@ -201,42 +227,40 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
 
 @(export)
 game_update :: proc() {
-
     if rl.IsKeyPressed(.ESCAPE) {
   		g.app_run = false
    	}
     if g.app_run == false {
         return
     }
-    if rl.IsKeyPressed(.P) {
-        // this sucks
-        // g.network_mannager.should_run = !g.network_mannager.should_run
-        g.game_run = !g.game_run
-    }
-    key_prt,in_remap := g.p1_input_mannager.inRemapMode.?
-    if in_remap {
-        key := rl.GetKeyPressed()
-        if key != rl.KeyboardKey.KEY_NULL {
-            key_prt^ = key
-            g.p1_input_mannager.inRemapMode = nil
+    switch &screen in g.screen {
+    case InRound:
+        if rl.IsKeyPressed(.P) {
+            // this sucks
+            // g.network_mannager.should_run = !g.network_mannager.should_run
+            g.game_run = !g.game_run
         }
-    }
-    if g.game_run == true && in_remap == false{
-        // the remote player should be the only one that decides when roll back
-        if g.start_time != nil && time.diff(time.now(),g.start_time.?) < 0 {
-   	        run_game_sim(&g.world,g.frame)
+        key_prt,in_remap := g.p1_input_mannager.inRemapMode.?
+        if in_remap {
+            key := rl.GetKeyPressed()
+            if key != rl.KeyboardKey.KEY_NULL {
+                key_prt^ = key
+                g.p1_input_mannager.inRemapMode = nil
+            }
         }
+        if g.game_run == true && in_remap == false{
+            // the remote player should be the only one that decides when roll back
+            if g.start_time != nil && time.diff(time.now(),g.start_time.?) < 0 {
+       	        run_game_sim(&g.world,g.frame)
+            }
+        }
+    	draw_game()
+    case MainMenu:
+        draw_main_menu(&screen)
+    case CharecterSelect:
+
     }
-    // log.debug("---------------------------")
-    // todo go back 7 and resimulate in debug zzzz
-    //
-    //
 
-    // log.debug(g.rollback_state.current_frame)
-    // log.debug(g.rollback_state.current_index)
-
-	//
-	draw()
 
 	// Everything on tracking allocator is valid until end-of-frame.
 	free_all(context.temp_allocator)
@@ -324,6 +348,7 @@ game_init :: proc() {
 	arena_alocator := vmem.arena_allocator(&g.arena)
 	g = new(Game_Memory)
 	g^ = Game_Memory {
+        screen = MainMenu{},
 		app_run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.

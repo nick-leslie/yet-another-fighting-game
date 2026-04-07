@@ -137,7 +137,7 @@ network_mannagment_ui :: proc() {
 	}
 }
 remap_callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
-	context = g_context
+	// context = g_context
     if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
         input_manager := &g.p1_input_mannager
         keyboard,ok := &input_manager.controls.(Keyboard)
