@@ -75,6 +75,7 @@ Game_Memory :: struct {
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
+	inRemapMode:Maybe(^rl.KeyboardKey), //
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -201,6 +202,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
 
 @(export)
 game_update :: proc() {
+
     if rl.IsKeyPressed(.ESCAPE) {
   		g.app_run = false
    	}
@@ -212,8 +214,18 @@ game_update :: proc() {
         // g.network_mannager.should_run = !g.network_mannager.should_run
         g.game_run = !g.game_run
     }
-
-    if g.game_run == true {
+    key_prt,in_remap := g.inRemapMode.?
+    if in_remap {
+        keyboard,ok := &g.p1_input_mannager.controls.(Keyboard)
+        if ok {
+            key := rl.GetKeyPressed()
+            if key != rl.KeyboardKey.KEY_NULL {
+                key_prt^ = key
+                g.inRemapMode = nil
+            }
+        }
+    }
+    if g.game_run == true && in_remap == false{
         // the remote player should be the only one that decides when roll back
         if g.start_time != nil && time.diff(time.now(),g.start_time.?) < 0 {
    	        run_game_sim(&g.world,g.frame)
