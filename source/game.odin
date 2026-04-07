@@ -75,7 +75,6 @@ Game_Memory :: struct {
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
-	inRemapMode:Maybe(^rl.KeyboardKey), //
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -214,15 +213,12 @@ game_update :: proc() {
         // g.network_mannager.should_run = !g.network_mannager.should_run
         g.game_run = !g.game_run
     }
-    key_prt,in_remap := g.inRemapMode.?
+    key_prt,in_remap := g.p1_input_mannager.inRemapMode.?
     if in_remap {
-        keyboard,ok := &g.p1_input_mannager.controls.(Keyboard)
-        if ok {
-            key := rl.GetKeyPressed()
-            if key != rl.KeyboardKey.KEY_NULL {
-                key_prt^ = key
-                g.inRemapMode = nil
-            }
+        key := rl.GetKeyPressed()
+        if key != rl.KeyboardKey.KEY_NULL {
+            key_prt^ = key
+            g.p1_input_mannager.inRemapMode = nil
         }
     }
     if g.game_run == true && in_remap == false{
