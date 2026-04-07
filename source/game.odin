@@ -294,8 +294,8 @@ game_init :: proc() {
 
 	// }
 
-	p1 := create_generic_charecter(Charecters,{-10,0,2,0})
-	p2 := create_generic_charecter(Charecters,{10,0,2,0})
+	p1 := create_generic_charecter(Charecters,{-10,0,2,0},true)
+	p2 := create_generic_charecter(Charecters,{10,0,2,0},false)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
@@ -320,7 +320,7 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 		clay_arena=clay_arena,
-		world=	gk.world_init(p1,p2),
+		world=gk.world_init(p1,p2),
 		// network_mannager=network_mannager.?,
 		p1_input_mannager=InputMannager {
             controls=p1_controls,

@@ -14,7 +14,7 @@ TestCharecterData :: struct {
 
 }
 
-create_generic_charecter :: proc($CU:typeid,pos:[4]i16) -> gk.CharecterBase(CU) {
+create_generic_charecter :: proc($CU:typeid,pos:[4]i16,p1_side:bool) -> gk.CharecterBase(CU) {
     hooks := gk.CharecterHooks(CU) {
               damage_formula = gk.make_default_dammage_formula(CU),
               charecter_check_counterhit = gk.make_default_counterhit_check(CU),
@@ -28,7 +28,7 @@ create_generic_charecter :: proc($CU:typeid,pos:[4]i16) -> gk.CharecterBase(CU) 
 		air_drag =psy.init_from_parts(0,5),
 		air_move_speed = psy.init_from_parts(15,0),
 		jump_height = psy.init_from_parts(-10,0),
-		p1_side = true,
+		p1_side = p1_side,
 		hooks = hooks,
 	}
 	gk.initilize_charecter_memory(&charecter)
@@ -732,8 +732,8 @@ entity_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity(CU),w:^gk.World(CU)) {
-							if  enitity.charecter_ptr.p1_side do enitity.body.velocity.x = enitity.move_speed
-							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.invert_fixed(enitity.move_speed)
+							if enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.invert_fixed(enitity.move_speed)
+							if !enitity.charecter_ptr.p1_side do enitity.body.velocity.x = enitity.move_speed
 						},
 						check_exit = proc(char: ^gk.Entity(CU), cancel_index: int) -> bool {
 							return false
