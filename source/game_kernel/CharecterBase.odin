@@ -34,10 +34,14 @@ CharecterSerlizedState :: struct($CU:typeid) {
     p1_side:           bool,
     combo_scaling:     u32,
     charecter_info: CU,
+    end_in_hardknockdown:bool, // these flags are for if you end hitstun in hard or soft knockdown
+    end_in_softknockdown:bool,
    	charecter_flags: bit_field u64 {
 
 	}, // lots of flags for various states.. tuble extc
 }
+
+
 
 //rename to charecter base
 CharecterBase :: struct($CU:typeid) {
@@ -45,6 +49,8 @@ CharecterBase :: struct($CU:typeid) {
 	//do I want to add an arena here
 	using serlized_state: CharecterSerlizedState(CU),
 	collision_box:     psy.FixedBox,
+	soft_knockdown_index:int,
+	hard_knockdown_index:int,
 	states:            [dynamic]State(CharecterBase(CU),CU), // should this be state
 	patterns:          [dynamic]Pattern,
 	hit_stun_index:    int, // we may replace this with a constent
@@ -87,10 +93,13 @@ charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffe
 	exit_check := frame.check_exit(character, proposed_state_index)
 	//exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
 	if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
-		if(character.current_state == character.hit_stun_index) {
+		// if we were in hitstun and we want to go to another state
+	    if(character.current_state == character.hit_stun_index) {
 			//this is the recovery point
 			w.combo_counter = 0
 			character.combo_scaling = 100
+			if character.end_in_hardknockdown do proposed_state_index = character.hard_knockdown_index
+			if character.end_in_softknockdown do proposed_state_index = character.soft_knockdown_index
 		}
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {

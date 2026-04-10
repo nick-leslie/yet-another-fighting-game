@@ -100,6 +100,9 @@ input_history :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,gk.Input)) {
 	}
 }
 
+
+
+
 network_mannagment_ui :: proc() {
 	if clay.UI(clay.ID("network_mannagment_layout"))({
 		layout = {
@@ -116,6 +119,7 @@ network_mannagment_ui :: proc() {
 			if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
 				context = g_context
 				now := time.now()
+				log.debug("connect")
 				send_messsage(&g.network_mannager,NetworkMessage {
 					packet_version=MESSAGE_VERSION,
 					frame=-1,
@@ -129,6 +133,32 @@ network_mannagment_ui :: proc() {
 		}
 		clay.OnHover(callback,nil)
 		clay.Text("connect",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
+		static_button("remap up",false,remap_callback)
+	}
+}
+remap_callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+	// context = g_context
+    if pointerData.state == clay.PointerDataInteractionState.PressedThisFrame {
+        input_manager := &g.p1_input_mannager
+        keyboard,ok := &input_manager.controls.(Keyboard)
+        if ok {
+            input_manager.inRemapMode = &keyboard.up_key
+        }
+    }
+}
+//todo add a controler support section
+static_button :: proc($txt:string,in_focus:bool,callback:proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr)) {
+    if clay.UI()({
+		layout = {
+			sizing = {
+				width = clay.SizingFit(),
+				height = clay.SizingFit(),
+			},
+		},
+
+	}) {
+       	clay.OnHover(callback,nil)
+       	clay.Text(txt,clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 	}
 }
 

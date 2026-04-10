@@ -51,6 +51,7 @@ InputMannager :: struct {
 	last_input: InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
+	inRemapMode:Maybe(^rl.KeyboardKey), //
 }
 
 
