@@ -2,6 +2,7 @@ package game_kernel
 
 import "core:log"
 import psy "../physics"
+import fixed "core:math/fixed"
 
 /*
 	ENTITY desighn doc
@@ -108,8 +109,8 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 
 
 
-	side_mod: f64 = -1.
-	if other.p1_side == false do side_mod = 1.
+	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
+	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
 
 
    	for &hurt_box in frameOther.hurtbox_list {
@@ -119,16 +120,13 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
-        log.debug(block == false)
-        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false)
-        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr)
-        log.debug(hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false && block == false)
-		knockback := hit_ctx.hitbox.blockKnockback
-		knockback.x *= side_mod
+
+        knockback := hit_ctx.hitbox.blockKnockback
+		knockback.x = fixed.mul(knockback.x ,side_mod)
 		pushback := hit_ctx.hitbox.blockPushback
-		pushback.x *= side_mod
-		psy.add_float_vec2_to_vel(&other.body,knockback)
-		// psy.add_float_vec2_to_vel(&self.body,pushback)
+		pushback.x = fixed.mul(pushback.x ,side_mod)
+
+		psy.add_fixed_vec2_to_vel(&other.body,knockback)
 		//this sets it so we dont hit with the same hitbox for multiple frames
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set

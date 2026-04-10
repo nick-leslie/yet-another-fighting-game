@@ -29,16 +29,27 @@ Box :: struct($T:typeid) {
 
 body_init :: proc(pos:[4]i16) -> FixedBody {
     return FixedBody {
-        position = {init_from_parts(pos.x,pos.y),init_from_parts(pos.z,pos.w)},
+        position = vec2_init(pos),
         velocity = {},
     }
 }
 
 // a float with front back parts
-box_init :: proc(extent:[4]i16) -> FixedBox {
-    return FixedBox {
-        position = {},
-        extent = {init_from_parts(extent.x,extent.y),init_from_parts(extent.z,extent.w)},
+box_init :: proc(pos:[4]i16,extent:[4]i16) -> FixedBox {
+    log.debug(extent.x)
+    log.debug(extent.y)
+    box := FixedBox {
+        position = vec2_init(pos),
+        extent = vec2_init(extent),
+    }
+    // assert(false)
+    return box
+}
+
+vec2_init :: proc(vec:[4]i16) -> Vec2Fixed {
+    return Vec2Fixed{
+        init_from_parts(vec.x,vec.y),
+        init_from_parts(vec.z,vec.w),
     }
 }
 
@@ -117,6 +128,13 @@ add_float_vec2_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[2]f64) -> ^Rigged
 	}
 	return body
 }
+add_fixed_vec2_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[2]Fixed12_4) -> ^RiggedBody(Fixed12_4) {
+	body.velocity = Vec2Fixed {
+		fixed.add(body.velocity.x,vec.x),
+		fixed.add(body.velocity.y,vec.y),
+	}
+	return body
+}
 add_fixed_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]Fixed12_4) -> ^RiggedBody(Fixed12_4) {
 	body.velocity = Vec2Fixed {
 		fixed.add(body.velocity.x,vec.x),
@@ -143,6 +161,8 @@ float_vec2_to_fixed :: proc(vec:[2]f64) -> [2]Fixed12_4 {
 init_from_parts :: proc(front:i16,back:i16) -> Fixed12_4{
 	value := Fixed12_4 {}
 	fixed.init_from_parts(&value,front,back)
+	// log.debug(value)
+	// log.debug(fixed_to_f64(value))
 	return value
 }
 
@@ -156,17 +176,17 @@ fixed_to_f64 :: proc(val:Fixed12_4) -> f64 {
     return fixed.to_f64(val)
 }
 
-fix_box :: proc(box:Box(f64)) -> FixedBox {
-   	vec_fixed := [4]Fixed12_4 {}
-	fixed.init_from_f64(&vec_fixed.x,box.position.x)
-	fixed.init_from_f64(&vec_fixed.y,box.position.y)
-	fixed.init_from_f64(&vec_fixed.z,box.extent.x)
-	fixed.init_from_f64(&vec_fixed.w,box.extent.y)
-	return FixedBox {
-        position = {vec_fixed.x,vec_fixed.y},
-        extent = {vec_fixed.z,vec_fixed.w},
-	}
-}
+// fix_box :: proc(box:Box(f64)) -> FixedBox {
+//    	vec_fixed := [4]Fixed12_4 {}
+// 	fixed.init_from_f64(&vec_fixed.x,box.position.x)
+// 	fixed.init_from_f64(&vec_fixed.y,box.position.y)
+// 	fixed.init_from_f64(&vec_fixed.z,box.extent.x)
+// 	fixed.init_from_f64(&vec_fixed.w,box.extent.y)
+// 	return FixedBox {
+//         position = {vec_fixed.x,vec_fixed.y},
+//         extent = {vec_fixed.z,vec_fixed.w},
+// 	}
+// }
 
 add_fixed_vecs :: proc(vec1:[2]Fixed12_4,vec2:[2]Fixed12_4) -> [2]Fixed12_4 {
     return [2]Fixed12_4{

@@ -27,10 +27,10 @@ Frame :: struct($T:typeid,$CU:typeid) {
 //for multi hits spawn a new hitbox
 Hit_box :: struct {
     box:psy.FixedBox,
-	hitKnockback:     Vec2, // this is applied to other
-	hitPushback:      Vec2, // this is applied to self
-	blockKnockback:   Vec2,
-	blockPushback:    Vec2,
+	hitKnockback:     psy.Vec2Fixed, // this is applied to other
+	hitPushback:      psy.Vec2Fixed, // this is applied to self
+	blockKnockback:   psy.Vec2Fixed,
+	blockPushback:    psy.Vec2Fixed,
 	attackDir:        AttackDir,
 	// todo properties
 }

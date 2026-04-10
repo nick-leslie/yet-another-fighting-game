@@ -13,7 +13,7 @@ Cyberpunk :: struct {
 
 
 create_cyberpunk_charecter :: proc(pos:[4]i16,budget:u64) -> gk.CharecterBase(Charecter) {
-	 hooks := gk.CharecterHooks(Charecter) {
+    hooks := gk.CharecterHooks(Charecter) {
         damage_formula = gk.make_default_dammage_formula(Charecter),
         charecter_check_counterhit = gk.make_default_counterhit_check(Charecter),
 	}
@@ -21,24 +21,25 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:u64) -> gk.CharecterBase(Ch
    	charecter := gk.CharecterBase(Charecter) {
 		health=200, // todo change me
 		body = psy.body_init(pos),
-		collision_box = psy.box_init({gk.CHARACTER_CAPSULE_RADIUS*2,0, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,0}),
+		collision_box = psy.box_init({},{gk.CHARACTER_CAPSULE_RADIUS*2,0, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,0}),
 		move_speed = psy.init_from_parts(7,0),
 		air_drag =psy.init_from_parts(0,5),
 		air_move_speed = psy.init_from_parts(15,0),
 		jump_height = psy.init_from_parts(-10,0),
 		p1_side = true,
 		hooks = hooks,
-		serlized_state = {
-			charecter_info=Charecter {
-				budget=budget,
-				charecter_spesific_data = Cyberpunk {
-				},
+		charecter_info=Charecter {
+			budget=budget,
+			charecter_spesific_data = Cyberpunk {
 			},
 		},
 	}
 	gk.initilize_charecter_memory(&charecter)
+
+	add_universal_states(&charecter)
 	cyberpunk_add_state_movement(&charecter) // the nill is tmp
-	// add_state_light_attack(&charecter)
+
+
 	// cyberpunk_add_state_light_fireball(&charecter)
 	return charecter
 }
@@ -48,14 +49,33 @@ free_cancel :: proc(char: ^gk.CharecterBase($Charecter), cancel_index: int) -> b
 	return true
 }
 
-cyberpunk_state_neutral ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
+	log.debug("in add movement")
+	index := cyberpunk_state_neutral(char)
+	cyberpunk_pattern_neutral(char,index)
+
+	index = cyberpunk_state_forward(char)
+	cyberpunk_pattern_forward(char,index)
+
+	index = cyberpunk_state_backward(char)
+	cyberpunk_pattern_backward(char,index)
+
+	index = cyberpunk_state_jump(char)
+	cyberpunk_pattern_jump(char,index)
+
+	index = cyberpunk_state_jump_forward(char)
+	cyberpunk_pattern_jump_forward(char,index)
+
+	index = cyberpunk_state_jump_backward(char)
+	cyberpunk_pattern_jump_backward(char,index)
+	log.debug("done adding movement")
+}
+
+cyberpunk_state_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
-	unfixed_box := psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}}
-	fixed := psy.fix_box(unfixed_box)
-	unfixed_2 := psy.unfix_box(fixed)
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(unfixed_box)},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo if should we check if grounded?
@@ -69,12 +89,14 @@ cyberpunk_state_neutral ::proc(char: ^gk.CharecterBase(Charecter)) {
 		frames = {zero_frame},
 	}
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
-cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			if char.p1_side do char.body.velocity.x = char.move_speed
@@ -88,15 +110,17 @@ cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 	log.debug("in setting up physics")
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
 
 
-cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
     		if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
@@ -110,12 +134,14 @@ cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
-cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		    char.jump_requested = true
@@ -125,7 +151,7 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -137,13 +163,15 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
-cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
@@ -155,7 +183,7 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -167,13 +195,15 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
-cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
@@ -185,7 +215,9 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.fix_box(psy.UnfixedBox{position = [2]f64{0, 0}, extent = [2]f64{5., 10.}})},
+		hurtbox_list = {
+		    psy.box_init({0,0,0,0},{5,0,10,0}),
+		},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -198,86 +230,494 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
 		frames = {zero_frame, one_frame},
 	}
 	append(&char.states, move)
+	index := len(char.states)-1
+	return index
 }
 
-cyberpunk_pattern_neutral ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_neutral ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 0,
+		state_index = index,
+		air_ok=false,
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 1,
+		state_index = index,
+		air_ok=false,
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 2,
+		state_index = index,
+		air_ok=false,
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.Up, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 3,
+		state_index = index,
+		air_ok=false, // set to true to enable double jump
+		air_only=false,
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 4,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) {
+cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
 		inputs      = {gk.Input{dir = gk.Direction.UpBack, attack = gk.Attack.None}},
 		pritority   = 0,
-		state_index = 5,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
 	}
 	append(&char.patterns, pattern)
 }
 
 
-cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
-	log.debug("in add movement")
-	cyberpunk_state_neutral(char)
-	cyberpunk_state_forward(char)
-	cyberpunk_state_backward(char)
-	cyberpunk_state_jump(char)
-	cyberpunk_state_jump_forward(char)
-	cyberpunk_state_jump_backward(char)
-	log.debug("done adding movement")
 
-	//add the move patterns
-	cyberpunk_pattern_neutral(char)
-	cyberpunk_pattern_forward(char)
-	cyberpunk_pattern_backward(char)
-	cyberpunk_pattern_jump(char)
-	cyberpunk_pattern_jump_forward(char)
-	cyberpunk_pattern_jump_backward(char)
-	log.debug("done adding patterns")
+
+
+cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
+    index := cyberpunk_add_stand_punch(char)
+    cyber_punk_pattern_stand_punch(char,index)
+    index = cyberpunk_add_crouch_light(char)
+    cyber_punk_pattern_crouch_punch(char,index)
+
+    //need to add in air to patterns
+    // index = cyberpunk_add_jump_punch(char)
+    // cyber_punk_pattern_jump_punch(char,index)
+}
+
+cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
+	hit_box := gk.Hit_box {
+           box = psy.box_init(
+               {0, 0,0,0},
+               {10,0, 5,0},
+           ),
+           hitKnockback = psy.vec2_init({-1,0,0,0}),
+           blockPushback = psy.vec2_init({1,0,0,0}),
+	}
+	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
+		name="stand light attack",
+		hit_boxes = {hit_box},
+		damage = 10,
+		frames    = {
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+				},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+		},
+		isAttack  = true,
+		hitstun   = 15,
+		blockstun = 10,
+	}
+	append(&char.states, move)
+	index := len(char.states)-1
+	return index
+}
+cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
+    context.allocator = vmem.arena_allocator(&char.arena)
+
+	hit_box := gk.Hit_box {
+           box = psy.box_init(
+               {0, 0,0,0},
+               {10,0, 5,0},
+           ),
+           hitKnockback = psy.vec2_init({-1,0,0,0}),
+           blockPushback = psy.vec2_init({1,0,0,0}),
+	}
+	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
+		name="stand light attack",
+		hit_boxes = {hit_box},
+		damage = 10,
+		frames    = {
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+				},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+		},
+		isAttack  = true,
+		hitstun   = 15,
+		blockstun = 10,
+	}
+	append(&char.states, move)
+	index := len(char.states)-1
+	return index
+}
+cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
+    context.allocator = vmem.arena_allocator(&char.arena)
+
+	hit_box := gk.Hit_box {
+           box = psy.box_init(
+               {0, 0,0,0},
+               {10,0, 5,0},
+           ),
+           hitKnockback = psy.vec2_init({-1,0,0,0}),
+           blockPushback = psy.vec2_init({1,0,0,0}),
+	}
+	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
+		name="stand light attack",
+		hit_boxes = {hit_box},
+		damage = 10,
+		frames    = {
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+				},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//I think inline allocations of dynamics is causing leaks
+				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+		},
+		isAttack  = true,
+		hitstun   = 15,
+		blockstun = 10,
+	}
+	append(&char.states, move)
+	index := len(char.states)-1
+	return index
+}
+
+
+cyber_punk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+    context.allocator = vmem.arena_allocator(&char.arena)
+
+	pattern := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+	}
+	pattern2 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+	}
+	pattern3 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+
+	}
+	append(&char.patterns, pattern)
+	append(&char.patterns, pattern2)
+	append(&char.patterns, pattern3)
+}
+cyber_punk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
+	pattern := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+
+	}
+	pattern2 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+	}
+	pattern3 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+
+	}
+	append(&char.patterns, pattern)
+	append(&char.patterns, pattern2)
+	append(&char.patterns, pattern3)
+}
+cyber_punk_pattern_jump_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
+	pattern := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=true,
+		air_only=true,
+	}
+	pattern2 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=true,
+		air_only=true,
+	}
+	pattern3 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.Light}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=true,
+		air_only=true,
+
+	}
+	append(&char.patterns, pattern)
+	append(&char.patterns, pattern2)
+	append(&char.patterns, pattern3)
 }

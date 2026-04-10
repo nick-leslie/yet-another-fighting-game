@@ -68,7 +68,10 @@ world_init :: proc(p1:CharecterBase($CU),p2:CharecterBase(CU)) -> World(CU) {
 	world.p2_input_buffer = {}
 	world.p1=p1
 	world.p2=p2
-	world.stage= Stage{}
+	world.stage= Stage{
+	    // 0,0 2,2
+        floor=psy.box_init({0,0,0,0},{2,0,2,0}),
+	}
 	setup_charecter(&world.p1)
 	setup_charecter(&world.p2)
 	return world
@@ -117,7 +120,7 @@ serlize_world :: proc (w:World($CU),allocator:runtime.Allocator) -> SerlizedWorl
     }
     p1,p1_entitys:=serlize_charecter(w.p1,allocator)
     p2,p2_entitys:=serlize_charecter(w.p2,allocator)
-    
+
     serlized_world.p1,serlized_world.p1_entity_pool=p1,p1_entitys
     serlized_world.p2,serlized_world.p2_entity_pool=p2,p2_entitys
     // ,allocator:runtime.Allocator
