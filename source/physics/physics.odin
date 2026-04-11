@@ -36,8 +36,6 @@ body_init :: proc(pos:[4]i16) -> FixedBody {
 
 // a float with front back parts
 box_init :: proc(pos:[4]i16,extent:[4]i16) -> FixedBox {
-    log.debug(extent.x)
-    log.debug(extent.y)
     box := FixedBox {
         position = vec2_init(pos),
         extent = vec2_init(extent),

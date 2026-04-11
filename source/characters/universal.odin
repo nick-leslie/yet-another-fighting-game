@@ -20,8 +20,8 @@ Charecter :: struct {
 
 air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
+	state := char.states[cancel_index]
 	// jump normal/special
-	state,_ := gk.charecter_get_current_state_frame(char^)
    	if char.in_air == false || state.air_ok == true {
   		return true
    	}

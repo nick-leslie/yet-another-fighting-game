@@ -311,13 +311,14 @@ cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:
 
 cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
     index := cyberpunk_add_stand_punch(char)
-    cyber_punk_pattern_stand_punch(char,index)
+    cyberpunk_pattern_stand_punch(char,index)
     index = cyberpunk_add_crouch_light(char)
-    cyber_punk_pattern_crouch_punch(char,index)
+    cyberpunk_pattern_crouch_punch(char,index)
 
     //need to add in air to patterns
     index = cyberpunk_add_jump_punch(char)
-    cyber_punk_pattern_jump_punch(char,index)
+    log.debug(index)
+    cyberpunk_pattern_jump_punch(char,index)
 }
 
 cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
@@ -639,7 +640,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 }
 
 
-cyber_punk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
     context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -666,7 +667,7 @@ cyber_punk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:i
 	append(&char.patterns, pattern2)
 	append(&char.patterns, pattern3)
 }
-cyber_punk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -695,7 +696,7 @@ cyber_punk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:
 	append(&char.patterns, pattern2)
 	append(&char.patterns, pattern3)
 }
-cyber_punk_pattern_jump_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_jump_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {

@@ -1,6 +1,7 @@
 #+feature dynamic-literals
 package game_kernel
 
+import "core:log"
 import "core:testing"
 import "../utils"
 // import "core:log"
@@ -80,6 +81,9 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
             if (pattern.air_ok == false && in_air == true) || pattern.air_only == true && in_air == false{
                 //disqalify based on air state
                 pattern_input_index[j] = -1
+                if pattern.air_ok == true && in_air == true {
+                    log.debug("breakpoint")
+                }
                 continue
             }
             if pattern.inputs[check_index] == input {
