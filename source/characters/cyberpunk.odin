@@ -38,6 +38,7 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:u64) -> gk.CharecterBase(Ch
 
 	add_universal_states(&charecter)
 	cyberpunk_add_state_movement(&charecter) // the nill is tmp
+	cyberpunk_add_punch_attacks(&charecter)
 
 
 	// cyberpunk_add_state_light_fireball(&charecter)
@@ -155,7 +156,7 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(Charecter)), // todo change me
+		check_exit = air_state_cancel, // todo change me
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="nutral jump",
@@ -187,7 +188,7 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(Charecter)), // todo change me
+		check_exit = air_state_cancel, // todo change me
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="jump forward",
@@ -221,7 +222,7 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int 
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
-		check_exit = gk.make_air_state_cancel(gk.CharecterBase(Charecter)), // todo change me
+		check_exit = air_state_cancel, // todo change me
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="jump back",
@@ -315,8 +316,8 @@ cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
     cyber_punk_pattern_crouch_punch(char,index)
 
     //need to add in air to patterns
-    // index = cyberpunk_add_jump_punch(char)
-    // cyber_punk_pattern_jump_punch(char,index)
+    index = cyberpunk_add_jump_punch(char)
+    cyber_punk_pattern_jump_punch(char,index)
 }
 
 cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
@@ -436,9 +437,10 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
            blockPushback = psy.vec2_init({1,0,0,0}),
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
-		name="stand light attack",
+		name="crouch light attack",
 		hit_boxes = {hit_box},
 		damage = 10,
+		air_ok=false,
 		frames    = {
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
@@ -541,9 +543,10 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
            blockPushback = psy.vec2_init({1,0,0,0}),
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
-		name="stand light attack",
+		name="jump light attack",
 		hit_boxes = {hit_box},
 		damage = 10,
+		air_ok=true,
 		frames    = {
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
@@ -667,21 +670,21 @@ cyber_punk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.Light}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Down, attack = gk.Attack.Light}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 		air_only=false,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = gk.Attack.Light}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,

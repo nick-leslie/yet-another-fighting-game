@@ -18,12 +18,14 @@ Charecter :: struct {
 }
 
 
-make_air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
-   	if char.in_air == false {
+	state,_ := gk.charecter_get_current_state_frame(char^)
+   	if char.in_air == false || state.air_ok == true {
   		return true
    	}
+   	// assert(false,"not implmented")
    	return false
 }
 

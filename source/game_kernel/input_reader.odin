@@ -67,7 +67,6 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
         //     i=INPUT_BUFFER_LENGTH-1
         // }
         // log.debug(i)
-
         input := buffer.buffer[i]
         // log.info(input)
         for j:=0;j< len(pattern_list);j+=1 {
