@@ -116,7 +116,6 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         move_vec := Vec2{}
         side_mod := 1
         if rl.IsGamepadAvailable(controls.gamepad) {
-        	log.debug(rl.GetGamepadName(controls.gamepad))
          	// assert(false,"getting game pad name")
         }
         if p1_side == false {

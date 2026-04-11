@@ -45,18 +45,18 @@ CharecterSerlizedState :: struct($CU:typeid) {
 
 //rename to charecter base
 CharecterBase :: struct($CU:typeid) {
-	arena:             vmem.Arena,
+	arena:                vmem.Arena,
 	//do I want to add an arena here
 	using serlized_state: CharecterSerlizedState(CU),
-	collision_box:     psy.FixedBox,
-	soft_knockdown_index:int,
-	hard_knockdown_index:int,
-	states:            [dynamic]State(CharecterBase(CU),CU), // should this be state
-	patterns:          [dynamic]Pattern,
-	hit_stun_index:    int, // we may replace this with a constent
-	block_stun_index:  int,
-    entity_pool:   	   [dynamic]Entity(CU), // this is the pool of entitys that we can spawn
-    using hooks:CharecterHooks(CU),
+	collision_box:        psy.FixedBox,
+	soft_knockdown_index: int,
+	hard_knockdown_index: int,
+	states:               [dynamic]State(CharecterBase(CU),CU), // should this be state
+	patterns:             [dynamic]Pattern,
+	hit_stun_index:       int, // we may replace this with a constent
+	block_stun_index:     int,
+    entity_pool:   	      [dynamic]Entity(CU), // this is the pool of entitys that we can spawn
+    using hooks:          CharecterHooks(CU),
 }
 
 
@@ -85,7 +85,7 @@ charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffe
 
 	// log.debug("getting current state")
 	state,frame := charecter_get_current_state_frame(character^)
-	proposed_state_index := pick_state(input_buffer, character.patterns)
+	proposed_state_index := pick_state(input_buffer, character.patterns,character.in_air)
 	// log.debug("done getting state")
 
 	state_frame_len := len(state.frames)
@@ -243,8 +243,8 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 
 
 
-	side_mod: f64 = 1.
-	if other.p1_side == false do side_mod = -1.
+	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
+	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
 
 
    	for &hurt_box in frameOther.hurtbox_list {
@@ -254,12 +254,14 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
+        
 		knockback := hit_ctx.hitbox.blockKnockback
-		knockback.x *= side_mod
+		knockback.x = fixed.mul(knockback.x ,side_mod)
 		pushback := hit_ctx.hitbox.blockPushback
-		pushback.x *= side_mod
-		psy.add_float_vec2_to_vel(&other.body,knockback)
-		psy.add_float_vec2_to_vel(&self.body,pushback)
+		pushback.x = fixed.mul(pushback.x ,side_mod)
+		
+		psy.add_fixed_vec2_to_vel(&other.body,knockback)
+		psy.add_fixed_vec2_to_vel(&self.body,pushback)
 		//this sets it so we dont hit with the same hitbox for multiple frames
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
@@ -282,11 +284,14 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 				hit_ctx.hitbox^,
 			)
 			other.health -= dammage
-
+			charecer_change_state(other,other.hit_stun_index)
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
 			other.block_stun_frames = hit_ctx.self_state.blockstun
-			other.hit_stun_index=0
+			charecer_change_state(other,other.block_stun_index)
+			// other.block_stun_frames=0
+
+			// other.hit_stun_frames=0
 		}
 		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
         //check if blocking and set to block or hit_stun
@@ -298,9 +303,9 @@ charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.
 	input := input_buffer.buffer[input_buffer.index]
 	#partial switch input.dir {
 	case Direction.Back:
-		return true
+		return true && charecter.hit_stun_index <= 0
 	case Direction.DownBack:
-		return true
+		return true && charecter.hit_stun_index <= 0
 		// this is where we decide up back or down back
 	case:
 		return false
@@ -322,7 +327,7 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 	// add me as a charecter peramiter
 	gravity := psy.invert_fixed(psy.init_from_parts(0,20)) // needed bc negitive 0 is stinky
     character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
-    ground_collision := psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),w.stage.floor.y,false)
+    ground_collision := psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),fixed.add(w.stage.floor.y,w.stage.floor.extent.y),false)
     charecter_was_in_air := character.in_air
 	character.in_air = !ground_collision
 	if ground_collision && jump_pressed == false {
@@ -332,7 +337,7 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 		character.body.velocity.y = psy.Fixed12_4 {}
 		if charecter_was_in_air {
 			character.body.velocity.x = psy.Fixed12_4 {}
-			character.body.y = w.stage.floor.y
+			character.body.y = fixed.add(w.stage.floor.y,w.stage.floor.extent.y)
 		}
 	}
 	// log.debug(character.velocity)
@@ -371,7 +376,7 @@ serlize_charecter :: proc(char:CharecterBase($CU),allocator:runtime.Allocator) -
     for i := 0 ; i<len(char.entity_pool);i+=1 {
         append_elem(&entitys,serlize_entity(char.entity_pool[i]))
     }
-    log.debug(entitys[:])
+    // log.debug(entitys[:])
     return char.serlized_state,entitys
 }
 deserlize_charecter :: proc(state:CharecterSerlizedState($CU),entitys_states:[dynamic]SerlizedEntityState,char:^CharecterBase(CU)) {

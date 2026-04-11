@@ -37,8 +37,10 @@ import gk "game_kernel"
 import clay "../libs/clay-odin"
 // import psy "./physics"
 import vmem "core:mem/virtual"
+import chars "./characters"
 import "core:os"
 import "core:time"
+import char "./characters"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -48,11 +50,7 @@ USE_PROFILING :: #config(USE_PROFILING, false)
 PIXEL_WINDOW_HEIGHT :: 180
 MAX_ROLLBACK_WINDOW :: 15
 
-Charecters :: struct {
-    charecter_spesific_data: union {
-        TestCharecterData,
-    },
-}
+
 // do we want this to be a union
 Screen :: union {
     InRound,
@@ -78,11 +76,11 @@ Game_Memory :: struct {
 	arena:     		vmem.Arena,
 	frame:          int,
 	start_time:		Maybe(time.Time),
-	world: 		    gk.World(Charecters),
+	world: 		    gk.World(char.Charecter),
 	model_tmp: 		rl.Model,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
-	rollback_state: RollbackMannager(Charecters),
+	rollback_state: RollbackMannager(char.Charecter),
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
@@ -312,22 +310,22 @@ game_init :: proc() {
 		medium_key = rl.KeyboardKey.K,
 		heavy_key = rl.KeyboardKey.L,
 	}
-	p2_controls := GamePad {
-		gamepad = 0,
-		up_key = rl.GamepadButton.LEFT_FACE_UP,
-		down_key = rl.GamepadButton.LEFT_FACE_DOWN,
-		left_key = rl.GamepadButton.LEFT_FACE_LEFT,
-		right_key = rl.GamepadButton.LEFT_FACE_RIGHT,
-		light_key = rl.GamepadButton.RIGHT_FACE_LEFT,
-		medium_key = rl.GamepadButton.RIGHT_FACE_UP,
-		heavy_key = rl.GamepadButton.RIGHT_FACE_RIGHT,
-	}
-	// p2_controls := Remote {
-
+	// p2_controls := GamePad {
+	// 	gamepad = 0,
+	// 	up_key = rl.GamepadButton.LEFT_FACE_UP,
+	// 	down_key = rl.GamepadButton.LEFT_FACE_DOWN,
+	// 	left_key = rl.GamepadButton.LEFT_FACE_LEFT,
+	// 	right_key = rl.GamepadButton.LEFT_FACE_RIGHT,
+	// 	light_key = rl.GamepadButton.RIGHT_FACE_LEFT,
+	// 	medium_key = rl.GamepadButton.RIGHT_FACE_UP,
+	// 	heavy_key = rl.GamepadButton.RIGHT_FACE_RIGHT,
 	// }
+	p2_controls := Remote {
 
-	p1 := create_generic_charecter(Charecters,{-10,0,2,0},true)
-	p2 := create_generic_charecter(Charecters,{10,0,2,0},false)
+	}
+
+	p1 := chars.create_cyberpunk_charecter({-10,0,2,0},64)
+	p2 := chars.create_cyberpunk_charecter({10,0,2,0},64)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({
@@ -363,7 +361,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p2_controls,
-            remote = false,
+            remote = true,
             network_mannager_ptr = &g.network_mannager,
             delay = 0,
 		},

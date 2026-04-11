@@ -9,6 +9,7 @@ State :: struct($T:typeid,$CU:typeid) {
 	// should all this be in a seprate struct
 	canBlock:      bool,
 	isAttack:      bool,
+	air_ok:        bool,
 	hitstun:       u32,
 	blockstun:     u32,
 	damage:        u32,
@@ -27,10 +28,10 @@ Frame :: struct($T:typeid,$CU:typeid) {
 //for multi hits spawn a new hitbox
 Hit_box :: struct {
     box:psy.FixedBox,
-	hitKnockback:     Vec2, // this is applied to other
-	hitPushback:      Vec2, // this is applied to self
-	blockKnockback:   Vec2,
-	blockPushback:    Vec2,
+	hitKnockback:     psy.Vec2Fixed, // this is applied to other
+	hitPushback:      psy.Vec2Fixed, // this is applied to self
+	blockKnockback:   psy.Vec2Fixed,
+	blockPushback:    psy.Vec2Fixed,
 	attackDir:        AttackDir,
 	// todo properties
 }
@@ -76,11 +77,12 @@ check_cancel_options :: proc(char: ^CharecterBase($CU), cancel_index: int) -> bo
 	}
 	return false
 }
-make_air_state_cancel :: proc($T: typeid) -> proc(char: ^T, cancel_index: int) -> bool {
-    return proc(char: ^T, cancel_index: int) -> bool {
+make_air_state_cancel :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	// jump normal/special
-    	if char.in_air == false {
+        state,_ := charecter_get_current_state_frame(char)
+    	if char.in_air == false || state.air_ok == true {
     		return true
     	}
     	// assert(false,"not implmented")

@@ -7,8 +7,12 @@ import "core:log"
 import gk "game_kernel"
 import vmem "core:mem/virtual"
 import psy "./physics"
-
-
+//this is a demo file
+Charecters :: struct {
+    charecter_spesific_data: union {
+        TestCharecterData,
+    },
+}
 
 TestCharecterData :: struct {
 

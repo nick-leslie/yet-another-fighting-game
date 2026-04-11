@@ -1,6 +1,7 @@
 #+feature dynamic-literals
 package game_kernel
 
+import "core:log"
 import "core:testing"
 import "../utils"
 // import "core:log"
@@ -35,7 +36,10 @@ Pattern :: struct {
     // these are essently fixed. could we use code gen?
     inputs:       [dynamic]Input,
     pritority:    int,
-    state_index:   int,
+    state_index:  int,
+    // we may want to also add a only in air check
+    air_ok:       bool,
+    air_only:     bool,
 }
 
 delete_pattern :: proc(pattern:^Pattern) {
@@ -51,7 +55,7 @@ update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input
 }
 INPUT_BUFFER_LENGTH :: 25
 // could we speed this up with a binary tree
-pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern) -> int {
+pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern,in_air:bool) -> int {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
@@ -64,7 +68,6 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
         //     i=INPUT_BUFFER_LENGTH-1
         // }
         // log.debug(i)
-
         input := buffer.buffer[i]
         // log.info(input)
         for j:=0;j< len(pattern_list);j+=1 {
@@ -72,6 +75,15 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
             check_index := pattern_input_index[j]
             if check_index == len(pattern.inputs) || check_index == -1{
                 // we know this pattern is qalifed break the loop
+                continue
+            }
+            // we may want to
+            if (pattern.air_ok == false && in_air == true) || pattern.air_only == true && in_air == false{
+                //disqalify based on air state
+                pattern_input_index[j] = -1
+                if pattern.air_ok == true && in_air == true {
+                    log.debug("breakpoint")
+                }
                 continue
             }
             if pattern.inputs[check_index] == input {
@@ -171,7 +183,7 @@ test_quarter_circle :: proc(t: ^testing.T) {
 	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
 	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = Attack.Light})
 
-	out_state := pick_state(input_buffer,patterns)
+	out_state := pick_state(input_buffer,patterns,false)
 	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")
 	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
 }
