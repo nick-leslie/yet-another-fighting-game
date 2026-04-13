@@ -23,9 +23,9 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:u64) -> gk.CharecterBase(Ch
 		body = psy.body_init(pos),
 		collision_box = psy.box_init({},{gk.CHARACTER_CAPSULE_RADIUS*2,0, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,0}),
 		move_speed = psy.init_from_parts(7,0),
-		air_drag =psy.init_from_parts(0,5),
-		air_move_speed = psy.init_from_parts(15,0),
-		jump_height = psy.init_from_parts(-10,0),
+		air_move_speed = psy.init_from_parts(10,0),
+		jump_height = psy.init_from_parts(15,0),
+		grav = psy.init_from_parts(1,5),
 		p1_side = true,
 		hooks = hooks,
 		charecter_info=Charecter {
@@ -148,7 +148,7 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		    char.jump_requested = true
-			char.body.velocity.y = psy.invert_fixed(char.jump_height)
+			char.body.velocity.y = char.jump_height
 		},
 		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
 	}
@@ -178,9 +178,9 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
-			char.body.velocity.y = psy.invert_fixed(char.jump_height)
-			if char.p1_side do char.body.velocity.x = char.move_speed
-			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
+			char.body.velocity.y = char.jump_height
+			if char.p1_side do char.body.velocity.x = char.air_move_speed
+			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.air_move_speed)
 		},
 		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
 	}
@@ -210,9 +210,9 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int 
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
-			char.body.velocity.y = psy.invert_fixed(char.jump_height)
-			if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
-			if !char.p1_side do char.body.velocity.x = char.move_speed
+			char.body.velocity.y = char.jump_height
+			if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.air_move_speed)
+			if !char.p1_side do char.body.velocity.x = char.air_move_speed
 		},
 		check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
 	}
@@ -331,8 +331,8 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
                {0, 0,0,0},
                {10,0, 5,0},
            ),
-           hitKnockback = psy.vec2_init({-1,0,0,0}),
-           blockPushback = psy.vec2_init({1,0,0,0}),
+           hitKnockback = psy.vec2_init({1,5,0,0}),
+           blockPushback = psy.vec2_init({12,0,0,0}),
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="stand light attack",
@@ -348,7 +348,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -356,7 +356,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -364,7 +364,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -372,7 +372,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -381,7 +381,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -389,7 +389,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -397,7 +397,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -405,7 +405,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -413,7 +413,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -454,7 +454,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -462,7 +462,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -470,7 +470,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -478,7 +478,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -487,7 +487,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -495,7 +495,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -503,7 +503,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -511,7 +511,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -519,7 +519,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -560,7 +560,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -568,7 +568,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -576,7 +576,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -584,7 +584,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -593,7 +593,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -601,7 +601,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -609,7 +609,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -617,7 +617,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -625,7 +625,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -758,7 +758,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -766,7 +766,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -774,7 +774,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -782,7 +782,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -791,7 +791,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -799,7 +799,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -807,7 +807,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -819,7 +819,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -829,7 +829,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -837,7 +837,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -845,7 +845,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -853,7 +853,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -861,7 +861,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -869,7 +869,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -877,7 +877,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -885,7 +885,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -893,7 +893,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -901,7 +901,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -909,7 +909,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -917,7 +917,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -925,7 +925,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -933,7 +933,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -941,7 +941,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -949,7 +949,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -957,7 +957,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
@@ -965,7 +965,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
-				//I think inline allocations of dynamics is causing leaks
+				//
 				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
@@ -1030,10 +1030,75 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 		state_index = index,
 		air_ok = true,
 	}
+	pattern_5 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.Light},
+			gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+		},
+		pritority   = 2,
+		state_index = index,
+		air_ok = true,
+	}
+	pattern_6 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light},
+			gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+		},
+		pritority   = 2,
+		state_index = index,
+		air_ok = true,
+	}
+	pattern_7 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = gk.Direction.Up, attack = gk.Attack.Light},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+		},
+		pritority   = 2,
+		state_index = index,
+		air_ok = true,
+	}
+	pattern_8 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.Light},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+		},
+		pritority   = 2,
+		state_index = index,
+		air_ok = true,
+	}
+	//this could use some refinment
+	pattern_9 := gk.Pattern {
+		inputs      = {
+			gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.Light},
+			gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+		},
+		pritority   = 2,
+		state_index = index,
+		air_ok = true,
+	}
 	append(&char.patterns, pattern)
 	append(&char.patterns, pattern_2)
 	append(&char.patterns, pattern_3)
 	append(&char.patterns, pattern_4)
+	append(&char.patterns, pattern_5)
+	append(&char.patterns, pattern_6)
+	append(&char.patterns, pattern_7)
+	append(&char.patterns, pattern_8)
+	append(&char.patterns, pattern_9)
 }
 
 cyberpunk_entity_fireball ::proc(char: ^gk.CharecterBase($Charecter)) -> int{
@@ -1044,22 +1109,22 @@ cyberpunk_entity_fireball ::proc(char: ^gk.CharecterBase($Charecter)) -> int{
 		states = {
 			gk.State(gk.Entity(Charecter),Charecter) {
 				damage = 10,
-				hitstun = 32,
-				blockstun = 64,
+				hitstun = 16,
+				blockstun = 32,
 				hit_boxes = {
 					gk.Hit_box {
 					    box = psy.box_init(
 							[4]i16{0,0,0, 0},
 							[4]i16{10,0,5,0},
 						),
-						hitKnockback = psy.vec2_init({-5,0,0, 0}),
+						hitKnockback = psy.vec2_init({1,0,0, 0}),
 						blockPushback = psy.vec2_init({5,0,0,0}),
 					},
 				},
 				frames= {
 					gk.Frame(gk.Entity(Charecter),Charecter) {
 						frame_type = gk.FrameType.Recovery,
-						//I think inline allocations of dynamics is causing leaks
+						//
 						hurtbox_list = {
 							psy.box_init([4]i16{0,0,0,0},[4]i16{5,0, 5,0}),
 						},

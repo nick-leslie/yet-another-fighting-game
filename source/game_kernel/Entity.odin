@@ -120,29 +120,41 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
+		// should we remove existing velocity
 
-        knockback := hit_ctx.hitbox.blockKnockback
-		knockback.x = fixed.mul(knockback.x ,side_mod)
-		pushback := hit_ctx.hitbox.blockPushback
-		pushback.x = fixed.mul(pushback.x ,side_mod)
-
-		psy.add_fixed_vec2_to_vel(&other.body,knockback)
 		//this sets it so we dont hit with the same hitbox for multiple frames
+		other.body.velocity = psy.Vec2Fixed{}
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
             // hit
+            knockback := hit_ctx.hitbox.hitKnockback
+      		knockback.x = fixed.mul(knockback.x ,side_mod)
+
+
+            psy.add_fixed_vec2_to_vel(&other.body,knockback)
+
 			//todo set self current velocity
 			other.hit_stun_frames = hit_ctx.self_state.hitstun
 			other.block_stun_frames=0
+
+			psy.add_fixed_vec2_to_vel(&other.body,knockback)
+
 			hit_ctx.world.combo_counter += 1
 			//set in hit_stun
 			other.health-= hit_ctx.self_state.damage
-			entity.on_block(entity,hit_ctx)
+			entity.on_hit(entity,hit_ctx)
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
+      		knockback := hit_ctx.hitbox.blockKnockback
+      		knockback.x = fixed.mul(knockback.x ,side_mod)
+            psy.add_fixed_vec2_to_vel(&other.body,knockback)
+
+            psy.add_fixed_vec2_to_vel(&other.body,knockback)
+
+
 			other.block_stun_frames = hit_ctx.self_state.blockstun
 			other.hit_stun_index=0
-			entity.on_hit(entity,hit_ctx)
+			entity.on_block(entity,hit_ctx)
 		}
 		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
         //check if blocking and set to block or hit_stun

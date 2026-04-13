@@ -30,6 +30,10 @@ create_menu_ui_layout :: proc(controller_map:^[MENU_INTERACTIVE_ELEMENTS]Control
 				 },
 	            padding = { 10,10,10,10 },
 				layoutDirection=.LeftToRight,
+				childAlignment= {
+				    x = .Center,
+				    y = .Center,
+				},
            	},
 		}) {
 		    //todo figure out a better way
@@ -49,7 +53,7 @@ create_menu_ui_layout :: proc(controller_map:^[MENU_INTERACTIVE_ELEMENTS]Control
 				up = 0,
 				down = 0,
 			}
-            static_button("start",false,clay_callback)
+            static_button("start",false,clay.TextConfig({fontSize=50,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),clay_callback)
 		}
 	}
     return clay.EndLayout()

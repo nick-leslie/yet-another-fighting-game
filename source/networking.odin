@@ -214,8 +214,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
             })
 		case AckInput:
 		    // if
-		    log.debug("got acc")
-			input_ack := utils.get_at_frame_prt(&mannager.sent_inputs, msg.frame)
+		input_ack := utils.get_at_frame_prt(&mannager.sent_inputs, msg.frame)
 			if state.input == input_ack.input {
 			    input_ack.acked = true
 			}

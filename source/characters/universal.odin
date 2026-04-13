@@ -2,6 +2,7 @@
 #+vet !unused !using-stmt
 package characters
 
+import "core:math/fixed"
 import gk "../game_kernel"
 @(require) import "core:log"
 import psy "../physics"
@@ -121,7 +122,15 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 			hitbox_list = {},
-			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+			    if char.body.x.i > (psy.Fixed12_4 {}).i {
+			        psy.add_fixed_vec2_to_vel(
+						&char.body,
+						psy.invert_vec(psy.vec2_init({0,7,0,0}),
+					))
+			    }
+				//todo add grav scaling
+			},
 			check_exit = exit_hit_stun_proc, // todo change me
 		}},
 		isAttack  = false,
@@ -134,7 +143,7 @@ add_state_block_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
-		name="hitstun",
+		name="blockstun",
 		frames = {gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},

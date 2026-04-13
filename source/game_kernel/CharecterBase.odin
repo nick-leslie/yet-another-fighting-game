@@ -24,7 +24,7 @@ CharecterSerlizedState :: struct($CU:typeid) {
    	jump_height:       psy.Fixed12_4,
    	move_speed:        psy.Fixed12_4,
    	air_move_speed:    psy.Fixed12_4,
-   	air_drag:          psy.Fixed12_4,
+    grav:              psy.Fixed12_4,
    	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
    	entity_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of what entitys are active
    	current_frame:     int,
@@ -254,17 +254,22 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
             continue // skip to the next hurt box
         }
         block := charecter_check_block(other,other_buffer^)
-        
-		knockback := hit_ctx.hitbox.blockKnockback
-		knockback.x = fixed.mul(knockback.x ,side_mod)
-		pushback := hit_ctx.hitbox.blockPushback
-		pushback.x = fixed.mul(pushback.x ,side_mod)
-		
-		psy.add_fixed_vec2_to_vel(&other.body,knockback)
-		psy.add_fixed_vec2_to_vel(&self.body,pushback)
+
+
+
+		other.body.velocity = psy.Vec2Fixed{}
 		//this sets it so we dont hit with the same hitbox for multiple frames
 
         if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
+
+            knockback := hit_ctx.hitbox.hitKnockback
+      		knockback.x = fixed.mul(knockback.x ,side_mod)
+      		pushback := hit_ctx.hitbox.hitPushback
+      		pushback.x = fixed.mul(pushback.x ,side_mod)
+
+
+            psy.add_fixed_vec2_to_vel(&self.body,pushback)
+            psy.add_fixed_vec2_to_vel(&other.body,knockback)
             // hit
 			//todo set self current velocity
 			other.hit_stun_frames = hit_ctx.self_state.hitstun
@@ -287,6 +292,14 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 			charecer_change_state(other,other.hit_stun_index)
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
+      		knockback := hit_ctx.hitbox.blockKnockback
+    		knockback.x = fixed.mul(knockback.x ,side_mod)
+    		pushback := hit_ctx.hitbox.blockPushback
+    		pushback.x = fixed.mul(pushback.x ,side_mod)
+
+            psy.add_fixed_vec2_to_vel(&self.body,pushback)
+            psy.add_fixed_vec2_to_vel(&other.body,knockback)
+
 			other.block_stun_frames = hit_ctx.self_state.blockstun
 			charecer_change_state(other,other.block_stun_index)
 			// other.block_stun_frames=0
@@ -325,7 +338,7 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 	}
 	// Add gravity
 	// add me as a charecter peramiter
-	gravity := psy.invert_fixed(psy.init_from_parts(0,20)) // needed bc negitive 0 is stinky
+	gravity := psy.invert_fixed(character.serlized_state.grav) // needed bc negitive 0 is stinky
     character.body.velocity.y = fixed.add(character.body.velocity.y,gravity)
     ground_collision := psy.check_horizontal_plane_col(psy.set_box_by_body(character.collision_box,character.body),fixed.add(w.stage.floor.y,w.stage.floor.extent.y),false)
     charecter_was_in_air := character.in_air

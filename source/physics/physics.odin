@@ -109,6 +109,12 @@ set_box_by_body :: proc(box:FixedBox,body:FixedBody) -> FixedBox {
 invert_fixed :: proc(val:Fixed12_4) -> Fixed12_4 {
     return fixed.mul(val, init_from_parts(-1,0))
 }
+invert_vec :: proc(val:Vec2Fixed) -> Vec2Fixed {
+    return Vec2Fixed{
+        invert_fixed(val.x),
+        invert_fixed(val.y),
+    }
+}
 
 add_float_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]f64) -> ^RiggedBody(Fixed12_4) {
     vec_fixed := float_vec3_to_fixed(vec)

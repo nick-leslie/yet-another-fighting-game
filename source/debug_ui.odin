@@ -133,7 +133,7 @@ network_mannagment_ui :: proc() {
 		}
 		clay.OnHover(callback,nil)
 		clay.Text("connect",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
-		static_button("remap up",false,remap_callback)
+		static_button("remap up",false,clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),remap_callback)
 	}
 }
 remap_callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
@@ -147,7 +147,7 @@ remap_callback := proc "c" (d: clay.ElementId, pointerData: clay.PointerData, us
     }
 }
 //todo add a controler support section
-static_button :: proc($txt:string,in_focus:bool,callback:proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr)) {
+static_button :: proc($txt:string,in_focus:bool,txt_config:^clay.TextElementConfig,callback:proc "c" (d: clay.ElementId, pointerData: clay.PointerData, userData: rawptr)) {
     if clay.UI()({
 		layout = {
 			sizing = {
@@ -158,7 +158,7 @@ static_button :: proc($txt:string,in_focus:bool,callback:proc "c" (d: clay.Eleme
 
 	}) {
        	clay.OnHover(callback,nil)
-       	clay.Text(txt,clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
+       	clay.Text(txt,txt_config)
 	}
 }
 

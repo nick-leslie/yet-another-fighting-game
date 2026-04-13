@@ -54,6 +54,7 @@ update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input
 	utils.push(input_buffer,input)
 }
 INPUT_BUFFER_LENGTH :: 25
+//look at how tks work and refne. right now we cant handle input of the same type before the attack type
 // could we speed this up with a binary tree
 pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern,in_air:bool) -> int {
     // could we stack alocate this
