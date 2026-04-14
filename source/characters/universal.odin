@@ -123,13 +123,13 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 			hitbox_list = {},
 			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-			    if char.body.x.i > (psy.Fixed12_4 {}).i {
-			        psy.add_fixed_vec2_to_vel(
-						&char.body,
-						psy.invert_vec(psy.vec2_init({0,7,0,0}),
-					))
-			    }
 				//todo add grav scaling
+                if fixed.add(char.body.velocity.x,psy.invert_fixed(psy.init_from_parts(0,7))).i > (psy.init_from_parts(0,0)).i {
+                    psy.add_fixed_vec2_to_vel(
+                  		&char.body,
+                  		psy.invert_vec(psy.vec2_init({0,7,0,0}),
+                   	))
+                }
 			},
 			check_exit = exit_hit_stun_proc, // todo change me
 		}},

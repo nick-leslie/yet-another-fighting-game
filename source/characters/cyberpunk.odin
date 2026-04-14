@@ -81,6 +81,7 @@ cyberpunk_state_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo if should we check if grounded?
 			// we are going to have to change this
+			
 			if char.in_air == false {
 			    char.body.velocity.x = psy.Fixed12_4 {}
 			}
