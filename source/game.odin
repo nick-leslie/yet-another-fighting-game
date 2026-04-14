@@ -201,14 +201,14 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
     if rollback_to_p2 > 0 {
             //we have a rollback issue where we are not pusing fully to buffer
     	    // assert(false,"we have a rollback")
-	        rollback_correct_frame(&g.rollback_state,world,rollback_to_p2)
+        rollback_correct_frame(&g.rollback_state,world,rollback_to_p2)
     }
     p1_input := get_input_at_frame(&g.p1_input_mannager,frame)
     p2_input := get_input_at_frame(&g.p2_input_mannager,frame)
 
 
     if ODIN_DEBUG == true {
-        debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
+        // debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
     }
 
     // last_world_state := get_current_state(&g.rollback_state)

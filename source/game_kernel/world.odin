@@ -92,6 +92,7 @@ world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 
 	if w.hit_stop > 0 {
 		w.hit_stop -=1
+		log.debug("running hitstop")
 		return // dont run world updates during hitstop but still collect input
 	}
 
@@ -104,6 +105,9 @@ world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 
 
 world_physics_tic ::proc(w:^World($CU)) {
+   	if w.hit_stop > 0 {
+        return
+    }
 	//move me out
 	charecter_physics_update(&w.p1, w)
 	charecter_physics_update(&w.p2, w)

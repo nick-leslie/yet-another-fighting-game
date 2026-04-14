@@ -248,7 +248,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 
 
    	for &hurt_box in frameOther.hurtbox_list {
-    col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
+        col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
         log.debug(col_check_res)
         if col_check_res == false{
             continue // skip to the next hurt box
@@ -290,6 +290,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 			)
 			other.health -= dammage
 			charecer_change_state(other,other.hit_stun_index)
+			hit_ctx.world.hit_stop+=hit_ctx.self_state.hitstop
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
       		knockback := hit_ctx.hitbox.blockKnockback

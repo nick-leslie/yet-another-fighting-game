@@ -143,6 +143,7 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 			//set in hit_stun
 			other.health-= hit_ctx.self_state.damage
 			entity.on_hit(entity,hit_ctx)
+			hit_ctx.world.hit_stop+=hit_ctx.self_state.hitstop
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
       		knockback := hit_ctx.hitbox.blockKnockback

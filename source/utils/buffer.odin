@@ -16,10 +16,12 @@ RingBuffer :: struct($N:int,$T:typeid) {
 	read_index:int,
 }
 
-push :: proc(buffer:^Buffer($N,$T),item:T) {
+push :: proc(buffer:^Buffer($N,$T),item:T) -> T {
+    old:= buffer.buffer[buffer.index]
     buffer.buffer[buffer.index] = item
     buffer.index += 1
     buffer.index = buffer.index %% len(buffer.buffer)
+    return old
 }
 
 ring_pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
@@ -42,13 +44,16 @@ ring_peek ::proc(buffer:^RingBuffer($N,$T)) -> T {
 ring_len :: proc(buffer:^RingBuffer($N,$T)) -> int{
 	return abs(buffer.index - buffer.read_index)
 }
-
-insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) {
+//todo fix me
+insert_at_frame :: proc(buffer:^FrameTrackedBuffer($N,$T),item:T,frame:int) -> T{
     //pushing back into the past
     ensure(buffer.current_frame-frame <= len(buffer.buffer),"you cant push too far back into the past")
     buffer.index = frame %% len(buffer.buffer)
     buffer.current_frame = frame
+
+    old:= buffer.buffer[buffer.index]
     buffer.buffer[buffer.index] = item
+    return old
 }
 
 get_at_frame :: proc(buffer:FrameTrackedBuffer($N,$T),frame:int) -> T {

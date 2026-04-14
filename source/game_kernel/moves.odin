@@ -11,6 +11,7 @@ State :: struct($T:typeid,$CU:typeid) {
 	isAttack:      bool,
 	air_ok:        bool,
 	hitstun:       u32,
+	hitstop:       u32,
 	blockstun:     u32,
 	damage:        u32,
 }
