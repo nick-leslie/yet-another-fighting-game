@@ -18,9 +18,9 @@ RingBuffer :: struct($N:int,$T:typeid) {
 
 push :: proc(buffer:^Buffer($N,$T),item:T) -> T {
     old:= buffer.buffer[buffer.index]
-    buffer.buffer[buffer.index] = item
     buffer.index += 1
     buffer.index = buffer.index %% len(buffer.buffer)
+    buffer.buffer[buffer.index] = item
     return old
 }
 

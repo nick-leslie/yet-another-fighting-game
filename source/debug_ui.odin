@@ -37,6 +37,10 @@ create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 			charecter_debug_ui(g.world.p1)
 			charecter_debug_ui(g.world.p2)
 		}
+		clay.TextDynamic(
+			fmt.tprintfln("combo counter:%d",g.world.combo_counter),
+			clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}),
+		)
 		//todo reduce the distance between stuff
 		clay.Text("buffer p1",clay.TextConfig({fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255}}))
 		input_history(g.world.p1_input_buffer)

@@ -366,8 +366,12 @@ cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:
 cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
     index := cyberpunk_add_stand_punch(char)
     cyberpunk_pattern_stand_punch(char,index)
+
     index = cyberpunk_add_crouch_light(char)
-    cyberpunk_pattern_crouch_punch(char,index)
+    cyberpunk_pattern_crouch_light_punch(char,index)
+
+    index = cyberpunk_add_crouch_heavy(char)
+    cyberpunk_pattern_crouch_heavy_punch(char,index)
 
     //need to add in air to patterns
     index = cyberpunk_add_jump_punch(char)
@@ -587,6 +591,117 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	index := len(char.states)-1
 	return index
 }
+cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
+    context.allocator = vmem.arena_allocator(&char.arena)
+
+	hit_box := gk.Hit_box {
+           box = psy.box_init(
+               {0, 0,0,0},
+               {10,0, 5,0},
+           ),
+           hitKnockback = psy.vec2_init({-1,0,0,0}),
+           blockPushback = psy.vec2_init({1,0,0,0}),
+	}
+	hurt_box := psy.box_init({0,0,0,0},{5,0,5,0})
+	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
+		name="crouch light attack",
+		hit_boxes = {hit_box},
+		damage = 10,
+		air_ok=false,
+		hard_knockdown=true,
+		frames    = {
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Startup,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+				},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Active,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {0},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_no_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+				frame_type = gk.FrameType.Recovery,
+				//
+				hurtbox_list = {hurt_box},
+				hitbox_list = {},
+				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+				check_exit = gk.make_free_cancel_proc(^gk.CharecterBase(Charecter)), // todo change me
+			},
+		},
+		isAttack  = true,
+		hitstun   = 15,
+		blockstun = 10,
+	}
+	append(&char.states, move)
+	index := len(char.states)-1
+	return index
+}
+
+
+
 cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
     context.allocator = vmem.arena_allocator(&char.arena)
 
@@ -722,7 +837,36 @@ cyberpunk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:in
 	append(&char.patterns, pattern2)
 	append(&char.patterns, pattern3)
 }
-cyberpunk_pattern_crouch_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_crouch_heavy_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
+	pattern := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.Heavy}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+
+	}
+	pattern2 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.Down, attack = gk.Attack.Heavy}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+	}
+	pattern3 := gk.Pattern {
+		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = gk.Attack.Heavy}},
+		pritority   = 1,
+		state_index = index,
+		air_ok=false,
+		air_only=false,
+
+	}
+	append(&char.patterns, pattern)
+	append(&char.patterns, pattern2)
+	append(&char.patterns, pattern3)
+}
+cyberpunk_pattern_crouch_light_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -794,8 +938,8 @@ cyberpunk_add_fireball :: proc(char: ^gk.CharecterBase(Charecter)) {
 
     index := cyberpunk_state_light_fireball(char)
     cyberpunk_pattern_light_fireball(char,index)
-    
-    
+
+
     index = cyberpunk_state_medium_fireball(char)
     cyberpunk_pattern_medium_fireball(char,index)
 }
@@ -1412,6 +1556,7 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	append(&char.patterns, pattern_8)
 	append(&char.patterns, pattern_9)
 }
+
 cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 

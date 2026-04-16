@@ -101,6 +101,14 @@ charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffe
 			if character.end_in_hardknockdown do proposed_state_index = character.hard_knockdown_index
 			if character.end_in_softknockdown do proposed_state_index = character.soft_knockdown_index
 		}
+		//if we are exiting a hard knock down reset the hardknockdown flag
+		if character.serlized_state.end_in_hardknockdown && character.serlized_state.current_state  == character.hard_knockdown_index {
+            character.serlized_state.end_in_hardknockdown=false
+		}
+		if character.serlized_state.end_in_softknockdown && character.serlized_state.current_state  == character.soft_knockdown_index {
+            character.serlized_state.end_in_softknockdown=false
+		}
+
 		state,frame = charecer_change_state(character,proposed_state_index)
 		for i:=0;i<63;i+=1 {
 			character.hit_box_tracker_bit_mask -= {i} // All bits set to 0
@@ -282,6 +290,13 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 			if  knockback.y.i > 0 {
 			    other.jump_requested=true
 			}
+
+			if hit_ctx.self_state.hard_knockdown == true {
+                other.serlized_state.end_in_hardknockdown = true
+			} else if hit_ctx.self_state.soft_knockdown == true {
+                other.serlized_state.end_in_softknockdown = true
+			}
+
 			//set in hit_stun
 			dammage := self.damage_formula(
 			    self^,
@@ -294,6 +309,8 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 			other.health -= dammage
 			charecer_change_state(other,other.hit_stun_index)
 			hit_ctx.world.hit_stop+=hit_ctx.self_state.hitstop
+
+
 		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
             // block
       		knockback := hit_ctx.hitbox.blockKnockback

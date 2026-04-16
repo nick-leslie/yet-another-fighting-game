@@ -6,6 +6,8 @@ State :: struct($T:typeid,$CU:typeid) {
 	name:		   string,
 	frames:        [dynamic]Frame(T,CU),
 	hit_boxes: 	   [dynamic]Hit_box,
+	hard_knockdown:bool,
+	soft_knockdown:bool,
 	// should all this be in a seprate struct
 	canBlock:      bool,
 	isAttack:      bool,
