@@ -136,7 +136,9 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 			//todo set self current velocity
 			other.hit_stun_frames = hit_ctx.self_state.hitstun
 			other.block_stun_frames=0
-
+			if  knockback.y.i > 0 {
+			    other.jump_requested=true
+			}
 			psy.add_fixed_vec2_to_vel(&other.body,knockback)
 
 			hit_ctx.world.combo_counter += 1

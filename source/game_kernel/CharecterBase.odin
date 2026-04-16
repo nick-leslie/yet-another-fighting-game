@@ -279,6 +279,9 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 				//do we want to do this to avoid 0% scalling
 				self.combo_scaling = 100
 			}
+			if  knockback.y.i > 0 {
+			    other.jump_requested=true
+			}
 			//set in hit_stun
 			dammage := self.damage_formula(
 			    self^,
