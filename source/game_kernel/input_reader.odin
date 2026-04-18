@@ -1,7 +1,7 @@
 #+feature dynamic-literals
 package game_kernel
 
-import "core:log"
+@(require)import "core:log"
 import "core:testing"
 import "../utils"
 // import "core:log"
@@ -18,16 +18,19 @@ Direction :: enum {
     DownForward,
 }
 
-Attack :: enum {
+
+Button :: enum {
     None,
     Light,
     Medium,
     Heavy,
+    Dash,
+    Debit,
 }
 
 Input :: struct {
     dir:Direction,
-    attack:Attack,
+    attack:Button,
 }
 
 
@@ -82,9 +85,6 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
             if (pattern.air_ok == false && in_air == true) || pattern.air_only == true && in_air == false{
                 //disqalify based on air state
                 pattern_input_index[j] = -1
-                if pattern.air_ok == true && in_air == true {
-                    log.debug("breakpoint")
-                }
                 continue
             }
             if pattern.inputs[check_index] == input {
@@ -132,17 +132,17 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
 test_quarter_circle :: proc(t: ^testing.T) {
 	patterns := make([dynamic]Pattern)
 	pattern_light_attack := Pattern {
-		inputs      = {Input{dir = Direction.Forward, attack = Attack.Light}},
+		inputs      = {Input{dir = Direction.Forward, attack = Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
 	pattern2_light_attack := Pattern {
-		inputs      = {Input{dir = Direction.Neutral, attack = Attack.Light}},
+		inputs      = {Input{dir = Direction.Neutral, attack = Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
 	pattern3_light_attack := Pattern {
-		inputs      = {Input{dir = Direction.Back, attack = Attack.Light}},
+		inputs      = {Input{dir = Direction.Back, attack = Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
@@ -153,19 +153,19 @@ test_quarter_circle :: proc(t: ^testing.T) {
 
 	pattern_quarter_circle := Pattern {
 		inputs      = {
-			Input{dir = Direction.Forward, attack = Attack.Light},
-			Input{dir = Direction.DownForward, attack = Attack.None},
-			Input{dir = Direction.Down, attack = Attack.None},
+			Input{dir = Direction.Forward, attack = Button.Light},
+			Input{dir = Direction.DownForward, attack = Button.None},
+			Input{dir = Direction.Down, attack = Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
 	}
 	pattern_2_quarter_circle := Pattern {
 		inputs  = {
-			Input{dir = Direction.Forward, attack = Attack.Light},
-			Input{dir = Direction.Neutral, attack = Attack.None},
-			Input{dir = Direction.DownForward, attack = Attack.None},
-			Input{dir = Direction.Down, attack = Attack.None},
+			Input{dir = Direction.Forward, attack = Button.Light},
+			Input{dir = Direction.Neutral, attack = Button.None},
+			Input{dir = Direction.DownForward, attack = Button.None},
+			Input{dir = Direction.Down, attack = Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
@@ -174,15 +174,15 @@ test_quarter_circle :: proc(t: ^testing.T) {
 	append(&patterns,pattern_2_quarter_circle)
 
 	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
-	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Attack.None})
-	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = Attack.Light})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = Button.Light})
 
 	out_state := pick_state(input_buffer,patterns,false)
 	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")

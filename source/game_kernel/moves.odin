@@ -94,21 +94,27 @@ make_air_state_cancel :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cance
 }
 
 
-make_free_cancel_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
-    return proc(char: T, cancel_index: int) -> bool {
+make_free_cancel_proc :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
         return true
     }
 }
 
 
-make_no_cancel_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
-    return proc(char: T, cancel_index: int) -> bool {
+make_no_cancel_proc :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
         return false
     }
 }
 
-make_exit_block_stun_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
-    return proc(char: T, cancel_index: int) -> bool {
+
+make_on_hit_or_block_cancel_proc :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+        return false
+    }
+}
+make_exit_block_stun_proc :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
         if char.block_stun_frames <= 0 {
             return true
         }
@@ -129,8 +135,8 @@ make_on_block_stun_proc :: proc($T: typeid) -> proc(char: T) {
     }
 }
 
-make_exit_hit_stun_proc :: proc($T: typeid) -> proc(char: T, cancel_index: int) -> bool {
-    return proc(char: T, cancel_index: int) -> bool {
+make_exit_hit_stun_proc :: proc($T: typeid) -> proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
+    return proc(char: ^CharecterBase(T), cancel_index: int) -> bool {
         log.debug(char.hit_stun_frames)
         if char.hit_stun_frames <= 0 {
             return true

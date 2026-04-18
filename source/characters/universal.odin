@@ -12,7 +12,9 @@ import vmem "core:mem/virtual"
 //todo we should maybe rename this but charecter base is taken care of.
 // so like idk what to name it
 Charecter :: struct {
-	budget:u64,
+	budget:i64,
+	debit_install_index:int,
+	in_debit:bool,
 	charecter_spesific_data: union {
 		Cyberpunk,
 	},
@@ -31,16 +33,23 @@ air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) 
 }
 
 
-make_free_cancel_proc :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+any_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
     return true
 }
 
-
-make_no_cancel_proc ::proc(char: gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+no_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
     return false
 }
 
-exit_block_stun_proc :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+// we cant cancel except into debit install
+no_cancel_accept_install ::proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+    if cancel_index == char.serlized_state.charecter_info.debit_install_index && char.serlized_state.charecter_info.in_debit == false{
+        return true
+    }
+    return false
+}
+
+exit_block_stun :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
     if char.block_stun_frames <= 0 {
         return true
     }
@@ -48,7 +57,7 @@ exit_block_stun_proc :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: i
 }
 
 
-exit_hit_stun_proc ::  proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+exit_hit_stun ::  proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
     if char.hit_stun_frames <= 0 {
         return true
     }
@@ -131,7 +140,7 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
                    	))
                 }
 			},
-			check_exit = exit_hit_stun_proc, // todo change me
+			check_exit = exit_hit_stun, // todo change me
 		}},
 		isAttack  = false,
 	}
@@ -149,9 +158,53 @@ add_state_block_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 			hitbox_list = {},
 			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-			check_exit = exit_block_stun_proc, // todo change me
+			check_exit = exit_block_stun, // todo change me
 		}},
 		isAttack  = false,
+	}
+	append(&char.states, move)
+	index := len(char.states)-1
+	char.block_stun_index = index
+}
+
+
+add_debit_install :: proc(char:^gk.CharecterBase(Charecter)) {
+   	context.allocator = vmem.arena_allocator(&char.arena)
+
+	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
+		name="debit-install",
+		frames = {},
+		isAttack  = false,
+	}
+	for i := 0; i < 7; i += 1 {
+	    append(&move.frames,
+		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+			frame_type = gk.FrameType.Startup,
+			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+			hitbox_list = {},
+			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+			check_exit = no_cancel, // todo change me
+		})
+	}
+	append(&move.frames,
+	gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+		frame_type = gk.FrameType.Startup,
+		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hitbox_list = {},
+		on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+		    char.serlized_state.charecter_info.in_debit = true
+		},
+		check_exit =  no_cancel, // todo change me
+	})
+	for i := 0; i < 3; i += 1 {
+	    append(&move.frames,
+		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+			frame_type = gk.FrameType.Recovery,
+			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+			hitbox_list = {},
+			on_frame = proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+			check_exit =  no_cancel, // todo change me
+		})
 	}
 	append(&char.states, move)
 	index := len(char.states)-1

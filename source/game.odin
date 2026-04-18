@@ -324,8 +324,8 @@ game_init :: proc() {
 
 	// }
 
-	p1 := chars.create_cyberpunk_charecter({-10,0,2,0},64)
-	p2 := chars.create_cyberpunk_charecter({10,0,2,0},64)
+	p1 := chars.create_cyberpunk_charecter({-10,0,2,0},200)
+	p2 := chars.create_cyberpunk_charecter({10,0,2,0},200)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
 	clay_arena := setup_clay({

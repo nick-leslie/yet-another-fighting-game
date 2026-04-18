@@ -7,17 +7,49 @@ import psy "./physics"
 
 
 charecter_draw :: proc(character: gk.CharecterBase($C)) {
-	_,frame := gk.charecter_get_current_state_frame(character)
+	state,frame := gk.charecter_get_current_state_frame(character)
 	char_body := psy.unfix_body(character.body)
 	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
-	rl.DrawCapsule(
-		pos,
-		pos + UP * f32(gk.CHARACTER_CAPSULE_HALF_HEIGHT) * 2,
-		f32(gk.CHARACTER_CAPSULE_RADIUS),
-		16,
-		8,
-		rl.ORANGE,
-	)
+	if frame.frame_type == .Startup {
+    	rl.DrawCapsule(
+    		pos,
+    		pos + UP * f32(gk.CHARACTER_CAPSULE_HALF_HEIGHT) * 2,
+    		f32(gk.CHARACTER_CAPSULE_RADIUS),
+    		16,
+    		8,
+    		rl.DARKBLUE,
+    	)
+        first_active_drew:=false
+        for i := 0; i < len(state.frames); i += 1 {
+            future_frame := state.frames[i]
+            if future_frame.frame_type == .Active && first_active_drew==false {
+                for j := 0; j < len(future_frame.hitbox_list); j += 1 {
+                    hitbox := state.hit_boxes[j]
+                    unfixed_box := psy.unfix_box(hitbox.box)
+              		rl.DrawCube(
+             			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
+             			f32(unfixed_box.extent.x),
+             			f32(unfixed_box.extent.y),
+             			0.0,
+             			rl.RED,
+              		)
+                }
+                first_active_drew = true
+            }
+        }
+
+	} else {
+    	rl.DrawCapsule(
+    		pos,
+    		pos + UP * f32(gk.CHARACTER_CAPSULE_HALF_HEIGHT) * 2,
+    		f32(gk.CHARACTER_CAPSULE_RADIUS),
+    		16,
+    		8,
+    		rl.ORANGE,
+    	)
+	}
+
+
 	for &hurt_box in frame.hurtbox_list {
         unfixed_box := psy.unfix_box(hurt_box)
 		rl.DrawCube(

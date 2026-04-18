@@ -25,6 +25,8 @@ Keyboard :: struct {
  light_key:rl.KeyboardKey,
  medium_key:rl.KeyboardKey,
  heavy_key:rl.KeyboardKey,
+ dash_key:rl.KeyboardKey,
+ debit_key:rl.KeyboardKey,
 }
 
 GamePad :: struct {
@@ -36,6 +38,8 @@ GamePad :: struct {
     light_key:rl.GamepadButton,
     medium_key:rl.GamepadButton,
     heavy_key:rl.GamepadButton,
+    dash_key:rl.GamepadButton,
+    debit_key:rl.GamepadButton,
 }
 
 InputWithFrame :: struct {
@@ -77,7 +81,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             move_vec.x += f32(-1 * side_mod)
         }
         dir:gk.Direction
-        attack:gk.Attack
+        attack:gk.Button
         switch move_vec {
         case {0,0}:
             dir = gk.Direction.Neutral
@@ -99,13 +103,13 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             dir = gk.Direction.DownBack
         }
         if rl.IsKeyPressed(controls.light_key) {
-            attack = gk.Attack.Light
+            attack = gk.Button.Light
         }
         if rl.IsKeyPressed(controls.medium_key) {
-            attack = gk.Attack.Medium
+            attack = gk.Button.Medium
         }
         if rl.IsKeyPressed(controls.heavy_key) {
-            attack = gk.Attack.Heavy
+            attack = gk.Button.Heavy
         }
         return gk.Input{
             dir=dir,
@@ -134,7 +138,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             move_vec.x += f32(-1 * side_mod)
         }
         dir:gk.Direction
-        attack:gk.Attack
+        attack:gk.Button
         switch move_vec {
         case {0,0}:
             dir = gk.Direction.Neutral
@@ -156,13 +160,13 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             dir = gk.Direction.DownBack
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.light_key) {
-            attack = gk.Attack.Light
+            attack = gk.Button.Light
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.medium_key) {
-            attack = gk.Attack.Medium
+            attack = gk.Button.Medium
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.heavy_key) {
-            attack = gk.Attack.Heavy
+            attack = gk.Button.Heavy
         }
         return gk.Input{
             dir=dir,

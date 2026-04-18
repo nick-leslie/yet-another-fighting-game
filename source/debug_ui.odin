@@ -158,6 +158,10 @@ static_button :: proc($txt:string,in_focus:bool,txt_config:^clay.TextElementConf
 				width = clay.SizingFit(),
 				height = clay.SizingFit(),
 			},
+			childAlignment = {
+                x=.Center,
+                y=.Center,
+			},
 		},
 
 	}) {
@@ -204,6 +208,10 @@ input_ui:: proc(input:gk.Input) {
 		char_arr[2] = 'M'
 	case .Heavy:
 		char_arr[2] = 'H'
+	case .Dash:
+		char_arr[2] = 'D'
+	case .Debit:
+		char_arr[2] = '$'
 	}
 	str := utf8.runes_to_string(char_arr[:],context.temp_allocator)
 	clay.TextDynamic(

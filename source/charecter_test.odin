@@ -202,7 +202,7 @@ pattern_neutral ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 0,
 	}
@@ -212,7 +212,7 @@ pattern_forward ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 1,
 	}
@@ -222,7 +222,7 @@ pattern_backward ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 2,
 	}
@@ -232,7 +232,7 @@ pattern_jump ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Up, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Up, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 3,
 	}
@@ -242,7 +242,7 @@ pattern_jump_forward ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 4,
 	}
@@ -252,7 +252,7 @@ pattern_jump_backward ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.UpBack, attack = gk.Attack.None}},
+		inputs      = {gk.Input{dir = gk.Direction.UpBack, attack = gk.Button.None}},
 		pritority   = 0,
 		state_index = 5,
 	}
@@ -392,17 +392,17 @@ pattern_light_attack ::proc(char: ^gk.CharecterBase($CU)) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Attack.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Button.Light}},
 		pritority   = 1,
 		state_index = 6,
 	}
@@ -664,39 +664,39 @@ pattern_light_fireball ::proc(char: ^gk.CharecterBase($CU)) {
 
 	pattern := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
 	}
 	pattern_2 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
+			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
 	}
 	pattern_3 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
 	}
 	pattern_4 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Attack.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Attack.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Attack.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light},
+			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
 		},
 		pritority   = 2,
 		state_index = 7,
