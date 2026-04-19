@@ -420,7 +420,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			hitbox_list = {0},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			},
-			check_exit = no_cancel_accept_install, // todo change me
+			check_exit = cancelable_on_hit_or_block, // todo change me
 		})
 	}
 	//9 recovery
@@ -432,7 +432,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-			check_exit = no_cancel_accept_install, // todo change me
+			check_exit = cancelable_on_hit_or_block, // todo change me
 		},)
 	}
 	append(&move.frames,
@@ -491,7 +491,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			hitbox_list = {0},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			},
-			check_exit = no_cancel_accept_install, // todo change me
+			check_exit = cancelable_on_hit_or_block, // todo change me
 		})
 	}
 	//9 recovery
@@ -503,7 +503,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			hurtbox_list = {hurt_box},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-			check_exit = no_cancel_accept_install, // todo change me
+			check_exit = cancelable_on_hit_or_block, // todo change me
 		})
 	}
 	append(&move.frames,
@@ -637,7 +637,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 				},
-				check_exit = no_cancel, // todo change me
+				check_exit = cancelable_on_hit_or_block, // todo change me
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
@@ -645,7 +645,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
+				check_exit = cancelable_on_hit_or_block, // todo change me
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
@@ -653,7 +653,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
+				check_exit = cancelable_on_hit_or_block, // todo change me
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
@@ -661,7 +661,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
+				check_exit = cancelable_on_hit_or_block, // todo change me
 			},
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
@@ -669,15 +669,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = gk.make_free_cancel_proc(Charecter), // todo change me
+				check_exit = air_state_cancel, // todo change me
 			},
 		},
 		isAttack  = true,

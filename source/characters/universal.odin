@@ -32,6 +32,15 @@ air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) 
    	return false
 }
 
+cancelable_on_hit_or_block :: proc(char:^gk.CharecterBase,cancel_index:int ) -> bool{
+    // if any of the hit box trackers are used
+    for i:=0;i<63;i+=1 {
+        if i in hit_ctx.hitbox_tracker_ptr == true {
+            return true
+        }
+	}
+	return false
+}
 
 any_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
     return true
