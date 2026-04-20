@@ -47,9 +47,6 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:i64) -> gk.CharecterBase(Ch
 }
 
 
-free_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
-	return true
-}
 
 cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
 	log.debug("in add movement")
@@ -90,7 +87,7 @@ cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 			    char.body.velocity.x = psy.Fixed12_4 {}
 			}
 		},
-		check_exit = gk.make_free_cancel_proc(Charecter),
+		check_exit = any_cancel,
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="neutral",
@@ -114,7 +111,7 @@ cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			    char.body.velocity.x = psy.Fixed12_4 {}
 			}
 		},
-		check_exit = gk.make_free_cancel_proc(Charecter),
+		check_exit = any_cancel,
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="neutral",
@@ -134,7 +131,7 @@ cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 			if char.p1_side do char.body.velocity.x = char.move_speed
 			if !char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
 		},
-		check_exit = gk.make_free_cancel_proc(Charecter),
+		check_exit = any_cancel,
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="forward",
@@ -158,7 +155,7 @@ cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
     		if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
     		if !char.p1_side do char.body.velocity.x = char.move_speed
 		},
-		check_exit = gk.make_free_cancel_proc(Charecter),
+		check_exit = any_cancel,
 	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="backward",
@@ -442,7 +439,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-		check_exit = free_cancel, // todo change me
+		check_exit = any_cancel, // todo change me
 	})
 	append(&char.states, move)
 	index := len(char.states)-1
@@ -513,7 +510,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 		hurtbox_list = {hurt_box},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-		check_exit = free_cancel, // todo change me
+		check_exit = any_cancel, // todo change me
 	})
 	append(&char.states, move)
 	index := len(char.states)-1
@@ -572,7 +569,7 @@ cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
 			hurtbox_list = {hurt_box},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-			check_exit = gk.make_free_cancel_proc(Charecter), // todo change me
+			check_exit = any_cancel, // todo change me
 		})
 	}
 	append(&char.states, move)
