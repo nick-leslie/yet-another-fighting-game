@@ -163,8 +163,8 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
             log.debug("connecting")
             now := time.now()
             send_msg := NetworkMessage {
-	           	packet_version=MESSAGE_VERSION,
-	            frame=-1,
+                packet_version=MESSAGE_VERSION,
+				frame=-1,
 	            message_type=AcceptGameStart {
 					character=0,
 					now=now,

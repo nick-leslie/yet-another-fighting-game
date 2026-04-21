@@ -13,12 +13,13 @@ AckWrapper ::struct($T:typeid) {
 
 ACK_WINDOW::20
 ReliableUdpMannager :: struct($T:typeid) {
-    address:net.Address,
-    port:int,
-    max_before_resend:int,
-    socket:  net.UDP_Socket,
-    sent_packets: utils.FrameTrackedBuffer(ACK_WINDOW,AckWrapper(T)),
-    serlize_packet: proc(T) -> []byte,
+    address:              net.Address,
+    port:                 int,
+    max_before_resend:    int,
+    socket:               net.UDP_Socket,
+    sent_packets:         utils.FrameTrackedBuffer(ACK_WINDOW,AckWrapper(T)),
+    serlize_packet:       proc(T) -> []byte,
+    deserlize_packet:     proc([]byte) -> T,
 }
 
 
@@ -40,6 +41,15 @@ send_message :: proc(mannager:ReliableUdpMannager($T), packet:T,tick:int) {
     },tick)
     assert((old_packet.acked==true || old_packet.tick==tick),"we failed to ack a packet before removing it this is bad")
     return bytes,net_err
+}
+
+recv_packet :: proc(mannager:ReliableUdpMannager($T),tick:int) -> (T,net_err) {
+    raw_packet,net_err := net.recv_udp(mannager.socket)
+    if net_err != net.UDP_Send_Error.None {
+        return nil,net_err
+    }
+    packet := mannager.deserlize_packet(raw_packet)
+    return packet,net_err
 }
 
 resend_messages :: proc(mannager:ReliableUdpMannager($T),tick:int) {
