@@ -7,6 +7,7 @@ import gk "../game_kernel"
 import "../utils"
 import "core:thread"
 import "base:runtime"
+import "core:encoding/cbor"
 
 NetworkMessage :: struct {
     packet_version:u8,
@@ -56,6 +57,7 @@ LobbyCreateError :: enum {
 	InvalidBindAddr,
 	InvalidAddress,
 	SocketBindErr,
+	FailedToMakeReliableUdp
 }
 
 MAX_ROLLBACK_WINDOW :: 15
@@ -71,27 +73,49 @@ SessionMannager :: struct {
 
 
 make_session_mannager :: proc(
-    port:int,
-    other_ip:string,
-    other_port:int,
+    bind_port:int,
+    target_ip:string,
+    target_port:int,
     allocator:runtime.Allocator
 ) -> (Maybe(SessionMannager),LobbyCreateError) {
-    addr,ok := net.parse_ip4_address("0.0.0.0")
-    if ok == false  {
-    	log.error("invalida bind address")
-        return nil,LobbyCreateError.InvalidBindAddr
+    udp_mannager,err := make_reliable_mannager(
+        NetworkMessage,
+        bind_port,
+        target_ip,
+        target_port,
+        10, // max before resend
+        encode_message,
+        decode_message
+    )
+    if err != nil {
+        return nil,LobbyCreateError.FailedToMakeReliableUdp
     }
-    other_addr, other_addr_ok := net.parse_ip4_address(other_ip)
-    if other_addr_ok == false {
-       	log.error("invalida address")
-        return nil,LobbyCreateError.InvalidAddress
+    mannager := SessionMannager {
+        udp=udp_mannager.(ReliableUdpMannager(NetworkMessage)),
+        rcvd_inputs=utils.RingBuffer(MAX_NETWORK_WINDOW, InputWithFrame) {},
+        other_player_connected=false,
+        should_run=false,
+        game_start_sent_at=time.now(),
+        thread=nil,
     }
-    udp_socket,udp_err := net.make_bound_udp_socket(addr,port)
-    net.set_blocking(udp_socket,true)
-    if udp_err != nil {
-    	log.error("failed to bind to socket")
-    	return nil,LobbyCreateError.SocketBindErr
-    }
-    mannager := SessionMannager {}
     return mannager, nil
+}
+
+encode_message :: proc(msg:NetworkMessage) -> []byte {
+    data,err := cbor.marshal_into_bytes(msg, cbor.ENCODE_FULLY_DETERMINISTIC,context.temp_allocator)
+    if err != nil {
+        log.error(err)
+        return {}
+    }
+    return data
+}
+
+
+decode_message :: proc(data:[]byte) -> Maybe(NetworkMessage) {
+    msg:NetworkMessage = {}
+    err := cbor.unmarshal_from_bytes(data,&msg)
+    if err != nil {
+        return nil
+    }
+    return msg
 }

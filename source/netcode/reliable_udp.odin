@@ -10,18 +10,64 @@ AckWrapper ::struct($T:typeid) {
     packet:T,
 }
 
+UdpCreateError :: enum {
+    FailedToParseAddress,
+    SocketBindErr,
+}
 
 ACK_WINDOW::20
 ReliableUdpMannager :: struct($T:typeid) {
-    address:              net.Address,
-    port:                 int,
-    max_before_resend:    int,
-    socket:               net.UDP_Socket,
-    sent_packets:         utils.FrameTrackedBuffer(ACK_WINDOW,AckWrapper(T)),
-    serlize_packet:       proc(T) -> []byte,
-    deserlize_packet:     proc([]byte) -> T,
+    bind_endpoint:             net.Endpoint,
+    send_endpoint:             net.Endpoint,
+    max_before_resend:         int,
+    socket:                    net.UDP_Socket,
+    sent_packets:              utils.FrameTrackedBuffer(ACK_WINDOW,AckWrapper(T)),
+    serlize_packet:            proc(T) -> []byte,
+    deserlize_packet:          proc([]byte) -> T,
 }
 
+
+make_reliable_mannager :: proc(
+    $T:typeid,
+    bind_port:int,
+    target_ip:string,
+    target_port:int,
+    max_before_resend:int,
+    serlize_packet:proc(T) -> []byte,
+    deserlize_packet:proc([]byte) -> Maybe(T)
+) -> (Maybe(ReliableUdpMannager(T)),UdpCreateError) {
+    bind_addr,ok := net.parse_ip4_address("0.0.0.0")
+    assert(ok,"we failed to parse 0.0.0.0 this souldnt happen")
+
+    target_addr, other_addr_ok := net.parse_ip4_address(target_ip)
+    if other_addr_ok == false {
+       	log.error("invalid address")
+        return nil,UdpCreateError.FailedToParseAddress
+    }
+
+    udp_socket,udp_err := net.make_bound_udp_socket(target_addr,target_port)
+    net.set_blocking(udp_socket,true)
+    if udp_err != nil {
+    	log.error("failed to bind to socket")
+    	return nil,UdpCreateError.SocketBindErr
+    }
+
+    return ReliableUdpMannager(T) {
+        bind_endpoint={
+            address=bind_addr,
+            port=bind_port,
+        },
+        send_endpoint={
+            address=target_ip,
+            port=target_port,
+        },
+        socket=udp_socket,
+        sent_packets={},
+        max_before_resend=max_before_resend,
+        serlize_packet=serlize_packet,
+        deserlize_packet=deserlize_packet,
+    }
+}
 
 
 send_message :: proc(mannager:ReliableUdpMannager($T), packet:T,tick:int) {
@@ -30,7 +76,7 @@ send_message :: proc(mannager:ReliableUdpMannager($T), packet:T,tick:int) {
         //todo return error
         return
     }
-    bytes,net_err := net.send_udp(mannager.socket,raw_packet,mannager.endpoint)
+    bytes,net_err := net.send_udp(mannager.socket,raw_packet,mannager.send_endpoint)
     if net_err == net.UDP_Send_Error.None {
         return bytes,nil
     }
