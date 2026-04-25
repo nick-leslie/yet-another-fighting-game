@@ -1,5 +1,6 @@
 package netcode
 
+import "core:log"
 import "core:net"
 import "../utils"
 
@@ -23,7 +24,7 @@ ReliableUdpMannager :: struct($T:typeid) {
     socket:                    net.UDP_Socket,
     sent_packets:              utils.FrameTrackedBuffer(ACK_WINDOW,AckWrapper(T)),
     serlize_packet:            proc(T) -> []byte,
-    deserlize_packet:          proc([]byte) -> T,
+    deserlize_packet:          proc([]byte) -> Maybe(T),
 }
 
 
@@ -58,7 +59,7 @@ make_reliable_mannager :: proc(
             port=bind_port,
         },
         send_endpoint={
-            address=target_ip,
+            address=target_addr,
             port=target_port,
         },
         socket=udp_socket,
@@ -66,7 +67,7 @@ make_reliable_mannager :: proc(
         max_before_resend=max_before_resend,
         serlize_packet=serlize_packet,
         deserlize_packet=deserlize_packet,
-    }
+    },nil
 }
 
 

@@ -52,6 +52,7 @@ InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
 	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame),
+	remote_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
 	last_input: InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
@@ -179,6 +180,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 }
 
 
+
 push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
         input_queue := &mannager.network_mannager_ptr.rcvd_inputs
@@ -246,7 +248,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
             return 0
         }
-        log.debug("getting input")
         msg := utils.ring_pop(input_queue)
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
@@ -266,7 +267,6 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
         },frame+mannager.delay)
     }
     return 0
-    // todo we may want to move this into net
 }
 
 insert_input_at_frame ::proc (mannager:^InputMannager,frame:int, input:gk.Input) {
