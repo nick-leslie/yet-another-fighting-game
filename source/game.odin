@@ -193,8 +193,8 @@ draw_main_menu :: proc(screen:^MainMenu) {
 
 
 run_game_sim :: proc(world:^gk.World($C),frame:int) {
-    rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,frame,true)
-    rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,frame,true)
+    rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,frame,world.p1.serlized_state.p1_side)
+    rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,frame,world.p2.serlized_state.p1_side)
     if rollback_to_p1 > 0 {
         rollback_correct_frame(&g.rollback_state,world,rollback_to_p1)
     }
@@ -208,7 +208,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
 
 
     if ODIN_DEBUG == true {
-        // debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
+        debug_rollback(&g.rollback_state,world,DEBUG_ROLLBACK_FRAMES)
     }
 
     // last_world_state := get_current_state(&g.rollback_state)

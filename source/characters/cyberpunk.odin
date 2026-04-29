@@ -21,6 +21,7 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:i64) -> gk.CharecterBase(Ch
 	log.debug(hooks)
    	charecter := gk.CharecterBase(Charecter) {
 		health=200, // todo change me
+		max_health=200,
 		body = psy.body_init(pos),
 		collision_box = psy.box_init({},{gk.CHARACTER_CAPSULE_RADIUS*2,0, gk.CHARACTER_CAPSULE_HALF_HEIGHT * 2,0}),
 		move_speed = psy.init_from_parts(7,0),
@@ -393,7 +394,7 @@ cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 		damage = 10,
 		frames    = {},
 		isAttack  = true,
-		hitstun   = 15,
+		hitstun   = 25,
 		blockstun = 10,
 	}
 	// 5 startup

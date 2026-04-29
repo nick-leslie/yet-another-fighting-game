@@ -45,6 +45,7 @@ CharecterSerlizedState :: struct($CU:typeid) {
 
 //rename to charecter base
 CharecterBase :: struct($CU:typeid) {
+    max_health:           u32,
 	arena:                vmem.Arena,
 	//do I want to add an arena here
 	using serlized_state: CharecterSerlizedState(CU),
@@ -78,8 +79,11 @@ setup_charecter :: proc(char: ^CharecterBase($CU)) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World(CU)) {
-	// log.debug("in charecter update")
+charecter_update :: proc(character: ^CharecterBase($CU),other:CharecterBase(CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World(CU)) {
+
+    //if we are greater than zero p1 side else p2 side
+    character.serlized_state.p1_side = !(fixed.sub(character.serlized_state.body.position.x,other.serlized_state.body.x).i > (psy.Fixed12_4 {}).i)
+    // log.debug("in charecter update")
 	character.jump_requested = false // should this be reset here
 	// character.addional_velocity = {} // do we want to reset this here
 

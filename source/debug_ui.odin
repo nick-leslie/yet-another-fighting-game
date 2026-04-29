@@ -15,7 +15,7 @@ error_handler :: proc "c" (errorData: clay.ErrorData) {
 
 create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 	clay.BeginLayout()
-
+	
 	if clay.UI()({
         layout = {
             sizing = { width = clay.SizingGrow(), height = clay.SizingGrow() },
@@ -23,6 +23,7 @@ create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
             layoutDirection = .TopToBottom,
         },
 	}) {
+        round_top_ui()
 		if clay.UI()({
 			layout = {
 	            sizing = {
