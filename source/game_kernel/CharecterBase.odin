@@ -17,10 +17,13 @@ HIT_BOX_MAX :: 64 // we may want to change this
 
 CharecterSerlizedState :: struct($CU:typeid) {
    	health: 		   u32,
+    end_in_hardknockdown:bool, // these flags are for if you end hitstun in hard or soft knockdown
+    end_in_softknockdown:bool,
 	body:              psy.FixedBody,
+    p1_side:           bool,
    	move_dir:          Vec3,
-   	jump_requested:    bool,
    	in_air:            bool,
+   	jump_requested:    bool,
    	jump_height:       psy.Fixed12_4,
    	move_speed:        psy.Fixed12_4,
    	air_move_speed:    psy.Fixed12_4,
@@ -31,11 +34,8 @@ CharecterSerlizedState :: struct($CU:typeid) {
     current_state:     int, // this is an index
     hit_stun_frames:   u32,
     block_stun_frames: u32,
-    p1_side:           bool,
     combo_scaling:     u32,
     charecter_info: CU,
-    end_in_hardknockdown:bool, // these flags are for if you end hitstun in hard or soft knockdown
-    end_in_softknockdown:bool,
    	charecter_flags: bit_field u64 {
 
 	}, // lots of flags for various states.. tuble extc

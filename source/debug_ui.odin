@@ -15,7 +15,7 @@ error_handler :: proc "c" (errorData: clay.ErrorData) {
 
 create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 	clay.BeginLayout()
-	
+
 	if clay.UI()({
         layout = {
             sizing = { width = clay.SizingGrow(), height = clay.SizingGrow() },
@@ -200,7 +200,7 @@ input_ui:: proc(input:gk.Input) {
 		char_arr[0] = '/'
 		char_arr[1] = '^'
 	}
-	switch input.attack {
+	switch input.attack[0] {
 	case .None:
 		char_arr[2] = ' '
 	case .Light:
@@ -211,8 +211,8 @@ input_ui:: proc(input:gk.Input) {
 		char_arr[2] = 'H'
 	case .Dash:
 		char_arr[2] = 'D'
-	case .Debit:
-		char_arr[2] = '$'
+	case .Unique:
+		char_arr[2] = 'U'
 	}
 	str := utf8.runes_to_string(char_arr[:],context.temp_allocator)
 	clay.TextDynamic(

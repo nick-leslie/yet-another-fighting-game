@@ -25,12 +25,12 @@ Button :: enum {
     Medium,
     Heavy,
     Dash,
-    Debit,
+    Unique,
 }
 
 Input :: struct {
     dir:Direction,
-    attack:Button,
+    attack:[5]Button,
 }
 
 

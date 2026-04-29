@@ -346,7 +346,7 @@ game_init :: proc() {
 	arena_alocator := vmem.arena_allocator(&g.arena)
 	g = new(Game_Memory)
 	g^ = Game_Memory {
-        screen = MainMenu{},
+        screen = InRound{},
 		app_run = true,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.

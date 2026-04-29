@@ -268,7 +268,7 @@ cyberpunk_pattern_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter),index:
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -279,19 +279,19 @@ cyberpunk_pattern_crouch ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	append(&char.patterns,gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Down, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
 	})
 	append(&char.patterns,gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
 	})
 	append(&char.patterns,gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -302,7 +302,7 @@ cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -313,7 +313,7 @@ cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) 
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -324,7 +324,7 @@ cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Up, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.Up, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false, // set to true to enable double jump
@@ -336,7 +336,7 @@ cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter),index:i
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -348,7 +348,7 @@ cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.UpBack, attack = gk.Button.None}},
+		inputs      = {gk.Input{dir = gk.Direction.UpBack, attack = {gk.Button.None,nil,nil,nil,nil}}},
 		pritority   = 0,
 		state_index = index,
 		air_ok=false,
@@ -362,8 +362,8 @@ cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:
 
 
 cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
-    index := cyberpunk_add_stand_punch(char)
-    cyberpunk_pattern_stand_punch(char,index)
+    index := cyberpunk_add_stand_lunch(char)
+    cyberpunk_pattern_stand_light(char,index)
 
     index = cyberpunk_add_crouch_light(char)
     cyberpunk_pattern_crouch_light_punch(char,index)
@@ -377,7 +377,7 @@ cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
     cyberpunk_pattern_jump_punch(char,index)
 }
 
-cyberpunk_add_stand_punch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	hit_box := gk.Hit_box {
@@ -680,23 +680,23 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 }
 
 
-cyberpunk_pattern_stand_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_stand_light :: proc(char:^gk.CharecterBase(Charecter),index:int) {
     context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 		air_only=false,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
@@ -711,21 +711,21 @@ cyberpunk_pattern_crouch_heavy_punch :: proc(char:^gk.CharecterBase(Charecter),i
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.Heavy}},
+		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.Heavy,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Down, attack = gk.Button.Heavy}},
+		inputs      = {gk.Input{dir = gk.Direction.Down, attack = {gk.Button.Heavy,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 		air_only=false,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = gk.Button.Heavy}},
+		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = {gk.Button.Heavy,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
@@ -740,21 +740,21 @@ cyberpunk_pattern_crouch_light_punch :: proc(char:^gk.CharecterBase(Charecter),i
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Down, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Down, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
 		air_only=false,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.DownBack, attack = {gk.Button.Light,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=false,
@@ -771,21 +771,21 @@ cyberpunk_pattern_jump_punch :: proc(char:^gk.CharecterBase(Charecter),index:int
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Medium,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=true,
 		air_only=true,
 	}
 	pattern2 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Medium,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=true,
 		air_only=true,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = gk.Button.Light}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack = {gk.Button.Medium,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=true,
@@ -1322,9 +1322,9 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 
 	pattern := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1332,10 +1332,10 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_2 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1343,10 +1343,10 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_3 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1354,10 +1354,10 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_4 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1365,11 +1365,11 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_5 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1377,12 +1377,12 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_6 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1390,10 +1390,10 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_7 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Up, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Up, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1401,10 +1401,10 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	}
 	pattern_8 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1413,11 +1413,11 @@ cyberpunk_pattern_light_fireball ::proc(char: ^gk.CharecterBase(Charecter),index
 	//this could use some refinment
 	pattern_9 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Light},
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Light,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1439,9 +1439,9 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 
 	pattern := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1449,10 +1449,10 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_2 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1460,10 +1460,10 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_3 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1471,10 +1471,10 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_4 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1482,11 +1482,11 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_5 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1494,12 +1494,12 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_6 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Neutral, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Neutral, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1507,10 +1507,10 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_7 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.Up, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.Up, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1518,10 +1518,10 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	}
 	pattern_8 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,
@@ -1530,11 +1530,11 @@ cyberpunk_pattern_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter),inde
 	//this could use some refinment
 	pattern_9 := gk.Pattern {
 		inputs      = {
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.Medium},
-			gk.Input{dir = gk.Direction.UpForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Forward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.DownForward, attack = gk.Button.None},
-			gk.Input{dir = gk.Direction.Down, attack = gk.Button.None},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.Medium,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.UpForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Forward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.DownForward, attack = {gk.Button.None,nil,nil,nil,nil}},
+			gk.Input{dir = gk.Direction.Down, attack = {gk.Button.None,nil,nil,nil,nil}},
 		},
 		pritority   = 2,
 		state_index = index,

@@ -82,7 +82,6 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             move_vec.x += f32(-1 * side_mod)
         }
         dir:gk.Direction
-        attack:gk.Button
         switch move_vec {
         case {0,0}:
             dir = gk.Direction.Neutral
@@ -103,18 +102,24 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         case {-1,-1}:
             dir = gk.Direction.DownBack
         }
+
+        buttons:=[5]gk.Button {}
+        index := 0
         if rl.IsKeyPressed(controls.light_key) {
-            attack = gk.Button.Light
+            buttons[index] = gk.Button.Light
+            index += 1
         }
         if rl.IsKeyPressed(controls.medium_key) {
-            attack = gk.Button.Medium
+            buttons[index] = gk.Button.Medium
+            index += 1
         }
         if rl.IsKeyPressed(controls.heavy_key) {
-            attack = gk.Button.Heavy
+            buttons[index] = gk.Button.Heavy
+            index += 1
         }
         return gk.Input{
             dir=dir,
-            attack=attack,
+            attack=buttons,
         }
     case GamePad:
         // assert(false,"not implemented")
@@ -139,7 +144,6 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             move_vec.x += f32(-1 * side_mod)
         }
         dir:gk.Direction
-        attack:gk.Button
         switch move_vec {
         case {0,0}:
             dir = gk.Direction.Neutral
@@ -160,18 +164,23 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         case {-1,-1}:
             dir = gk.Direction.DownBack
         }
+        buttons:=[5]gk.Button {}
+        index := 0
         if rl.IsGamepadButtonDown(controls.gamepad,controls.light_key) {
-            attack = gk.Button.Light
+            buttons[index] = gk.Button.Light
+            index += 1
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.medium_key) {
-            attack = gk.Button.Medium
+            buttons[index] = gk.Button.Medium
+            index += 1
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.heavy_key) {
-            attack = gk.Button.Heavy
+            buttons[index] = gk.Button.Heavy
+            index += 1
         }
         return gk.Input{
             dir=dir,
-            attack=attack,
+            attack=buttons,
         }
     case Remote:
         return {}
@@ -183,6 +192,7 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 
 push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
+        //predicting code
         input_queue := &mannager.network_mannager_ptr.rcvd_inputs
         length := utils.ring_len(input_queue)
         if length <= 0 {

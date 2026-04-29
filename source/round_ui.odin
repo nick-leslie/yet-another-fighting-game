@@ -9,9 +9,10 @@ import gk "game_kernel"
 round_top_ui :: proc() {
     if clay.UI()({
            layout = {
-               sizing = { width = clay.SizingGrow(), height = clay.SizingGrow() },
+               sizing = { width = clay.SizingGrow(), height = clay.SizingFit() },
                padding = { 10,10,10,10 },
                layoutDirection = .LeftToRight,
+               childGap=10,
            },
 		}) {
         health_bar_ui(g.world.p1)
@@ -22,22 +23,11 @@ round_top_ui :: proc() {
 
 
 timer_ui :: proc(time:u32) {
-    if clay.UI(clay.ID("timer"))({
-        layout = {
-            sizing = {
-                width = clay.SizingFit(),
-                height = clay.SizingFixed(20),
-            },
-            layoutDirection = .LeftToRight,
-        },
-        backgroundColor = {},
-    }) {
-      		clay.TextDynamic(
-			fmt.tprintfln("%d",time),
-			clay.TextConfig({
-			fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255},textAlignment=.Center}),
-		)
-    }
+  		clay.TextDynamic(
+		fmt.tprintfln("%d",time),
+		clay.TextConfig({
+		fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255},textAlignment=.Center}),
+	)
 }
 
 health_bar_ui :: proc(char:gk.CharecterBase($CU)) {
