@@ -35,7 +35,7 @@ make_reliable_mannager :: proc(
     target_port:int,
     max_before_resend:int,
     serlize_packet:proc(T) -> []byte,
-    deserlize_packet:proc([]byte) -> Maybe(T)
+    deserlize_packet:proc([]byte) -> Maybe(T),
 ) -> (Maybe(ReliableUdpMannager(T)),UdpCreateError) {
     bind_addr,ok := net.parse_ip4_address("0.0.0.0")
     assert(ok,"we failed to parse 0.0.0.0 this souldnt happen")

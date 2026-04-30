@@ -7,6 +7,7 @@ import "core:unicode/utf8"
 import psy "./physics"
 import "core:time"
 import "./utils"
+import "./netcode"
 @(require)import "core:log"
 
 error_handler :: proc "c" (errorData: clay.ErrorData) {
@@ -57,7 +58,7 @@ create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
     return clay.EndLayout()
 }
 
-network_input_hisory :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame)) {
+network_input_hisory :: proc(buffer:utils.Buffer(gk.INPUT_BUFFER_LENGTH,gk.InputWithFrame)) {
     if clay.UI()({
 		layout = {
 			sizing = {
@@ -125,15 +126,26 @@ network_mannagment_ui :: proc() {
 				context = g_context
 				now := time.now()
 				log.debug("connect")
-				send_messsage(&g.network_mannager,NetworkMessage {
-					packet_version=MESSAGE_VERSION,
-					frame=-1,
-					message_type=RequestGameStart {
-						character=0,
-						now=now,
-					},
-				})
-				network_mannager_start_listening(&g.network_mannager)
+				netcode.send_message(
+				    g.network_session,
+					netcode.NetworkMessage {
+						packet_version = netcode.MESSAGE_VERSION,
+						frame = -1,
+						message_type = netcode.RequestGameStart {
+							character = 0,
+							now = now,
+						},
+					},			
+				)
+				// send_messsage(&g.network_mannager,NetworkMessage {
+				// 	packet_version=MESSAGE_VERSION,
+				// 	frame=-1,
+				// 	message_type=RequestGameStart {
+				// 		character=0,
+				// 		now=now,
+				// 	},
+				// })
+				// network_mannager_start_listening(&g.network_mannager)
 			}
 		}
 		clay.OnHover(callback,nil)

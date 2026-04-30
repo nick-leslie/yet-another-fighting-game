@@ -33,6 +33,11 @@ Input :: struct {
     attack:[5]Button,
 }
 
+InputWithFrame :: struct {
+    frame:int,
+    input:Input,
+}
+
 
 Pattern :: struct {
     //we will always alocate these with a cap pre alocated

@@ -48,16 +48,13 @@ AckInput :: struct {
 
 EndSession :: struct {}
 
-InputWithFrame :: struct {
-    frame:int,
-    input:gk.Input,
-}
+
 
 LobbyCreateError :: enum {
 	InvalidBindAddr,
 	InvalidAddress,
 	SocketBindErr,
-	FailedToMakeReliableUdp
+	FailedToMakeReliableUdp,
 }
 
 MAX_ROLLBACK_WINDOW :: 15
@@ -68,19 +65,19 @@ SessionMannager :: struct {
     // rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
     other_player_connected:bool,
     //ptr because we dont want to  store this in the network mannager
-    remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+    remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
     should_run:bool,
     game_start_sent_at:time.Time,
    	thread: ^thread.Thread,
 }
 
 
-make_session_mannager :: proc(
+make_session :: proc(
     bind_port:int,
     target_ip:string,
     target_port:int,
-    remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame)
-    allocator:runtime.Allocator
+    remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
+    allocator:runtime.Allocator,
 ) -> (Maybe(SessionMannager),LobbyCreateError) {
     udp_mannager,err := make_reliable_mannager(
         NetworkMessage,
@@ -89,7 +86,7 @@ make_session_mannager :: proc(
         target_port,
         10, // max before resend
         encode_message,
-        decode_message
+        decode_message,
     )
     if err != nil {
         return nil,LobbyCreateError.FailedToMakeReliableUdp
@@ -102,6 +99,9 @@ make_session_mannager :: proc(
         game_start_sent_at=time.now(),
         thread=nil,
     }
+    //todo do I put this here or in the old spot
+   	thread := thread.create_and_start_with_poly_data(mannager,recv_input_network)
+    mannager.thread = thread
     return mannager, nil
 }
 
@@ -134,10 +134,6 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 
             send_message(mannager.udp,send_msg)
 		case AcceptGameStart:
-			// rtt := time.diff(
-			// 	state.now(),
-			// 	mannager.game_start_sent_at,
-			// )
 			g.game_run = true
 			remote_now := state.now
    			now := time.now()
@@ -159,7 +155,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			log.debug(state.start_time)
 			// g.game_run = true
 		case SendInput:
-			input:=InputWithFrame {
+			input:=gk.InputWithFrame {
                 frame=msg.frame,
                 input=state.input,
             }

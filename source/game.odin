@@ -41,6 +41,7 @@ import chars "./characters"
 import "core:os"
 import "core:time"
 import char "./characters"
+import "./netcode"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -84,6 +85,7 @@ Game_Memory :: struct {
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
 	network_mannager:NetworkMannager,
+	network_session:netcode.SessionMannager,
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -371,30 +373,36 @@ game_init :: proc() {
 		game_run = false,
 	}
 	log.debug("connecting to network")
-	port := 3636
-	other_port := 3636
+	bind_port := 3636
+	target_port := 3636
 	if len(os.args) >= 2 {
 		port_from_str,ok := strconv.parse_int(os.args[1])
 		log.debug(port_from_str)
 		if ok == true {
-			port = port_from_str
+			bind_port = port_from_str
 		}
 	}
 	if len(os.args) >= 3 {
 		port_from_str,ok := strconv.parse_int(os.args[2])
 		log.debug(port_from_str)
 		if ok == true {
-			other_port = port_from_str
+			target_port = port_from_str
 		}
 	}
-	network_mannager,err := make_network_mannager(port,"127.0.0.1",other_port,arena_alocator)
-	log.debug(network_mannager)
-	if network_mannager == nil || err != nil {
+	// network_mannager,err := make_network_mannager(bind_port,"127.0.0.1",target_port,arena_alocator)
+	session,session_err := netcode.make_session(bind_port,"127.0.0.1",target_port,&g.p2_input_mannager.remote_inputs,arena_alocator)
+	// log.debug(network_mannager)
+	if session == nil || session_err != nil {
 		log.debug("failed to connect")
 		return
 	}
-	g.network_mannager=network_mannager.?
-	log.debug(network_mannager)
+	// if network_mannager == nil || err != nil {
+	// 	log.debug("failed to connect")
+	// 	return
+	// }
+	// g.network_mannager=network_mannager.?
+	g.network_session=session.?
+	log.debug(session)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
 	g.rollback_state = create_new_rollback_queue(g.world,&g.p1_input_mannager,&g.p2_input_mannager)

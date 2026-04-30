@@ -51,9 +51,9 @@ InputWithFrame :: struct {
 InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
-	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,InputWithFrame),
+	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,gk.InputWithFrame),
 	remote_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
-	last_input: InputWithFrame,
+	last_input: gk.InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,
 	inRemapMode:Maybe(^rl.KeyboardKey), //
@@ -271,7 +271,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
                 log.debug(err)
             }
         }
-        utils.insert_at_frame(&mannager.input_buffer,InputWithFrame{
+        utils.insert_at_frame(&mannager.input_buffer,gk.InputWithFrame{
             frame+mannager.delay, // add delay frames
             input,
         },frame+mannager.delay)
