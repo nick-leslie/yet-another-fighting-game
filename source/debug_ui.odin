@@ -127,7 +127,7 @@ network_mannagment_ui :: proc() {
 				now := time.now()
 				log.debug("connect")
 				netcode.send_message(
-				    g.network_session,
+				    &g.network_session.udp,
 					netcode.NetworkMessage {
 						packet_version = netcode.MESSAGE_VERSION,
 						frame = -1,
@@ -135,7 +135,8 @@ network_mannagment_ui :: proc() {
 							character = 0,
 							now = now,
 						},
-					},			
+					},
+					-1,
 				)
 				// send_messsage(&g.network_mannager,NetworkMessage {
 				// 	packet_version=MESSAGE_VERSION,

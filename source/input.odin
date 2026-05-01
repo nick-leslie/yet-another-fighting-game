@@ -52,7 +52,7 @@ InputMannager :: struct {
    	controls: 	Controls,
     delay:       int,
 	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,gk.InputWithFrame),
-	remote_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+	remote_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
 	last_input: gk.InputWithFrame,
 	network_mannager_ptr:^NetworkMannager,
 	remote:bool,

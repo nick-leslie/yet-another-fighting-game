@@ -1,6 +1,6 @@
 package netcode
 
-import "core:net"
+@(require)import "core:net"
 import "core:log"
 import "core:time"
 import gk "../game_kernel"
@@ -21,7 +21,7 @@ MessageType :: union #no_nil {
     AcceptGameStart,
     SetStartTime,
     SendInput,
-    AckInput,
+    AckPacket,
     EndSession,
 }
 RequestGameStart :: struct {
@@ -42,9 +42,7 @@ SendInput :: struct {
     input:gk.Input,
 }
 
-AckInput :: struct {
-    input:gk.Input,
-} // todo see what we need to send with the acc
+AckPacket :: struct {} // todo see what we need to send with the acc
 
 EndSession :: struct {}
 
@@ -56,7 +54,7 @@ LobbyCreateError :: enum {
 	SocketBindErr,
 	FailedToMakeReliableUdp,
 }
-
+MESSAGE_VERSION :: 0
 MAX_ROLLBACK_WINDOW :: 15
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 SessionMannager :: struct {
@@ -100,24 +98,28 @@ make_session :: proc(
         thread=nil,
     }
     //todo do I put this here or in the old spot
-   	thread := thread.create_and_start_with_poly_data(mannager,recv_input_network)
+   	thread := thread.create_and_start_with_poly_data(&mannager,recv_network_loop)
     mannager.thread = thread
     return mannager, nil
 }
 
 //this should be in another thread
 recv_network_loop :: proc(mannager:^SessionMannager) {
-	context.logger = g_context.logger
+	// context.logger = g_context.logger
 	// make this not fixed
     log.debug("started listening for messages")
     for mannager.should_run {
-	    buffer := [150]u8{}
-	    net.recv_udp(mannager.socket,buffer[:])
-
+        msg,err  := recv_packet(mannager.udp)
+        if err != nil {
+            log.warn(err)
+            //todo just skip for now
+            continue
+        }
 		// remove me we want to make our own queue
-	    msg:NetworkMessage = {}
-		err := cbor.unmarshal_from_bytes(buffer[:],&msg)
-		switch state in msg.message_type {
+	    // msg:NetworkMessage = {}
+		// err := cbor.unmarshal_from_bytes(buffer[:],&msg.?)
+
+		switch state in msg.?.message_type {
 		//TODO game start not working of we packet loss
 		case RequestGameStart:
             log.debug("connecting")
@@ -132,7 +134,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
             }
             log.debug(send_msg)
 
-            send_message(mannager.udp,send_msg)
+            send_message(&mannager.udp,send_msg,-1)
 		case AcceptGameStart:
 			g.game_run = true
 			remote_now := state.now
@@ -148,7 +150,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			log.debug(remote_now)
             log.debug(send_msg)
             g.start_time = start_time
-            send_message(mannager.udp,send_msg)
+            send_message(&mannager.udp,send_msg,-1)
 		case SetStartTime:
 			g.game_run = true
 			g.start_time = state.start_time
@@ -156,25 +158,20 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			// g.game_run = true
 		case SendInput:
 			input:=gk.InputWithFrame {
-                frame=msg.frame,
+                frame=msg.?.frame,
                 input=state.input,
             }
-            utils.push(&mannager.rcvd_inputs.inner,input)
+            utils.push(&mannager.remote_input_queue.inner,input)
             //sent acc
-            send_message(mannager.udp,NetworkMessage {
+            send_message(&mannager.udp,NetworkMessage {
            		packet_version =0,
-           		frame=msg.frame,
-            	message_type=AckInput{
-                  input=state.input,
-                },
-            })
-		case AckInput:
+           		frame=msg.?.frame,
+            	message_type=AckPacket{},
+            },msg.?.frame)
+		case AckPacket:
 		    // if
-		input_ack := utils.get_at_frame_prt(&mannager.sent_inputs, msg.frame)
-			if state.input == input_ack.input {
-			    input_ack.acked = true
-			}
-				//conform input
+			ack_msg(&mannager.udp,msg.?.frame)
+			//conform input
 		case EndSession:
 		    log.debug("end session")
         }

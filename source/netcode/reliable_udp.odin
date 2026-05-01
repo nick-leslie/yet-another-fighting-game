@@ -71,17 +71,17 @@ make_reliable_mannager :: proc(
 }
 
 
-send_message :: proc(mannager:ReliableUdpMannager($T), packet:T,tick:int) {
+send_message :: proc(mannager:^ReliableUdpMannager($T), packet:T,tick:int) -> (int,net.UDP_Send_Error) {
     raw_packet := mannager.serlize_packet(packet)
     if len(raw_packet) < 0{
         //todo return error
-        return
+        return 0,nil
     }
     bytes,net_err := net.send_udp(mannager.socket,raw_packet,mannager.send_endpoint)
     if net_err == net.UDP_Send_Error.None {
         return bytes,nil
     }
-    old_packet:=utils.insert_at_frame(mannager.sent_packets,AckWrapper {
+    old_packet:=utils.insert_at_frame(&mannager.sent_packets,AckWrapper(T) {
         packet=packet,
         tick=tick,
         acked=false,
@@ -90,13 +90,19 @@ send_message :: proc(mannager:ReliableUdpMannager($T), packet:T,tick:int) {
     return bytes,net_err
 }
 
-recv_packet :: proc(mannager:ReliableUdpMannager($T),tick:int) -> (T,net_err) {
-    raw_packet,net_err := net.recv_udp(mannager.socket)
-    if net_err != net.UDP_Send_Error.None {
+recv_packet :: proc(mannager:ReliableUdpMannager($T)) -> (Maybe(T),net.UDP_Recv_Error) {
+    buffer := [300]u8{}
+    bytes_rcved,_,net_err := net.recv_udp(mannager.socket,buffer[:])
+    if net_err != net.UDP_Recv_Error.None && bytes_rcved > 0 {
         return nil,net_err
     }
-    packet := mannager.deserlize_packet(raw_packet)
+    packet := mannager.deserlize_packet(buffer[:])
     return packet,net_err
+}
+
+ack_msg :: proc(mannager:^ReliableUdpMannager($T),tick:int) {
+    packet := utils.get_at_frame_prt(&mannager.sent_packets,tick)
+    packet.acked = true
 }
 
 resend_messages :: proc(mannager:ReliableUdpMannager($T),tick:int) {

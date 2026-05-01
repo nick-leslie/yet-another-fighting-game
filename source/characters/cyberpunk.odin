@@ -785,7 +785,7 @@ cyberpunk_pattern_jump_punch :: proc(char:^gk.CharecterBase(Charecter),index:int
 		air_only=true,
 	}
 	pattern3 := gk.Pattern {
-		inputs      = {gk.Input{dir = gk.Direction.Back, attack = {gk.Button.Medium,nil,nil,nil,nil}}},
+		inputs      = {gk.Input{dir = gk.Direction.Back, attack =  {gk.Button.Medium,nil,nil,nil,nil}}},
 		pritority   = 1,
 		state_index = index,
 		air_ok=true,

@@ -62,7 +62,7 @@ NetworkMannager :: struct {
     //todo remove me we want to decouple this
     // could these be linked lists
     //todo addapt these to be for all messages
-    rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+    rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
     sent_inputs:utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,AckedInput),
     endpoint:net.Endpoint,
     other_player_connected:bool,
@@ -98,7 +98,7 @@ make_network_mannager :: proc(port:int,other_ip:string,other_port:int,allocator:
     	socket = udp_socket,
     	address = addr,
      	port = port,
-     	rcvd_inputs = utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame) {},
+     	rcvd_inputs = utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame) {},
      	sent_inputs = utils.FrameTrackedBuffer(MAX_NETWORK_WINDOW,AckedInput) {},
         endpoint=net.Endpoint {
             address = other_addr,
@@ -199,7 +199,7 @@ recv_input_network :: proc(mannager:^NetworkMannager) {
 			log.debug(state.start_time)
 			// g.game_run = true
 		case SendInput:
-			input:=InputWithFrame {
+			input:=gk.InputWithFrame {
                 frame=msg.frame,
                 input=state.input,
             }
