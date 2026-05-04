@@ -4,6 +4,7 @@ import gk "game_kernel"
 import rl "vendor:raylib"
 import "./utils"
 @(require) import "core:log"
+import "./netcode"
 
 
 
@@ -54,7 +55,7 @@ InputMannager :: struct {
 	input_buffer: utils.FrameTrackedBuffer(gk.INPUT_BUFFER_LENGTH,gk.InputWithFrame),
 	remote_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
 	last_input: gk.InputWithFrame,
-	network_mannager_ptr:^NetworkMannager,
+	network_mannager_ptr:^SessionMannager,
 	remote:bool,
 	inRemapMode:Maybe(^rl.KeyboardKey), //
 }
@@ -193,8 +194,8 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
         //predicting code
-        input_queue := &mannager.network_mannager_ptr.rcvd_inputs
-        length := utils.ring_len(input_queue)
+        input_queue := mannager.remote_inputs
+        length := utils.ring_len(&input_queue)
         if length <= 0 {
             log.debug("predicting")
             // assert(false,"predciting")
@@ -209,7 +210,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
             return 0
         }
-        front_ptr := utils.ring_peek(input_queue)
+        front_ptr := utils.ring_peek(&input_queue)
         // we keep peeking
         earlyest_frame := front_ptr.frame
         // drain if if we are behind
@@ -225,7 +226,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             if prediction.input == front_ptr.input {
             	log.debug("correct prediction")
 
-             	input := utils.ring_pop(input_queue)
+             	input := utils.ring_pop(&input_queue)
                 utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
                 // our prediction was right no need to rollback
             } else {
@@ -234,7 +235,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
                 log.debug(front_ptr)
                 // assert(false,"rollback")
 
-               	input := utils.ring_pop(input_queue)
+               	input := utils.ring_pop(&input_queue)
                 //predict
                 if input.frame < earlyest_frame {
                     earlyest_frame=input.frame
@@ -243,7 +244,7 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
                 //insert a prediction as well
                 log.debug(input.frame)
             }
-            front_ptr = utils.ring_peek(input_queue)
+            front_ptr = utils.ring_peek(&input_queue)
             // return input.frame
         }
         if earlyest_frame != frame {
@@ -258,13 +259,21 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
             return 0
         }
-        msg := utils.ring_pop(input_queue)
+        msg := utils.ring_pop(&input_queue)
         utils.insert_at_frame(&mannager.input_buffer,msg,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
 
-        if mannager.remote == false && g.network_mannager.should_run == true {
-            size,err := send_input(mannager.network_mannager_ptr,input,frame,mannager.delay)
+        if mannager.remote == false && mannager.network_mannager_ptr.should_run == true {
+            size,err := netcode.send_message(
+                &mannager.network_mannager_ptr.udp,
+                NetworkMessage {
+                    packet_version= 0,
+                    frame=frame+mannager.delay,
+                    message_type=SendInput{
+                        input=input,
+                    },
+                },frame+mannager.delay)
 
             if err != nil {
                 log.debug(size)

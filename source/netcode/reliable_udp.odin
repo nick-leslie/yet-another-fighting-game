@@ -90,17 +90,18 @@ send_message :: proc(mannager:^ReliableUdpMannager($T), packet:T,tick:int) -> (i
     return bytes,net_err
 }
 
-recv_packet :: proc(mannager:ReliableUdpMannager($T)) -> (T,net.UDP_Recv_Error) {
+recv_packet :: proc(mannager:ReliableUdpMannager($T),packet_write:^T) -> net.UDP_Recv_Error {
     buffer := [300]u8{}
     bytes_rcved,_,net_err := net.recv_udp(mannager.socket,buffer[:])
     if net_err != net.UDP_Recv_Error.None && bytes_rcved > 0 {
-        return NetworkMessage {},net_err
+        return net_err
     }
     packet,err := mannager.deserlize_packet(buffer[:])
     if err {
-        return NetworkMessage {},net_err
+        return net_err
     }
-    return packet,net_err
+    packet_write^ = packet
+    return net_err
 }
 
 ack_msg :: proc(mannager:^ReliableUdpMannager($T),tick:int) {
@@ -108,16 +109,23 @@ ack_msg :: proc(mannager:^ReliableUdpMannager($T),tick:int) {
     packet.acked = true
 }
 
-resend_messages :: proc(mannager:ReliableUdpMannager($T),tick:int) {
+resend_messages :: proc(mannager:^ReliableUdpMannager($T),tick:int) -> (int) {
+    total_bytes_written :=0
     for i := 0; i < len(mannager.sent_packets.buffer); i+=1 {
-        packet := &mannager.sent_packets.buffer[i]
+        packet := mannager.sent_packets.buffer[i]
         if !packet.acked && tick - packet.tick > mannager.max_before_resend {
 
-            net_bytes_written,net_err := send_messsage(mannager, packet.packet,packet.tick)
+            net_bytes_written,net_err := send_message(mannager, packet.packet,packet.tick)
             if net_err != nil {
-                return net_bytes_written,net_err
+                log.warn(net_err)
+                when ODIN_DEBUG {
+                    panic("we had a netcode err in resend") // temp
+                }
+                continue
+                // return net_bytes_written,net_err
             }
             total_bytes_written+= net_bytes_written
         }
     }
+    return total_bytes_written
 }

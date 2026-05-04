@@ -41,7 +41,6 @@ import chars "./characters"
 import "core:os"
 import "core:time"
 import char "./characters"
-import "./netcode"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -49,7 +48,6 @@ USE_PROFILING :: #config(USE_PROFILING, false)
 
 
 PIXEL_WINDOW_HEIGHT :: 180
-MAX_ROLLBACK_WINDOW :: 15
 
 
 // do we want this to be a union
@@ -84,8 +82,7 @@ Game_Memory :: struct {
 	rollback_state: RollbackMannager(char.Charecter),
 	p1_input_mannager:InputMannager,
 	p2_input_mannager:InputMannager,
-	network_mannager:NetworkMannager,
-	network_session:netcode.SessionMannager,
+	network_session:SessionMannager,
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
@@ -220,7 +217,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
    	gk.world_tic(world,p1_input,p2_input,frame)
    	gk.world_physics_tic(world)
    	save_current_world_state(&g.rollback_state,world^)
-    resend_packets(&g.network_mannager,frame) // is here the right place for it
+    // resend_packets(&g.network_mannager,frame) // is here the right place for it
    	g.frame +=1
 }
 
@@ -358,13 +355,13 @@ game_init :: proc() {
 		p1_input_mannager=InputMannager {
             controls=p1_controls,
             remote = false,
-            network_mannager_ptr = &g.network_mannager,
+            network_mannager_ptr = &g.network_session,
             delay = 0,
 		},
 		p2_input_mannager=InputMannager {
             controls=p2_controls,
             remote = false,
-            network_mannager_ptr = &g.network_mannager,
+            network_mannager_ptr = &g.network_session,
             delay = 0,
 		},
 		// model_tmp=rl.LoadModel("assets/tmp/test.glb"),
@@ -390,7 +387,7 @@ game_init :: proc() {
 		}
 	}
 	// network_mannager,err := make_network_mannager(bind_port,"127.0.0.1",target_port,arena_alocator)
-	session,session_err := netcode.make_session(bind_port,"127.0.0.1",target_port,&g.p2_input_mannager.remote_inputs,arena_alocator)
+	session,session_err := make_session(bind_port,"127.0.0.1",target_port,&g.p2_input_mannager.remote_inputs,arena_alocator)
 	// log.debug(network_mannager)
 	if session == nil || session_err != nil {
 		log.debug("failed to connect")
@@ -403,6 +400,7 @@ game_init :: proc() {
 	// g.network_mannager=network_mannager.?
 	g.network_session=session.?
 	log.debug(session)
+	start_network_loop(&g.network_session)
 	// last_world_state=gk.serlize_world(g.world)
 	// setup the inital world state
 	g.rollback_state = create_new_rollback_queue(g.world,&g.p1_input_mannager,&g.p2_input_mannager)
@@ -433,7 +431,7 @@ game_shutdown :: proc() {
 	rl.UnloadModel(g.model_tmp)
 	free(g.clay_arena.memory) // we may want to put this in its own arena
 	delete(g.fonts)
-	destory_lobby(&g.network_mannager)
+	// destory_lobby(&g.network_mannager)
 	free_rollback_state_queue(&g.rollback_state)
 	vmem.arena_destroy(&g.arena)
 	free(g)

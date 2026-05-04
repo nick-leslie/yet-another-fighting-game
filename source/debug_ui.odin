@@ -128,10 +128,10 @@ network_mannagment_ui :: proc() {
 				log.debug("connect")
 				netcode.send_message(
 				    &g.network_session.udp,
-					netcode.NetworkMessage {
-						packet_version = netcode.MESSAGE_VERSION,
+					NetworkMessage {
+						packet_version = MESSAGE_VERSION,
 						frame = -1,
-						message_type = netcode.RequestGameStart {
+						message_type = RequestGameStart {
 							character = 0,
 							now = now,
 						},

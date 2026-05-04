@@ -1,14 +1,14 @@
-package netcode
+package game
 
 @(require)import "core:net"
 import "core:log"
 import "core:time"
-import gk "../game_kernel"
-import "../utils"
+import gk "./game_kernel"
+import "./utils"
 import "core:thread"
 import "base:runtime"
 import "core:encoding/cbor"
-
+import "./netcode"
 NetworkMessage :: struct {
     packet_version:u8,
     frame:int,
@@ -58,9 +58,7 @@ MESSAGE_VERSION :: 0
 MAX_ROLLBACK_WINDOW :: 15
 MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 SessionMannager :: struct {
-    udp:ReliableUdpMannager(NetworkMessage),
-    // move below into the input section
-    // rcvd_inputs:utils.RingBuffer(MAX_NETWORK_WINDOW,InputWithFrame),
+    udp:netcode.ReliableUdpMannager(NetworkMessage),
     other_player_connected:bool,
     //ptr because we dont want to  store this in the network mannager
     remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
@@ -77,7 +75,7 @@ make_session :: proc(
     remote_input_queue:^utils.RingBuffer(MAX_NETWORK_WINDOW,gk.InputWithFrame),
     allocator:runtime.Allocator,
 ) -> (Maybe(SessionMannager),LobbyCreateError) {
-    udp_mannager,err := make_reliable_mannager(
+    udp_mannager,err := netcode.make_reliable_mannager(
         NetworkMessage,
         bind_port,
         target_ip,
@@ -97,10 +95,12 @@ make_session :: proc(
         game_start_sent_at=time.now(),
         thread=nil,
     }
-    //todo do I put this here or in the old spot
-   	thread := thread.create_and_start_with_poly_data(&mannager,recv_network_loop)
-    mannager.thread = thread
     return mannager, nil
+}
+//we put this here so we dont get decay of a stack pointer.
+start_network_loop :: proc(mannager:^SessionMannager) {
+   	thread := thread.create_and_start_with_poly_data(mannager,recv_network_loop)
+    mannager.thread = thread
 }
 
 //this should be in another thread
@@ -109,7 +109,8 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 	// make this not fixed
     log.debug("started listening for messages")
     for mannager.should_run {
-        msg,err  := recv_packet(mannager.udp)
+        msg:= NetworkMessage {}
+        err  := netcode.recv_packet(mannager.udp,&msg)
         if err != nil {
             log.warn(err)
             //todo just skip for now
@@ -134,7 +135,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
             }
             log.debug(send_msg)
 
-            send_message(&mannager.udp,send_msg,-1)
+            netcode.send_message(&mannager.udp,send_msg,-1)
 		case AcceptGameStart:
 			// g.game_run = true
 			remote_now := state.now
@@ -150,7 +151,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			log.debug(remote_now)
             log.debug(send_msg)
             // g.start_time = start_time
-            send_message(&mannager.udp,send_msg,-1)
+            netcode.send_message(&mannager.udp,send_msg,-1)
 		case SetStartTime:
 			// g.game_run = true
 			// g.start_time = state.start_time
@@ -163,14 +164,14 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
             }
             utils.push(&mannager.remote_input_queue.inner,input)
             //sent acc
-            send_message(&mannager.udp,NetworkMessage {
+            netcode.send_message(&mannager.udp,NetworkMessage {
            		packet_version =0,
            		frame=msg.frame,
             	message_type=AckPacket{},
             },msg.frame)
 		case AckPacket:
 		    // if
-			ack_msg(&mannager.udp,msg.frame)
+			netcode.ack_msg(&mannager.udp,msg.frame)
 			//conform input
 		case EndSession:
 		    log.debug("end session")
@@ -178,7 +179,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 	    if err != nil {
 	   		continue // love the continue here
 	    }
-
+		netcode.resend_messages(&mannager.udp,g.frame)
 		free_all(context.temp_allocator)
     }
 }
