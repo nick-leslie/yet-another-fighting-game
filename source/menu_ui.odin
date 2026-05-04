@@ -4,7 +4,7 @@ import clay "../libs/clay-odin"
 
 
 ControllerUiElement :: struct {
-    on_click: Maybe(proc()),
+    on_click: proc(),
     //do we put an action here
     up:int,
     down:int,

@@ -90,7 +90,7 @@ make_session :: proc(
         return nil,LobbyCreateError.FailedToMakeReliableUdp
     }
     mannager := SessionMannager {
-        udp=udp_mannager.(ReliableUdpMannager(NetworkMessage)),
+        udp=udp_mannager,
         remote_input_queue=remote_input_queue,
         other_player_connected=false,
         should_run=false,
@@ -119,7 +119,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 	    // msg:NetworkMessage = {}
 		// err := cbor.unmarshal_from_bytes(buffer[:],&msg.?)
 
-		switch state in msg.?.message_type {
+		switch state in msg.message_type {
 		//TODO game start not working of we packet loss
 		case RequestGameStart:
             log.debug("connecting")
@@ -136,7 +136,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 
             send_message(&mannager.udp,send_msg,-1)
 		case AcceptGameStart:
-			g.game_run = true
+			// g.game_run = true
 			remote_now := state.now
    			now := time.now()
       		start_time := time.time_add(now,time.Second * 3)
@@ -149,28 +149,28 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			}
 			log.debug(remote_now)
             log.debug(send_msg)
-            g.start_time = start_time
+            // g.start_time = start_time
             send_message(&mannager.udp,send_msg,-1)
 		case SetStartTime:
-			g.game_run = true
-			g.start_time = state.start_time
+			// g.game_run = true
+			// g.start_time = state.start_time
 			log.debug(state.start_time)
 			// g.game_run = true
 		case SendInput:
 			input:=gk.InputWithFrame {
-                frame=msg.?.frame,
+                frame=msg.frame,
                 input=state.input,
             }
             utils.push(&mannager.remote_input_queue.inner,input)
             //sent acc
             send_message(&mannager.udp,NetworkMessage {
            		packet_version =0,
-           		frame=msg.?.frame,
+           		frame=msg.frame,
             	message_type=AckPacket{},
-            },msg.?.frame)
+            },msg.frame)
 		case AckPacket:
 		    // if
-			ack_msg(&mannager.udp,msg.?.frame)
+			ack_msg(&mannager.udp,msg.frame)
 			//conform input
 		case EndSession:
 		    log.debug("end session")
@@ -193,11 +193,11 @@ encode_message :: proc(msg:NetworkMessage) -> []byte {
 }
 
 
-decode_message :: proc(data:[]byte) -> Maybe(NetworkMessage) {
+decode_message :: proc(data:[]byte) -> (NetworkMessage,bool) {
     msg:NetworkMessage = {}
     err := cbor.unmarshal_from_bytes(data,&msg)
     if err != nil {
-        return nil
+        return NetworkMessage{},false
     }
-    return msg
+    return msg,true
 }
