@@ -130,13 +130,13 @@ network_mannagment_ui :: proc() {
 				    &g.network_session.udp,
 					NetworkMessage {
 						packet_version = MESSAGE_VERSION,
-						frame = -1,
+						frame = 1,
 						message_type = RequestGameStart {
 							character = 0,
 							now = now,
 						},
 					},
-					-1,
+					1,
 				)
 				// send_messsage(&g.network_mannager,NetworkMessage {
 				// 	packet_version=MESSAGE_VERSION,

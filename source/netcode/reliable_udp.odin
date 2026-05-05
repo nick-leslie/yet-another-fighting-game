@@ -102,7 +102,7 @@ recv_packet :: proc(mannager:ReliableUdpMannager($T),packet_write:^T) -> net.UDP
     }
     packet,err := mannager.deserlize_packet(buffer[:])
     if err {
-        return net_err
+        return net.UDP_Recv_Error.Unknown
     }
     packet_write^ = packet
     return net_err

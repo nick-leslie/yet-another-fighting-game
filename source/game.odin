@@ -362,7 +362,7 @@ game_init :: proc() {
 		},
 		p2_input_mannager=InputMannager {
             controls=p2_controls,
-            remote = false,
+            remote = true,
             network_mannager_ptr = &g.network_session,
             delay = 0,
 		},

@@ -109,6 +109,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 	context.logger = g_context.logger
 	// make this not fixed
     // log.debug("started listening for messages")
+    net.set_blocking(mannager.udp.socket,true)
     for mannager.should_run {
         msg:= NetworkMessage {}
         // log.debug("waiting for next message")
@@ -126,14 +127,14 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
             now := time.now()
             send_msg := NetworkMessage {
                 packet_version=MESSAGE_VERSION,
-				frame=-1,
+				frame=1,
 	            message_type=AcceptGameStart {
 					character=0,
 					now=now,
 				},
             }
             // log.debug(send_msg)
-            netcode.send_message(&mannager.udp,send_msg,-1)
+            netcode.send_message(&mannager.udp,send_msg,1)
 		case AcceptGameStart:
 		    log.debug("accepted game start")
 			g.game_run = true
@@ -142,7 +143,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
       		start_time := time.time_add(now,time.Second * 3)
             send_msg := NetworkMessage {
 			   	packet_version=MESSAGE_VERSION,
-			    frame=-1,
+			    frame=1,
 			    message_type=SetStartTime {
 					start_time=start_time,
 				},
@@ -150,7 +151,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			log.debug(remote_now)
             log.debug(send_msg)
             g.start_time = start_time
-            netcode.send_message(&mannager.udp,send_msg,-1)
+            netcode.send_message(&mannager.udp,send_msg,1)
 		case SetStartTime:
 			g.game_run = true
 			g.start_time = state.start_time
@@ -196,7 +197,7 @@ decode_message :: proc(data:[]byte) -> (NetworkMessage,bool) {
     msg:NetworkMessage = {}
     err := cbor.unmarshal_from_bytes(data,&msg)
     if err != nil {
-        return NetworkMessage{},false
+        return NetworkMessage{},true
     }
-    return msg,true
+    return msg,false
 }
