@@ -76,6 +76,8 @@ cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
 
 cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
+	//todo we can load hitboxes
+	// test := #load("/", []gk.Hit_box)
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},

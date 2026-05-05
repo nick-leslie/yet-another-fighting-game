@@ -100,30 +100,29 @@ make_session :: proc(
 //we put this here so we dont get decay of a stack pointer.
 start_network_loop :: proc(mannager:^SessionMannager) {
    	thread := thread.create_and_start_with_poly_data(mannager,recv_network_loop)
+    mannager.should_run=true
     mannager.thread = thread
 }
 
 //this should be in another thread
 recv_network_loop :: proc(mannager:^SessionMannager) {
-	// context.logger = g_context.logger
+	context.logger = g_context.logger
 	// make this not fixed
-    log.debug("started listening for messages")
+    // log.debug("started listening for messages")
     for mannager.should_run {
         msg:= NetworkMessage {}
+        // log.debug("waiting for next message")
         err  := netcode.recv_packet(mannager.udp,&msg)
         if err != nil {
             log.warn(err)
             //todo just skip for now
             continue
         }
-		// remove me we want to make our own queue
-	    // msg:NetworkMessage = {}
-		// err := cbor.unmarshal_from_bytes(buffer[:],&msg.?)
+
 
 		switch state in msg.message_type {
 		//TODO game start not working of we packet loss
 		case RequestGameStart:
-            log.debug("connecting")
             now := time.now()
             send_msg := NetworkMessage {
                 packet_version=MESSAGE_VERSION,
@@ -133,11 +132,11 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 					now=now,
 				},
             }
-            log.debug(send_msg)
-
+            // log.debug(send_msg)
             netcode.send_message(&mannager.udp,send_msg,-1)
 		case AcceptGameStart:
-			// g.game_run = true
+		    log.debug("accepted game start")
+			g.game_run = true
 			remote_now := state.now
    			now := time.now()
       		start_time := time.time_add(now,time.Second * 3)
@@ -150,13 +149,13 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 			}
 			log.debug(remote_now)
             log.debug(send_msg)
-            // g.start_time = start_time
+            g.start_time = start_time
             netcode.send_message(&mannager.udp,send_msg,-1)
 		case SetStartTime:
-			// g.game_run = true
-			// g.start_time = state.start_time
+			g.game_run = true
+			g.start_time = state.start_time
 			log.debug(state.start_time)
-			// g.game_run = true
+			g.game_run = true
 		case SendInput:
 			input:=gk.InputWithFrame {
                 frame=msg.frame,
@@ -179,7 +178,6 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
 	    if err != nil {
 	   		continue // love the continue here
 	    }
-		netcode.resend_messages(&mannager.udp,g.frame)
 		free_all(context.temp_allocator)
     }
 }

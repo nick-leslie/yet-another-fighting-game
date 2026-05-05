@@ -41,6 +41,7 @@ import chars "./characters"
 import "core:os"
 import "core:time"
 import char "./characters"
+import "./netcode"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -218,6 +219,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
    	gk.world_physics_tic(world)
    	save_current_world_state(&g.rollback_state,world^)
     // resend_packets(&g.network_mannager,frame) // is here the right place for it
+    netcode.resend_messages(&g.network_session.udp,g.frame)
    	g.frame +=1
 }
 

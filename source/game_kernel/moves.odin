@@ -5,6 +5,8 @@ import psy "../physics"
 State :: struct($T:typeid,$CU:typeid) {
 	name:		   string,
 	frames:        [dynamic]Frame(T,CU),
+	moveboxs:      [dynamic]MoveBox,
+	//todo we could speed this ub
 	hit_boxes: 	   [dynamic]Hit_box,
 	hard_knockdown:bool,
 	soft_knockdown:bool,
@@ -17,6 +19,8 @@ State :: struct($T:typeid,$CU:typeid) {
 	blockstun:     u32,
 	damage:        u32,
 }
+
+
 //this is cringe see if we can fix
 Frame :: struct($T:typeid,$CU:typeid) {
 	frame_type:    FrameType,
@@ -28,6 +32,22 @@ Frame :: struct($T:typeid,$CU:typeid) {
 	check_exit:    proc(self: ^T, frame: int) -> bool, // takes char pointer and proposed state
 }
 
+//This would improve cache locality by colocating hit and hurbox.
+// and it would allow for a more packed file
+MoveBox :: struct {
+    type: enum {
+        HitBox,
+        HurtBox,
+        GrabBox,
+    },
+    box:psy.FixedBox,
+	hitKnockback:     psy.Vec2Fixed, // this is applied to other
+	hitPushback:      psy.Vec2Fixed, // this is applied to self
+	blockKnockback:   psy.Vec2Fixed,
+	blockPushback:    psy.Vec2Fixed,
+	attackDir:        AttackDir,
+}
+	// todo properties
 //for multi hits spawn a new hitbox
 Hit_box :: struct {
     box:psy.FixedBox,

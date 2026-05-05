@@ -52,8 +52,7 @@ make_reliable_mannager :: proc(
     	log.error("failed to bind to socket")
     	return ReliableUdpMannager(T){},UdpCreateError.SocketBindErr
     }
-
-    return ReliableUdpMannager(T) {
+    udp := ReliableUdpMannager(T) {
         bind_endpoint={
             address=bind_addr,
             port=bind_port,
@@ -67,7 +66,11 @@ make_reliable_mannager :: proc(
         max_before_resend=max_before_resend,
         serlize_packet=serlize_packet,
         deserlize_packet=deserlize_packet,
-    },nil
+    }
+    for &packets in udp.sent_packets.inner.buffer {
+        packets.acked=true
+    }
+    return udp,nil
 }
 
 
@@ -75,11 +78,12 @@ send_message :: proc(mannager:^ReliableUdpMannager($T), packet:T,tick:int) -> (i
     raw_packet := mannager.serlize_packet(packet)
     if len(raw_packet) < 0{
         //todo return error
+        log.error("we didnt serlize correctly")
         return 0,nil
     }
     bytes,net_err := net.send_udp(mannager.socket,raw_packet,mannager.send_endpoint)
-    if net_err == net.UDP_Send_Error.None {
-        return bytes,nil
+    if net_err != net.UDP_Send_Error.None {
+        return bytes,net_err
     }
     old_packet:=utils.insert_at_frame(&mannager.sent_packets,AckWrapper(T) {
         packet=packet,
