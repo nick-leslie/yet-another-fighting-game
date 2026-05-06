@@ -114,7 +114,7 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
         msg:= NetworkMessage {}
         // log.debug("waiting for next message")
         err  := netcode.recv_packet(mannager.udp,&msg)
-        if err != nil {
+        if err != nil { 
             log.warn(err)
             //todo just skip for now
             continue
@@ -162,6 +162,8 @@ recv_network_loop :: proc(mannager:^SessionMannager) {
                 frame=msg.frame,
                 input=state.input,
             }
+            log.debug(input)
+            // log.debug("remote read index",mannager.remote_input_queue.read_index,"write index",mannager.remote_input_queue.inner.index)
             utils.push(&mannager.remote_input_queue.inner,input)
             //sent acc
             netcode.send_message(&mannager.udp,NetworkMessage {

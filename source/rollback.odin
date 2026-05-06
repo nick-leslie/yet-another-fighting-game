@@ -109,7 +109,7 @@ debug_rollback :: proc(rollback_mannager:^RollbackMannager($CU),world:^gk.World(
 
 //this shit is all cringe rewrite
 resimulate_rest :: proc(rollback_mannager:^RollbackMannager($CU),world:^gk.World(CU),go_to:int) {
-    for g.rollback_state.current_frame != go_to {
+    for g.rollback_state.current_frame < go_to {
     	run_frame(rollback_mannager,world)
     }
 }

@@ -9,49 +9,6 @@ package game
 // import "core:encoding/cbor"
 // import "./utils"
 
-// MESSAGE_VERSION :: 0
-// NetworkMessage :: struct {
-//     packet_version:u8,
-//     frame:int,
-//     message_type:MessageType,
-//     // game_check_sum:u32, // todo check me
-// }
-
-// MessageType :: union #no_nil {
-//     RequestGameStart,
-//     AcceptGameStart,
-//     SetStartTime,
-//     SendInput,
-//     AckInput,
-//     EndSession,
-// }
-// RequestGameStart :: struct {
-//     character:u8,
-//     now:time.Time,
-// }
-
-// AcceptGameStart :: struct {
-// 	character:u8,
-// 	now:time.Time,
-// }
-
-// SetStartTime :: struct {
-// 	start_time:time.Time,
-// }
-
-// SendInput :: struct {
-//     input:gk.Input,
-// }
-// AckInput :: struct {
-//     input:gk.Input,
-// } // todo see what we need to send with the acc
-
-// EndSession :: struct {}
-
-// AckedInput :: struct {
-//     acked:bool,
-//     using inner:InputWithFrame,
-// }
 
 // MAX_NETWORK_WINDOW :: MAX_ROLLBACK_WINDOW * 2 // we should figure this out
 // NetworkMannager :: struct {

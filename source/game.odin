@@ -193,12 +193,18 @@ draw_main_menu :: proc(screen:^MainMenu) {
 
 
 run_game_sim :: proc(world:^gk.World($C),frame:int) {
-    rollback_to_p1 := push_to_input_stack(&g.p1_input_mannager,frame,world.p1.serlized_state.p1_side)
-    rollback_to_p2 := push_to_input_stack(&g.p2_input_mannager,frame,world.p2.serlized_state.p1_side)
-    if rollback_to_p1 > 0 {
+    rollback_to_p1 := push_to_input_buffer(&g.p1_input_mannager,frame,world.p1.serlized_state.p1_side)
+    rollback_to_p2 := push_to_input_buffer(&g.p2_input_mannager,frame,world.p2.serlized_state.p1_side)
+    log.debug(
+        "remote read index",g.p2_input_mannager.remote_inputs.read_index,
+        "write index",g.p2_input_mannager.remote_inputs.inner.index)
+
+    if rollback_to_p1 != -1 {
+        log.debug("p1 rolling back")
         rollback_correct_frame(&g.rollback_state,world,rollback_to_p1)
     }
-    if rollback_to_p2 > 0 {
+    if rollback_to_p1 != -1 {
+        log.debug("p2 rolling back")
             //we have a rollback issue where we are not pusing fully to buffer
     	    // assert(false,"we have a rollback")
         rollback_correct_frame(&g.rollback_state,world,rollback_to_p2)
@@ -356,7 +362,7 @@ game_init :: proc() {
 		// network_mannager=network_mannager.?,
 		p1_input_mannager=InputMannager {
             controls=p1_controls,
-            remote = false,
+        remote = false,
             network_mannager_ptr = &g.network_session,
             delay = 0,
 		},

@@ -191,76 +191,9 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
 
 
 
-push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
+push_to_input_buffer :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> int {
     if mannager.remote == true {
-        //predicting code
-        input_queue := mannager.remote_inputs
-        length := utils.ring_len(&input_queue)
-        if length <= 0 {
-            log.debug("predicting")
-            // assert(false,"predciting")
-            //predict
-
-            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return 0
-        }
-        if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
-            //prediction
-            // this is bad we need to work on it
-            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return 0
-        }
-        front_ptr := utils.ring_peek(&input_queue)
-        // we keep peeking
-        earlyest_frame := front_ptr.frame
-        // drain if if we are behind
-        for frame > front_ptr.frame  && input_queue.read_index+1 != input_queue.inner.index{
-            // rollback!!!!!!
-            // go back and insert the frame at the right pos.
-            // then resimulate
-            // check if predictions are correct
-            if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
-                break
-            }
-            prediction := utils.get_at_frame(mannager.input_buffer,front_ptr.frame)
-            if prediction.input == front_ptr.input {
-            	log.debug("correct prediction")
-
-             	input := utils.ring_pop(&input_queue)
-                utils.insert_at_frame(&mannager.input_buffer,input,front_ptr.frame)
-                // our prediction was right no need to rollback
-            } else {
-                log.debug("rollbackkkkkk")
-                log.debug(frame)
-                log.debug(front_ptr)
-                // assert(false,"rollback")
-
-               	input := utils.ring_pop(&input_queue)
-                //predict
-                if input.frame < earlyest_frame {
-                    earlyest_frame=input.frame
-                }
-                utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
-                //insert a prediction as well
-                log.debug(input.frame)
-            }
-            front_ptr = utils.ring_peek(&input_queue)
-            // return input.frame
-        }
-        if earlyest_frame != frame {
-            log.debug(earlyest_frame)
-            return earlyest_frame
-        }
-        if frame < front_ptr.frame {
-            // missing inputs we are predciting ask for input back
-            log.debug("predicting because of missing")
-            //predict
-            // todo this may be wrong
-            utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
-            return 0
-        }
-        msg := utils.ring_pop(&input_queue)
-        utils.insert_at_frame(&mannager.input_buffer,msg,frame)
+        return remote_rollback_and_prediction(mannager,frame)
     } else {
         input := poll_charecter_input(mannager.controls,p1_side)
 
@@ -285,7 +218,80 @@ push_to_input_stack :: proc(mannager:^InputMannager,frame:int,p1_side:bool) -> i
             input,
         },frame+mannager.delay)
     }
-    return 0
+    return -1
+}
+
+remote_rollback_and_prediction :: proc(mannager:^InputMannager,frame:int) -> int {
+    log.debug("-------------- start of rollback")
+    //predicting code
+    // this needs to be a prtr that way the changes are percisted
+    input_queue := &mannager.remote_inputs
+    log.debug("read index",input_queue.read_index,"write index",input_queue.inner.index)
+    length := utils.ring_len(input_queue)
+    //if we have nothing in the queue say we dont need to rollback
+    if length <= 0 {
+        log.debug("predicting")
+        utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+        return -1
+    }
+    //if the reader is too close to the writer we predict
+    if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
+        //prediction
+        // this is bad we need to work on it
+        utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+        log.debug("read index",input_queue.read_index,"write index",input_queue.inner.index)
+        return -1
+    }
+    peeked_input := utils.ring_peek(input_queue)
+    log.debug(peeked_input)
+    // we keep peeking
+    earlyest_frame := peeked_input.frame
+    // drain if if we are behind
+    for frame > peeked_input.frame  && input_queue.read_index+1 != input_queue.inner.index{
+        // rollback!!!!!!
+        // go back and insert the frame at the right pos.
+        // then resimulate
+        // check if predictions are correct
+        if input_queue.read_index+1 == input_queue.inner.index || input_queue.read_index == input_queue.inner.index{
+            break
+        }
+        prediction := utils.get_at_frame(mannager.input_buffer,peeked_input.frame)
+       	input := utils.ring_pop(input_queue)
+        log.debug("popped",input)
+        if prediction.input == peeked_input.input {
+        	// correct prediction keep draining the queue
+
+            utils.insert_at_frame(&mannager.input_buffer,input,peeked_input.frame)
+            // our prediction was right no need to rollback
+        } else {
+            // we have to rollback
+            if input.frame < earlyest_frame {
+                log.debug("updating earlyest frame to",earlyest_frame)
+                //how far we have to go back
+                earlyest_frame=input.frame
+            }
+            // insert the corrected input
+            utils.insert_at_frame(&mannager.input_buffer,input,input.frame)
+            //insert a prediction as well
+        }
+        peeked_input = utils.ring_peek(input_queue)
+        // return input.frame
+    }
+    if earlyest_frame != frame {
+        log.debug(peeked_input)
+        log.debug("rollback to ",earlyest_frame)
+        log.debug("read index",input_queue.read_index,"write index",input_queue.inner.index)
+        return earlyest_frame
+    }
+    if frame < peeked_input.frame {
+        // we are missing or packets are out of order we must predict for this frame
+        log.debug("predicting because of missing")
+        utils.insert_at_frame(&mannager.input_buffer,mannager.last_input,frame)
+        return -1
+    }
+    msg := utils.ring_pop(input_queue)
+    utils.insert_at_frame(&mannager.input_buffer,msg,frame)
+    return -1
 }
 
 insert_input_at_frame ::proc (mannager:^InputMannager,frame:int, input:gk.Input) {
