@@ -30,6 +30,7 @@ Button :: enum {
 
 Input :: struct {
     dir:Direction,
+    //todo add a negitive edge support
     attack:[5]Button,
 }
 
@@ -57,6 +58,13 @@ delete_pattern :: proc(pattern:^Pattern) {
 // seperate this out to another layer
 // gets the controls for the player that frame
 
+InputBuffer :: struct {
+    buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),
+    //this is for charge input support todo figure me out tmrw
+    current_dir:Direction,
+    frames_held_dir:int,
+    button_frames_held:[Button]int,
+}
 
 update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input),input:Input) {
 	utils.push(input_buffer,input)

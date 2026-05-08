@@ -6,8 +6,6 @@ State :: struct($T:typeid,$CU:typeid) {
 	name:		   string,
 	frames:        [dynamic]Frame(T,CU),
 	moveboxs:      [dynamic]MoveBox,
-	//todo we could speed this ub
-	hit_boxes: 	   [dynamic]Hit_box,
 	hard_knockdown:bool,
 	soft_knockdown:bool,
 	// should all this be in a seprate struct
@@ -25,7 +23,7 @@ State :: struct($T:typeid,$CU:typeid) {
 Frame :: struct($T:typeid,$CU:typeid) {
 	frame_type:    FrameType,
 	cancel_states: [dynamic]int,
-	hurtbox_list:  [dynamic]psy.FixedBox, // width height extent will be static we may want to make it an index
+	hurtbox_list:  [dynamic]int, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
 	on_frame:      proc(self: ^T,world:^World(CU)),
 	side_effect:   proc(self: T, world: World(CU),inRollback:bool),
@@ -34,18 +32,9 @@ Frame :: struct($T:typeid,$CU:typeid) {
 
 //This would improve cache locality by colocating hit and hurbox.
 // and it would allow for a more packed file
-MoveBox :: struct {
-    type: enum {
-        HitBox,
-        HurtBox,
-        GrabBox,
-    },
-    box:psy.FixedBox,
-	hitKnockback:     psy.Vec2Fixed, // this is applied to other
-	hitPushback:      psy.Vec2Fixed, // this is applied to self
-	blockKnockback:   psy.Vec2Fixed,
-	blockPushback:    psy.Vec2Fixed,
-	attackDir:        AttackDir,
+MoveBox :: union {
+    Hit_box,
+    Hurt_box,
 }
 	// todo properties
 //for multi hits spawn a new hitbox
@@ -57,6 +46,10 @@ Hit_box :: struct {
 	blockPushback:    psy.Vec2Fixed,
 	attackDir:        AttackDir,
 	// todo properties
+}
+
+Hurt_box :: struct {
+    using box:psy.FixedBox,
 }
 
 

@@ -24,8 +24,8 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
             future_frame := state.frames[i]
             if future_frame.frame_type == .Active && first_active_drew==false {
                 for j := 0; j < len(future_frame.hitbox_list); j += 1 {
-                    hitbox := state.hit_boxes[j]
-                    unfixed_box := psy.unfix_box(hitbox.box)
+                    hitbox := state.moveboxs[future_frame.hitbox_list[j]]
+                    unfixed_box := psy.unfix_box(hitbox.(gk.Hit_box).box)
               		rl.DrawCube(
              			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
              			f32(unfixed_box.extent.x),
@@ -50,8 +50,8 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
 	}
 
 
-	for &hurt_box in frame.hurtbox_list {
-        unfixed_box := psy.unfix_box(hurt_box)
+	for hurt_box_index in frame.hurtbox_list {
+        unfixed_box := psy.unfix_box(state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
 		rl.DrawCube(
 			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
 			f32(unfixed_box.extent.x),
@@ -66,8 +66,8 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
 			enity_frame := enity_state.frames[enity.current_frame]
 			entity_body := psy.unfix_body(enity.body)
 			entity_pos_vec_3 := [3]f32{f32(entity_body.position.x),f32(entity_body.position.y),10}
-			for &hurt_box in enity_frame.hurtbox_list {
-			    unfixed_box := psy.unfix_box(hurt_box)
+			for hurt_box_index in enity_frame.hurtbox_list {
+			    unfixed_box := psy.unfix_box(state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
 				rl.DrawCube(
 					entity_pos_vec_3 + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
 					f32(unfixed_box.extent.x),
@@ -76,9 +76,9 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
 					rl.BLUE,
 				)
 			}
-			for &hitbox_index in enity_frame.hitbox_list {
-				hitbox := enity_state.hit_boxes[hitbox_index]
-                unfixed_box := psy.unfix_box(hitbox.box)
+			for hitbox_index in enity_frame.hitbox_list {
+				hitbox := enity_state.moveboxs[hitbox_index]
+                unfixed_box := psy.unfix_box(hitbox.(gk.Hit_box).box)
 
 				rl.DrawCube(
 					entity_pos_vec_3 + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
@@ -97,7 +97,7 @@ charecter_draw_hit_boxes :: proc(character:gk.CharecterBase($C)) {
 	char_body := psy.unfix_body(character.body)
 	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
 	for &hitbox_index in frame.hitbox_list {
-		hitbox := state.hit_boxes[hitbox_index]
+		hitbox := state.moveboxs[hitbox_index].(gk.Hit_box)
         unfixed_box := psy.unfix_box(hitbox.box)
 
 		rl.DrawCube(

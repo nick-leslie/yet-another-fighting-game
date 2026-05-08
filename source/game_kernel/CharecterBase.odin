@@ -200,7 +200,7 @@ character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),s
 	state, frame := charecter_get_current_state_frame(self^)
 	for &hitbox_index in frame.hitbox_list {
 		//todo make me a function once we unify
-		hit_box := state.hit_boxes[hitbox_index]
+		hit_box := state.moveboxs[hitbox_index].(Hit_box)
 		hitbox_context := HitBoxCtx(CharecterBase(CU),CU) {
 			self_state         = state,
 			self               = self,
@@ -223,7 +223,7 @@ character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),s
 			enity_frame := enity_state.frames[entity.current_frame]
 			//todo sub in non jolt physics collision
 			for &hitbox_index in enity_frame.hitbox_list {
-				hit_box := enity_state.hit_boxes[hitbox_index]
+				hit_box := enity_state.moveboxs[hitbox_index].(Hit_box)
 				hitbox_context := HitBoxCtx(Entity(CU),CU) {
 					self_state = enity_state,
 					self   = self,
@@ -250,7 +250,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 	// self_buffer := hit_ctx.self_buffer
 	other_buffer := hit_ctx.other_buffer
 
-	_, frameOther := charecter_get_current_state_frame(other^)
+	stateOther, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
 
@@ -259,8 +259,9 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
 
 
-   	for &hurt_box in frameOther.hurtbox_list {
-        col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,self.body)
+   	for &hurt_box_index in frameOther.hurtbox_list {
+        hurt_box := stateOther.moveboxs[hurt_box_index].(Hurt_box)
+        col_check_res := psy.check_body_body_collsion(hurt_box.box,other.body,hit_ctx.hitbox.box,self.body)
         log.debug(col_check_res)
         if col_check_res == false{
             continue // skip to the next hurt box

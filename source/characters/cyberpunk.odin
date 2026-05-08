@@ -36,17 +36,20 @@ create_cyberpunk_charecter :: proc(pos:[4]i16,budget:i64) -> gk.CharecterBase(Ch
 			},
 		},
 	}
-	gk.initilize_charecter_memory(&charecter)
-
-	add_universal_states(&charecter)
-	cyberpunk_add_state_movement(&charecter) // the nill is tmp
-	cyberpunk_add_punch_attacks(&charecter)
-	cyberpunk_add_fireball(&charecter)
-
-	// cyberpunk_add_state_light_fireball(&charecter)
+   	gk.initilize_charecter_memory(&charecter)
+	add_charecter_states(&charecter)
 	return charecter
 }
 
+
+add_charecter_states:: proc(charecter:^gk.CharecterBase(Charecter)) {
+
+
+   	add_universal_states(charecter)
+	cyberpunk_add_state_movement(charecter) // the nill is tmp
+	cyberpunk_add_punch_attacks(charecter)
+	cyberpunk_add_fireball(charecter)
+}
 
 
 cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
@@ -78,9 +81,12 @@ cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	//todo we can load hitboxes
 	// test := #load("/", []gk.Hit_box)
+	hurt_box := gk.Hurt_box {
+	    box = psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo if should we check if grounded?
@@ -95,6 +101,7 @@ cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="neutral",
 		frames = {zero_frame},
+		moveboxs={hurt_box},
 	}
 	append(&char.states, move)
 	index := len(char.states)-1
@@ -102,9 +109,12 @@ cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 }
 cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
+	hurt_box := gk.Hurt_box {
+	    box= psy.box_init({0,0,0,0},{5,0,5,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,5,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo if should we check if grounded?
@@ -126,9 +136,12 @@ cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 }
 cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
+	hurt_box := gk.Hurt_box {
+	    box = psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			if char.p1_side do char.body.velocity.x = char.move_speed
@@ -139,6 +152,7 @@ cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="forward",
 		frames = {zero_frame},
+		moveboxs={hurt_box},
 	}
 	log.debug("in setting up physics")
 	append(&char.states, move)
@@ -149,10 +163,12 @@ cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 
 cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
-
+	hurt_box := gk.Hurt_box {
+	    box = psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
     		if char.p1_side do char.body.velocity.x = psy.invert_fixed(char.move_speed)
@@ -163,6 +179,7 @@ cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="backward",
 		frames = {zero_frame},
+		moveboxs={hurt_box},
 	}
 
 	append(&char.states, move)
@@ -171,9 +188,12 @@ cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 }
 cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	context.allocator = vmem.arena_allocator(&char.arena)
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		    char.jump_requested = true
@@ -183,7 +203,7 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -192,6 +212,7 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="nutral jump",
 		frames = {zero_frame, one_frame},
+		moveboxs={hurt_box},
 	}
 
 	append(&char.states, move)
@@ -200,10 +221,12 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 }
 cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	context.allocator = vmem.arena_allocator(&char.arena)
-
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
@@ -215,7 +238,7 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -224,6 +247,7 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="jump forward",
 		frames = {zero_frame,one_frame},
+		moveboxs={hurt_box},
 	}
 
 	append(&char.states, move)
@@ -232,10 +256,12 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 }
 cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 	context.allocator = vmem.arena_allocator(&char.arena)
-
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	zero_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			char.jump_requested = true
@@ -247,9 +273,7 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int 
 	}
 	one_frame := gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Active,
-		hurtbox_list = {
-		    psy.box_init({0,0,0,0},{5,0,10,0}),
-		},
+		hurtbox_list = {0},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 		},
@@ -259,6 +283,7 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int 
 		name="jump back",
 		// model_ptr=model_prt,
 		// animation_ptr=animation_ptr,
+		moveboxs={hurt_box},
 		frames = {zero_frame, one_frame},
 	}
 	append(&char.states, move)
@@ -364,7 +389,7 @@ cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:
 
 
 cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
-    index := cyberpunk_add_stand_lunch(char)
+    index := cyberpunk_add_stand_light(char)
     cyberpunk_pattern_stand_light(char,index)
 
     index = cyberpunk_add_crouch_light(char)
@@ -379,7 +404,7 @@ cyberpunk_add_punch_attacks :: proc(char:^gk.CharecterBase(Charecter)) {
     cyberpunk_pattern_jump_punch(char,index)
 }
 
-cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_add_stand_light :: proc (char:^gk.CharecterBase(Charecter)) -> int{
    	context.allocator = vmem.arena_allocator(&char.arena)
 
 	hit_box := gk.Hit_box {
@@ -390,9 +415,12 @@ cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
            hitKnockback = psy.vec2_init({1,5,0,0}),
            blockPushback = psy.vec2_init({12,0,0,0}),
 	}
+	hurt_box := gk.Hurt_box{
+	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="stand light attack",
-		hit_boxes = {hit_box},
+		moveboxs = {hit_box,hurt_box},
 		damage = 10,
 		frames    = {},
 		isAttack  = true,
@@ -404,7 +432,7 @@ cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 	append(&move.frames,
     	gk.Frame(gk.CharecterBase(Charecter),Charecter) {
     		frame_type = gk.FrameType.Startup,
-    		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+    		hurtbox_list = {1},
     		hitbox_list = {},
     		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
     		check_exit = no_cancel_accept_install, // todo change me
@@ -416,7 +444,7 @@ cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Active,
 			//
-			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+			hurtbox_list = {1},
 			hitbox_list = {0},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			},
@@ -429,7 +457,7 @@ cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Recovery,
 			//
-			hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+			hurtbox_list = {1},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 			check_exit = cancelable_on_hit_or_block, // todo change me
@@ -439,7 +467,7 @@ cyberpunk_add_stand_lunch :: proc (char:^gk.CharecterBase(Charecter)) -> int{
 	gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Recovery,
 		//
-		hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+		hurtbox_list = {1},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 		check_exit = any_cancel, // todo change me
@@ -459,10 +487,12 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
            hitKnockback = psy.vec2_init({-1,0,0,0}),
            blockPushback = psy.vec2_init({1,0,0,0}),
 	}
-	hurt_box := psy.box_init({0,0,0,0},{5,0,5,0})
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,5,0}),
+	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="crouch light attack",
-		hit_boxes = {hit_box},
+		moveboxs = {hit_box,hurt_box},
 		damage = 10,
 		air_ok=false,
 		frames    = {},
@@ -475,7 +505,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	append(&move.frames,
     	gk.Frame(gk.CharecterBase(Charecter),Charecter) {
     		frame_type = gk.FrameType.Startup,
-    		hurtbox_list = {hurt_box},
+    		hurtbox_list = {1},
     		hitbox_list = {},
     		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
     		check_exit = no_cancel_accept_install, // todo change me
@@ -487,7 +517,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Active,
 			//
-			hurtbox_list = {hurt_box},
+			hurtbox_list = {1},
 			hitbox_list = {0},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			},
@@ -500,7 +530,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Recovery,
 			//
-			hurtbox_list = {hurt_box},
+			hurtbox_list = {1},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 			check_exit = cancelable_on_hit_or_block, // todo change me
@@ -510,7 +540,7 @@ cyberpunk_add_crouch_light::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 		frame_type = gk.FrameType.Recovery,
 		//
-		hurtbox_list = {hurt_box},
+		hurtbox_list = {1},
 		hitbox_list = {},
 		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 		check_exit = any_cancel, // todo change me
@@ -533,10 +563,12 @@ cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
            hitKnockback = psy.vec2_init({-1,0,0,0}),
            blockPushback = psy.vec2_init({1,0,0,0}),
 	}
-	hurt_box := psy.box_init({0,0,0,0},{5,0,5,0})
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,5,0}),
+	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="crouch light attack",
-		hit_boxes = {hit_box},
+		moveboxs = {hit_box,hurt_box},
 		damage = 10,
 		air_ok=false,
 		hard_knockdown=true,
@@ -549,7 +581,7 @@ cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	for i := 0; i < 14; i += 1 {
 	    append(&move.frames,gk.Frame(gk.CharecterBase(Charecter),Charecter) {
     		frame_type = gk.FrameType.Startup,
-    		hurtbox_list = {hurt_box},
+    		hurtbox_list = {1},
     		hitbox_list = {},
     		on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
     		check_exit = no_cancel, // todo change me
@@ -559,7 +591,7 @@ cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	for i := 0; i < 4; i += 1 {
 	    append(&move.frames,gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Active,
-			hurtbox_list = {hurt_box},
+			hurtbox_list = {1},
 			hitbox_list = {0},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 			check_exit = no_cancel, // todo change me
@@ -569,7 +601,7 @@ cyberpunk_add_crouch_heavy::proc(char:^gk.CharecterBase(Charecter)) -> int{
 	for i := 0; i < 9; i += 1 {
 	    append(&move.frames,gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 			frame_type = gk.FrameType.Recovery,
-			hurtbox_list = {hurt_box},
+			hurtbox_list = {1},
 			hitbox_list = {},
 			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 			check_exit = any_cancel, // todo change me
@@ -593,15 +625,18 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
            hitKnockback = psy.vec2_init({-1,0,0,0}),
            blockPushback = psy.vec2_init({1,0,0,0}),
 	}
+	hurt_box := gk.Hurt_box {
+	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
+	}
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="jump light attack",
-		hit_boxes = {hit_box},
+		moveboxs = {hit_box,hurt_box},
 		damage = 10,
 		air_ok=true,
 		frames    = {
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -609,7 +644,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -617,7 +652,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -625,7 +660,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -633,7 +668,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 				},
@@ -642,7 +677,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = cancelable_on_hit_or_block, // todo change me
@@ -650,7 +685,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = cancelable_on_hit_or_block, // todo change me
@@ -658,7 +693,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {0},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = cancelable_on_hit_or_block, // todo change me
@@ -666,7 +701,7 @@ cyberpunk_add_jump_punch :: proc(char:^gk.CharecterBase(Charecter)) -> int{
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init({0,0,0,0},{5,0,10,0})},
+				hurtbox_list = {1},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = air_state_cancel, // todo change me
@@ -820,16 +855,18 @@ cyberpunk_add_fireball :: proc(char: ^gk.CharecterBase(Charecter)) {
 
 cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
     context.allocator = vmem.arena_allocator(&char.arena)
-
+    hurt_box := gk.Hurt_box {
+        box = psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0}),
+    }
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="light fireball",
-		hit_boxes = {},
+		moveboxs = {hurt_box},
 		damage = 0,
 		air_ok=true,
 		frames    = {
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 					char.body.velocity = {}
@@ -839,7 +876,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -847,7 +884,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -855,7 +892,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -863,7 +900,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 				},
@@ -872,7 +909,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -880,7 +917,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Startup,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -888,7 +925,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Active,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =  proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
               		log.debug("spawn fireball")
@@ -909,7 +946,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 					log.debug("gaming2")
@@ -919,7 +956,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -927,7 +964,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -935,7 +972,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -943,7 +980,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -951,7 +988,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -959,7 +996,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -967,7 +1004,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -975,7 +1012,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -983,7 +1020,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -991,7 +1028,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -999,7 +1036,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1007,7 +1044,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1015,7 +1052,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1023,7 +1060,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1031,7 +1068,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1039,7 +1076,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1047,7 +1084,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
 				check_exit = no_cancel, // todo change me
@@ -1055,7 +1092,7 @@ cyberpunk_state_light_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
 				frame_type = gk.FrameType.Recovery,
 				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
+				hurtbox_list = {0},
 				hitbox_list = {},
 				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 				    log.debug("bruh fuck")
@@ -1076,238 +1113,245 @@ cyberpunk_state_medium_fireball ::proc(char: ^gk.CharecterBase(Charecter)) -> in
 
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="medium fireball",
-		hit_boxes = {},
+		moveboxs = {},
 		damage = 0,
 		air_ok=true,
 		frames    = {
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-					char.body.velocity = {}
-				},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-				},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Startup,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Active,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =  proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-              		log.debug("spawn fireball")
-                    cyber:= &char.serlized_state.charecter_info.charecter_spesific_data.(Cyberpunk)
-
-              		gk.activate_entity(char,cyber.med_fireball_entity_index,w) // activate fireball
-              		log.debug("gaming")
-               	},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-					log.debug("gaming2")
-				},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
-				check_exit = no_cancel, // todo change me
-			},
-			gk.Frame(gk.CharecterBase(Charecter),Charecter) {
-				frame_type = gk.FrameType.Recovery,
-				//
-				hurtbox_list = {psy.box_init([4]i16{0,0,0, 0},[4]i16{5,0, 10,0})},
-				hitbox_list = {},
-				on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
-				    log.debug("bruh fuck")
-				},
-				check_exit = air_state_cancel, // todo change me
-			},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			hurtbox_list = {},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+    				char.body.velocity = {}
+    			},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+    			},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Startup,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Active,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =  proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+                  		log.debug("spawn fireball")
+                        budget := &char.serlized_state.charecter_info.budget
+                        cyber:= &char.serlized_state.charecter_info.charecter_spesific_data.(Cyberpunk)
+                        if budget^ > 0 {
+                            budget^ -= 20
+                            gk.activate_entity(char,cyber.light_fireball_entity_index,w) // activate fireball
+                        } else {
+                            // todo play no cost sound. Should we shorten recovery
+                            // how would we by using a flag in charecter info?
+                            // char.serlized_state.health -=20*2
+                        }
+                  		log.debug("gaming")
+                   	},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+    				log.debug("gaming2")
+    			},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {},
+    			check_exit = no_cancel, // todo change me
+    		},
+    		gk.Frame(gk.CharecterBase(Charecter),Charecter) {
+    			frame_type = gk.FrameType.Recovery,
+    			//
+    			hurtbox_list = {0},
+    			hitbox_list = {},
+    			on_frame =proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+    			    log.debug("bruh fuck")
+    			},
+    			check_exit = air_state_cancel, // todo change me
+    		},
 		},
 		isAttack  = true,
 		hitstun   = 15,
@@ -1564,7 +1608,7 @@ cyberpunk_entity_fireball_light ::proc(char: ^gk.CharecterBase($Charecter)) -> i
 				hitstun = 16,
 				blockstun = 32,
 				hitstop = 10,
-				hit_boxes = {
+				moveboxs = {
 					gk.Hit_box {
 					    box = psy.box_init(
 							[4]i16{0,0,0, 0},
@@ -1573,13 +1617,16 @@ cyberpunk_entity_fireball_light ::proc(char: ^gk.CharecterBase($Charecter)) -> i
 						hitKnockback = psy.vec2_init({1,0,0, 0}),
 						blockPushback = psy.vec2_init({5,0,0,0}),
 					},
+					gk.Hurt_box {
+					    box = psy.box_init([4]i16{0,0,0,0},[4]i16{5,0, 5,0}),
+					},
 				},
 				frames= {
 					gk.Frame(gk.Entity(Charecter),Charecter) {
 						frame_type = gk.FrameType.Recovery,
 						//
 						hurtbox_list = {
-							psy.box_init([4]i16{0,0,0,0},[4]i16{5,0, 5,0}),
+							1,
 						},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity(Charecter),w:^gk.World(Charecter)) {
@@ -1622,7 +1669,7 @@ cyberpunk_entity_fireball_medium ::proc(char: ^gk.CharecterBase($Charecter)) -> 
 				hitstun = 16,
 				blockstun = 32,
 				hitstop = 10,
-				hit_boxes = {
+				moveboxs = {
 					gk.Hit_box {
 					    box = psy.box_init(
 							[4]i16{0,0,0, 0},
@@ -1631,14 +1678,15 @@ cyberpunk_entity_fireball_medium ::proc(char: ^gk.CharecterBase($Charecter)) -> 
 						hitKnockback = psy.vec2_init({0,0,5, 0}),
 						blockPushback = psy.vec2_init({5,0,0,0}),
 					},
+					gk.Hurt_box {
+					    box = psy.box_init([4]i16{0,0,0,0},[4]i16{5,0, 5,0}),
+					},
 				},
 				frames= {
 					gk.Frame(gk.Entity(Charecter),Charecter) {
 						frame_type = gk.FrameType.Recovery,
 						//
-						hurtbox_list = {
-							psy.box_init([4]i16{0,0,0,0},[4]i16{5,0, 5,0}),
-						},
+						hurtbox_list = {1},
 						hitbox_list= {0},
 						on_frame = proc(enitity: ^gk.Entity(Charecter),w:^gk.World(Charecter)) {
 							if enitity.charecter_ptr.p1_side do enitity.body.velocity.x = psy.invert_fixed(enitity.move_speed)

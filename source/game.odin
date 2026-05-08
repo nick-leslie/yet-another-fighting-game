@@ -226,7 +226,6 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
    	save_current_world_state(&g.rollback_state,world^)
     // resend_packets(&g.network_mannager,frame) // is here the right place for it
     netcode.resend_messages(&g.network_session.udp,g.frame)
-   	g.frame +=1
 }
 
 
@@ -236,6 +235,7 @@ game_update :: proc() {
   		g.app_run = false
    	}
     if g.app_run == false {
+       	g.frame +=1
         return
     }
     switch &screen in g.screen {
@@ -269,6 +269,7 @@ game_update :: proc() {
 
 	// Everything on tracking allocator is valid until end-of-frame.
 	free_all(context.temp_allocator)
+   	g.frame +=1
 }
 
 @(export)
@@ -463,8 +464,9 @@ game_memory_size :: proc() -> int {
 
 @(export)
 game_hot_reloaded :: proc(mem: rawptr) {
-	// g = (^Game_Memory)(mem)
-	// g_context = context
+	g = (^Game_Memory)(mem)
+	g_context = context
+	// log.debug(g)
 	// Here you can also set your own global variables. A good idea is to make
 	// your global variables into pointers that point to something inside `g`.
 }

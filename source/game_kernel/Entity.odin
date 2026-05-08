@@ -104,7 +104,7 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 
 	// self_buffer := hit_ctx.self_buffer
 	other_buffer := hit_ctx.other_buffer
-	_, frameOther := charecter_get_current_state_frame(other^)
+	stateOther, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
 
 
@@ -113,7 +113,8 @@ check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
 	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
 
 
-   	for &hurt_box in frameOther.hurtbox_list {
+   	for hurt_box_index in frameOther.hurtbox_list {
+        hurt_box := stateOther.moveboxs[hurt_box_index].(Hurt_box).box
         col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,entity.body)
         log.debug(col_check_res)
         if col_check_res == false{
