@@ -1,9 +1,9 @@
 #+feature dynamic-literals
 package game_kernel
 
-import "core:reflect"
 @(require)import "core:log"
-import "core:testing"
+@(require)import "core:reflect"
+@(require)import "core:testing"
 import "../utils"
 // import "core:log"
 

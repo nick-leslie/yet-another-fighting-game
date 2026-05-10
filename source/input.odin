@@ -104,18 +104,27 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
             dir = gk.Direction.DownBack
         }
 
-        buttons:=[5]gk.Button {}
+        buttons:=[5]Maybe(gk.ButtonPress) {}
         index := 0
         if rl.IsKeyPressed(controls.light_key) {
-            buttons[index] = gk.Button.Light
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Light,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         if rl.IsKeyPressed(controls.medium_key) {
-            buttons[index] = gk.Button.Medium
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Medium,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         if rl.IsKeyPressed(controls.heavy_key) {
-            buttons[index] = gk.Button.Heavy
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Heavy,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         return gk.Input{
@@ -165,18 +174,27 @@ poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
         case {-1,-1}:
             dir = gk.Direction.DownBack
         }
-        buttons:=[5]gk.Button {}
+        buttons:=[5]Maybe(gk.ButtonPress) {}
         index := 0
         if rl.IsGamepadButtonDown(controls.gamepad,controls.light_key) {
-            buttons[index] = gk.Button.Light
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Light,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.medium_key) {
-            buttons[index] = gk.Button.Medium
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Medium,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         if rl.IsGamepadButtonDown(controls.gamepad,controls.heavy_key) {
-            buttons[index] = gk.Button.Heavy
+            buttons[index] = gk.ButtonPress {
+                button=gk.Button.Heavy,
+                PressType=gk.ButtonPressType.Tapped,
+            }
             index += 1
         }
         return gk.Input{

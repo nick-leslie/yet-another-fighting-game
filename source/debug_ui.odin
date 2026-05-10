@@ -214,18 +214,23 @@ input_ui:: proc(input:gk.Input) {
 		char_arr[1] = '^'
 	}
 	switch input.attack[0] {
-	case .None:
+	case nil:
 		char_arr[2] = ' '
-	case .Light:
-		char_arr[2] = 'L'
-	case .Medium:
-		char_arr[2] = 'M'
-	case .Heavy:
-		char_arr[2] = 'H'
-	case .Dash:
-		char_arr[2] = 'D'
-	case .Unique:
-		char_arr[2] = 'U'
+	case:
+        switch input.attack[0].(gk.ButtonPress).button {
+        case .None:
+            char_arr[2] = ' '
+    	case .Light:
+    		char_arr[2] = 'L'
+    	case .Medium:
+    		char_arr[2] = 'M'
+    	case .Heavy:
+    		char_arr[2] = 'H'
+    	case .Dash:
+    		char_arr[2] = 'D'
+    	case .Unique:
+    		char_arr[2] = 'U'
+     }
 	}
 	str := utf8.runes_to_string(char_arr[:],context.temp_allocator)
 	clay.TextDynamic(
