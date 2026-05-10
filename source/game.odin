@@ -226,6 +226,7 @@ run_game_sim :: proc(world:^gk.World($C),frame:int) {
    	save_current_world_state(&g.rollback_state,world^)
     // resend_packets(&g.network_mannager,frame) // is here the right place for it
     netcode.resend_messages(&g.network_session.udp,g.frame)
+   	g.frame +=1
 }
 
 
@@ -269,7 +270,6 @@ game_update :: proc() {
 
 	// Everything on tracking allocator is valid until end-of-frame.
 	free_all(context.temp_allocator)
-   	g.frame +=1
 }
 
 @(export)
