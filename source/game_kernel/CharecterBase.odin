@@ -340,12 +340,13 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 
 charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.index]
+	state,_ := charecter_get_current_state_frame(charecter^)
+	
 	#partial switch input.dir {
 	case Direction.Back:
-		return true && charecter.hit_stun_index <= 0
+		return true && charecter.hit_stun_index <= 0 && state.block_cancelable
 	case Direction.DownBack:
-		return true && charecter.hit_stun_index <= 0
-		// this is where we decide up back or down back
+		return true && charecter.hit_stun_index <= 0 && state.block_cancelable
 	case:
 		return false
 	}

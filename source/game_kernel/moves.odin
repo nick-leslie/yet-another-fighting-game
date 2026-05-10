@@ -16,6 +16,7 @@ State :: struct($T:typeid,$CU:typeid) {
 	hitstop:       u32,
 	blockstun:     u32,
 	damage:        u32,
+	block_cancelable:bool,
 }
 
 
