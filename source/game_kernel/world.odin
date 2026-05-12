@@ -96,8 +96,8 @@ world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 		return // dont run world updates during hitstop but still collect input
 	}
 	
-	charecter_update(&w.p1,w.p2, w.p1_input_buffer,w)
-	charecter_update(&w.p2,w.p1, w.p2_input_buffer,w)
+	charecter_update(&w.p1,&w.p2, w.p1_input_buffer,w)
+	charecter_update(&w.p2,&w.p1, w.p2_input_buffer,w)
 
 	character_check_hit(&w.p1, &w.p2,&w.p1_input_buffer,&w.p2_input_buffer, w)
 	character_check_hit(&w.p2, &w.p1,&w.p2_input_buffer,&w.p1_input_buffer, w)
@@ -109,8 +109,8 @@ world_physics_tic ::proc(w:^World($CU)) {
         return
     }
 	//move me out
-	charecter_physics_update(&w.p1, w)
-	charecter_physics_update(&w.p2, w)
+	charecter_physics_update(&w.p1,&w.p2, w)
+	charecter_physics_update(&w.p2,&w.p1, w)
 	// update normal physics
 }
 

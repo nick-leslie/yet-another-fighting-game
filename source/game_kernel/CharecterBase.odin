@@ -35,6 +35,7 @@ CharecterSerlizedState :: struct($CU:typeid) {
     hit_stun_frames:   u32,
     block_stun_frames: u32,
     combo_scaling:     u32,
+    throw_protected:bool, // this is used to check if the player can be thrown
     charecter_info: CU,
    	charecter_flags: bit_field u64 {
 
@@ -79,7 +80,7 @@ setup_charecter :: proc(char: ^CharecterBase($CU)) {
 
 
 //todo this is an ordering update. because we do pickstate -> physics_update
-charecter_update :: proc(character: ^CharecterBase($CU),other:CharecterBase(CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World(CU)) {
+charecter_update :: proc(character: ^CharecterBase($CU),other:^CharecterBase(CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),w:^World(CU)) {
 
     //if we are greater than zero p1 side else p2 side
     character.serlized_state.p1_side = !(fixed.sub(character.serlized_state.body.position.x,other.serlized_state.body.x).i > (psy.Fixed12_4 {}).i)
@@ -341,7 +342,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {
 	input := input_buffer.buffer[input_buffer.index]
 	state,_ := charecter_get_current_state_frame(charecter^)
-	
+
 	#partial switch input.dir {
 	case Direction.Back:
 		return true && charecter.hit_stun_index <= 0 && state.block_cancelable
@@ -356,7 +357,7 @@ charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.
 
 
 //todo fully move the velocity control to the moves
-charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) {
+charecter_physics_update :: proc(character: ^CharecterBase($CU),other:^CharecterBase(CU), w: ^World(CU)) {
 	character.body.prev_position = character.body.position
 	character.body.prev_velocity = character.body.velocity
 	jump_pressed := character.jump_requested
@@ -380,6 +381,18 @@ charecter_physics_update :: proc(character: ^CharecterBase($CU), w: ^World(CU)) 
 			character.body.y = fixed.add(w.stage.floor.y,w.stage.floor.extent.y)
 		}
 	}
+    other_player_collision := psy.check_body_body_collsion(
+        character.collision_box,
+        character.body,
+        other.collision_box,
+        other.body,
+    )
+    if other_player_collision {
+        // step 1 move them outside
+        // this is so bad bug my brain doesnt want to physics
+       psy.add_fixed_vec2_to_vel(&other.body,psy.Vec2Fixed{character.serlized_state.body.velocity.x,psy.Fixed12_4{}})
+       psy.add_fixed_vec2_to_vel(&character.body,psy.Vec2Fixed{other.serlized_state.body.velocity.x,psy.Fixed12_4{}})
+    }
 	// log.debug(character.velocity)
 
 
