@@ -6,17 +6,30 @@ State :: struct($T:typeid,$CU:typeid) {
 	name:		   string,
 	frames:        [dynamic]Frame(T,CU),
 	moveboxs:      [dynamic]MoveBox,
+	state_type:    StateType,
 	hard_knockdown:bool,
 	soft_knockdown:bool,
 	// should all this be in a seprate struct
 	canBlock:      bool,
 	isAttack:      bool,
 	air_ok:        bool,
-	hitstun:       u32,
-	hitstop:       u32,
 	blockstun:     u32,
+	//this is the techwindow of the throw
+	tech_window:   u32,
 	damage:        u32,
+	hitstun:       u8,
+	hitstop:       u8,
+	// reaction_index:u8, we may want this
 	block_cancelable:bool,
+}
+
+//used for determenting if we should use throw detection or hit detection
+StateType :: enum{
+    Attack,
+    Throw,
+    //used for hitstun or when in a throw
+    HitReaction,
+    ThrowReaction,
 }
 
 

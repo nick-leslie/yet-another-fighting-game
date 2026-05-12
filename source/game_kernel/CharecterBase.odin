@@ -51,12 +51,16 @@ CharecterBase :: struct($CU:typeid) {
 	//do I want to add an arena here
 	using serlized_state: CharecterSerlizedState(CU),
 	collision_box:        psy.FixedBox,
+	//for all of these we may want to move them to the move
+	// or we want to have a state that we then change off the charecter animation
+	// or we move this to a reaction in the move itself
 	soft_knockdown_index: int,
 	hard_knockdown_index: int,
-	states:               [dynamic]State(CharecterBase(CU),CU), // should this be state
-	patterns:             [dynamic]Pattern,
 	hit_stun_index:       int, // we may replace this with a constent
 	block_stun_index:     int,
+	throw_reaction_index: int,
+	states:               [dynamic]State(CharecterBase(CU),CU), // should this be state
+	patterns:             [dynamic]Pattern,
     entity_pool:   	      [dynamic]Entity(CU), // this is the pool of entitys that we can spawn
     using hooks:          CharecterHooks(CU),
 }
@@ -333,6 +337,7 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 
 			// other.hit_stun_frames=0
 		}
+
 		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
         //check if blocking and set to block or hit_stun
     }
