@@ -37,7 +37,7 @@ A state is a character state with frames. For example, walking is a state, punch
 Patterns are a list of inputs. They also include a priority, so inputs that have overlap will have a higher priority.
 
 # physics
-This is the fixed floating-point physics library. It has basic collision and vector addition. 
+This is the fixed floating-point physics library. It has basic collision detection and vector addition. collision resolution is a work in progress
 
 # rendering
 Rendering is covered by raylib. Raylib also exposes open gl under the hood. If I am feeling extra motivated, I may swap to Vulkan .
@@ -71,23 +71,6 @@ Any allocation that has the same life cycle as the character. This includes patt
 This is where any memory that needs to last the duration of the frame should go.
 This is cleared every frame.
 
-# Jam Requirements
-* [ ] A competitive versus game 
-* [ ] That functions completely with just two players
-* [ ] Which allows for 1v1 matches in a functional local versus
-* [ ] With real-time interactions and movement
-* [ ] Taking place in the same screen (no split-screen, no "one screen per player")
-* [ ] With at least 2 playable characters
-* [ ] With the goal of knocking out your opponent
-* [ ] Has full keyboard support and (strongly recommended) controller support for every player. Implementing either split keyboard or controller + keyboard for local versus is a required feature
-* [ ] And can run in windowed mode
-
-
-# other goals
-* [ ] we have sound effects fmod and potentaly music
-* [ ] The game can be played online with rollback
-* [ ] basic training mode
-* [ ] three or four characters
 
 [ ] rollback 
 * [x] input sync over network
@@ -138,7 +121,7 @@ This is cleared every frame.
 
 # tools that could help
 * [ ] hit box editor
-* [ ] 
+* [ ] numpad notation to pattern
 
 
 # nice to haves

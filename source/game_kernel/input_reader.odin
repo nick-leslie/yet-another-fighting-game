@@ -88,8 +88,8 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)
-    i:= buffer.index-1
-    for i != buffer.index {
+    i:= buffer.index
+    for i != buffer.index+1 {
         // log.debug(i)
         //
         i = i %% len(buffer.buffer)
@@ -112,7 +112,8 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
                 pattern_input_index[j] = -1
                 continue
             }
-            if pattern.inputs[check_index] == input {
+            check_input := pattern.inputs[check_index]
+            if check_input == input {
                 pattern_input_index[j] +=1
             } else {
             	if check_index > 0 && pattern.inputs[check_index-1] == input {
@@ -153,63 +154,94 @@ pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[
 
 
 
-// @(test)
-// test_quarter_circle :: proc(t: ^testing.T) {
-// 	patterns := make([dynamic]Pattern)
-// 	pattern_light_attack := Pattern {
-// 		inputs      = {Input{dir = Direction.Forward, attack = Button.Light}},
-// 		pritority   = 1,
-// 		state_index = 6,
-// 	}
-// 	pattern2_light_attack := Pattern {
-// 		inputs      = {Input{dir = Direction.Neutral, attack = Button.Light}},
-// 		pritority   = 1,
-// 		state_index = 6,
-// 	}
-// 	pattern3_light_attack := Pattern {
-// 		inputs      = {Input{dir = Direction.Back, attack = Button.Light}},
-// 		pritority   = 1,
-// 		state_index = 6,
-// 	}
+@(test)
+test_quarter_circle :: proc(t: ^testing.T) {
+	patterns := make([dynamic]Pattern)
+	pattern_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Forward, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 6,
+	}
+	pattern2_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Neutral, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 6,
+	}
+	pattern3_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Back, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 6,
+	}
 
-// 	append(&patterns,pattern_light_attack)
-// 	append(&patterns,pattern2_light_attack)
-// 	append(&patterns,pattern3_light_attack)
+	append(&patterns,pattern_light_attack)
+	append(&patterns,pattern2_light_attack)
+	append(&patterns,pattern3_light_attack)
 
-// 	pattern_quarter_circle := Pattern {
-// 		inputs      = {
-// 			Input{dir = Direction.Forward, attack = Button.Light},
-// 			Input{dir = Direction.DownForward, attack = Button.None},
-// 			Input{dir = Direction.Down, attack = Button.None},
-// 		},
-// 		pritority   = 2,
-// 		state_index = 7,
-// 	}
-// 	pattern_2_quarter_circle := Pattern {
-// 		inputs  = {
-// 			Input{dir = Direction.Forward, attack = Button.Light},
-// 			Input{dir = Direction.Neutral, attack = Button.None},
-// 			Input{dir = Direction.DownForward, attack = Button.None},
-// 			Input{dir = Direction.Down, attack = Button.None},
-// 		},
-// 		pritority   = 2,
-// 		state_index = 7,
-// 	}
-// 	append(&patterns,pattern_quarter_circle)
-// 	append(&patterns,pattern_2_quarter_circle)
+	pattern_quarter_circle := Pattern {
+		inputs      = {
+			Input{dir = Direction.Forward, attack = {ButtonPress {
+				button=Button.Light,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+			Input{dir = Direction.DownForward, attack = {ButtonPress {
+				button=Button.None,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+			Input{dir = Direction.Down, attack = {ButtonPress {
+				button=Button.None,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+		},
+		pritority   = 2,
+		state_index = 7,
+	}
+	pattern_2_quarter_circle := Pattern {
+		inputs  = {
+			Input{dir = Direction.Forward, attack = {ButtonPress {
+				button=Button.Light,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+			Input{dir = Direction.Neutral, attack = {ButtonPress {
+				button=Button.None,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+			Input{dir = Direction.DownForward, attack = {ButtonPress {
+				button=Button.None,
+				PressType=.Tapped,
+			},nil,nil,nil,nil }},
+			Input{dir = Direction.Down, attack = {ButtonPress {
+				button=Button.None,
+				PressType=.Tapped,
+			},nil,nil,nil,nil}},
+		},
+		pritority   = 2,
+		state_index = 7,
+	}
+	append(&patterns,pattern_quarter_circle)
+	append(&patterns,pattern_2_quarter_circle)
 
-// 	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = Button.None})
-// 	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = Button.Light})
+	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.DownForward, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
+	update_input_buffer(&input_buffer,Input{dir = Direction.Forward, attack = {ButtonPress {button=Button.Light,PressType=.Tapped,},nil,nil,nil,nil}})
 
-// 	out_state := pick_state(input_buffer,patterns,false)
-// 	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")
-// 	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
-// }
+	out_state := pick_state(input_buffer,patterns,false)
+	log.info(out_state)
+	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")
+	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
+}

@@ -18,23 +18,38 @@ number_notation_to_pattern :: proc(
         // r is of type `rune`
         char := notation[i]
 	    dir:gk.Direction
-		attack:gk.Button
+		button:Maybe(gk.ButtonPress)
 		//todo allow for diffent button tupes
         switch char {
         case 'l':
-            attack = gk.Button.Light
+            button = gk.ButtonPress {
+                button=gk.Button.Light,
+                PressType=gk.ButtonPressType.Tapped,
+            }
         case 'm':
-            attack = gk.Button.Medium
+            button = gk.ButtonPress {
+                button=gk.Button.Medium,
+                PressType=gk.ButtonPressType.Tapped,
+            }
         case 'h':
-            attack = gk.Button.Heavy
+            button = gk.ButtonPress {
+                button=gk.Button.Heavy,
+                PressType=gk.ButtonPressType.Tapped,
+            }
         case 'd':
-            attack = gk.Button.Dash
+            button = gk.ButtonPress {
+                button=gk.Button.Dash,
+                PressType=gk.ButtonPressType.Tapped,
+            }
         case 'u':
-            attack = gk.Button.Unique
+            button = gk.ButtonPress {
+                button=gk.Button.Unique,
+                PressType=gk.ButtonPressType.Tapped,
+            }
         case:
-            attack=gk.Button.None
+            button=nil
         }
-        if attack != gk.Button.None {
+        if button != nil {
             assert(i-1 >= 0,"we cant put an input at the end")
             i-=1
             char = notation[i]
@@ -61,10 +76,7 @@ number_notation_to_pattern :: proc(
         }
         append(&inputs, gk.Input {
             dir=dir,
-            attack={gk.ButtonPress {
-                button=attack,
-                PressType=gk.ButtonPressType.Tapped,
-            },nil,nil,nil,nil},
+            attack={button,nil,nil,nil,nil},
         })
     }
     pattenrn := gk.Pattern{

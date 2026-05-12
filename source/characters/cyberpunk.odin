@@ -130,6 +130,7 @@ cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 	move := gk.State(gk.CharecterBase(Charecter),Charecter) {
 		name="neutral",
 		frames = {zero_frame},
+		moveboxs={hurt_box},
 	}
 	append(&char.states, move)
 	index := len(char.states)-1
@@ -760,9 +761,9 @@ cyberpunk_pattern_crouch_heavy_punch :: proc(char:^gk.CharecterBase(Charecter),i
 cyberpunk_pattern_crouch_light_punch :: proc(char:^gk.CharecterBase(Charecter),index:int) {
    	context.allocator = vmem.arena_allocator(&char.arena)
 
-	pattern := tools.number_notation_to_pattern("3l",index,1,false,false,context.allocator)
-	pattern2 := tools.number_notation_to_pattern("2l",index,1,false,false,context.allocator)
-	pattern3 := tools.number_notation_to_pattern("1l",index,1,false,false,context.allocator)
+	pattern := tools.number_notation_to_pattern("3l",index,0,false,false,context.allocator)
+	pattern2 := tools.number_notation_to_pattern("2l",index,0,false,false,context.allocator)
+	pattern3 := tools.number_notation_to_pattern("1l",index,0,false,false,context.allocator)
 	append(&char.patterns, pattern)
 	append(&char.patterns, pattern2)
 	append(&char.patterns, pattern3)

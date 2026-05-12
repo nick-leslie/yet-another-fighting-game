@@ -67,7 +67,7 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
 			entity_body := psy.unfix_body(enity.body)
 			entity_pos_vec_3 := [3]f32{f32(entity_body.position.x),f32(entity_body.position.y),10}
 			for hurt_box_index in enity_frame.hurtbox_list {
-			    unfixed_box := psy.unfix_box(state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
+			    unfixed_box := psy.unfix_box(enity_state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
 				rl.DrawCube(
 					entity_pos_vec_3 + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
 					f32(unfixed_box.extent.x),
