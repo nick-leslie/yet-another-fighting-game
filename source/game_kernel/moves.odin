@@ -13,10 +13,10 @@ State :: struct($T:typeid,$CU:typeid) {
 	canBlock:      bool,
 	isAttack:      bool,
 	air_ok:        bool,
-	blockstun:     u32,
 	//this is the techwindow of the throw
 	tech_window:   u32,
 	damage:        u32,
+	blockstun:     u8,
 	hitstun:       u8,
 	hitstop:       u8,
 	// reaction_index:u8, we may want this

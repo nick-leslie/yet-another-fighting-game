@@ -50,7 +50,7 @@ World :: struct($CU:typeid) {
 	p2:                CharecterBase(CU),
 	p1_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
 	p2_input_buffer:   utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
-	hit_stop:		u32,
+	hit_stop:		u8,
 	//todo we may need to make this go to the charecters
 	combo_counter: 	   int, // this needs to check when the enemy recovers   trades will make this goto 2
 }
@@ -95,7 +95,7 @@ world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 		log.debug("running hitstop")
 		return // dont run world updates during hitstop but still collect input
 	}
-	
+
 	charecter_update(&w.p1,&w.p2, w.p1_input_buffer,w)
 	charecter_update(&w.p2,&w.p1, w.p2_input_buffer,w)
 

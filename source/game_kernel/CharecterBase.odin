@@ -32,8 +32,8 @@ CharecterSerlizedState :: struct($CU:typeid) {
    	entity_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of what entitys are active
    	current_frame:     int,
     current_state:     int, // this is an index
-    hit_stun_frames:   u32,
-    block_stun_frames: u32,
+    hit_stun_frames:   u8,
+    block_stun_frames: u8,
     combo_scaling:     u32,
     throw_protected:bool, // this is used to check if the player can be thrown
     charecter_info: CU,
