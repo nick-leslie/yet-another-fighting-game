@@ -1,5 +1,6 @@
 package game_kernel
 import "core:log"
+import "core:container/topological_sort"
 import "base:runtime"
 import vmem "core:mem/virtual"
 import psy "../physics"
@@ -257,7 +258,12 @@ check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
 
 	stateOther, frameOther := charecter_get_current_state_frame(other^)
 	// we may want to speed this up later by seperating to a p1 layer
+   	if hit_ctx.self_state.state_type==.Throw {
+   	    // handle throw logic
 
+  		throw_check:=psy.check_body_body_collsion(hit_ctx.hitbox.box,self.body,other.collision_box,other.body)
+        //todo change the other into throw
+   	}
 
 
 	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)

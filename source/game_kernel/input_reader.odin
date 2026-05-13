@@ -226,8 +226,9 @@ test_quarter_circle :: proc(t: ^testing.T) {
 		pritority   = 2,
 		state_index = 7,
 	}
-	append(&patterns,pattern_quarter_circle)
-	append(&patterns,pattern_2_quarter_circle)
+	append(&patterns,pattern_light_attack)
+	append(&patterns,pattern2_light_attack)
+	append(&patterns,pattern3_light_attack)
 
 	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})
@@ -243,5 +244,58 @@ test_quarter_circle :: proc(t: ^testing.T) {
 	out_state := pick_state(input_buffer,patterns,false)
 	log.info(out_state)
 	testing.expect(t,out_state==7,"our out state failed to be 7. light attack beat the higher priority quarter circle")
+	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
+}
+
+
+@(test)
+test_throw :: proc(t: ^testing.T) {
+   	patterns := make([dynamic]Pattern)
+    pattern_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Forward, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 0,
+	}
+	pattern2_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Neutral, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 0,
+	}
+	pattern3_light_attack := Pattern {
+		inputs      = {Input{dir = Direction.Back, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},nil,nil,nil,nil}}},
+		pritority   = 1,
+		state_index = 0,
+	}
+	append(&patterns,pattern_light_attack)
+	append(&patterns,pattern2_light_attack)
+	append(&patterns,pattern3_light_attack)
+	throw_pattern := Pattern {
+		inputs      = {Input{dir = Direction.Neutral, attack = {ButtonPress {
+			button=Button.Light,
+			PressType=.Tapped,
+		},ButtonPress {
+			button=Button.Medium,
+			PressType=.Tapped,
+		},nil,nil,nil}}},
+		pritority   = 2,
+		state_index = 1,
+	}
+	append(&patterns,throw_pattern)
+
+   	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
+    update_input_buffer(&input_buffer,Input{dir = Direction.Neutral, attack = {ButtonPress {button=Button.Light,PressType=.Tapped,},ButtonPress {button=Button.Medium,PressType=.Tapped,},nil,nil,nil}})
+
+	out_state := pick_state(input_buffer,patterns,false)
+	log.info(out_state)
+	testing.expect(t,out_state==1,"our out state failed to be ehter mutli buttons dont work. or prioritys dont work")
 	free_all(context.allocator) // this is so we dont memory leak with dynamic allocs
 }
