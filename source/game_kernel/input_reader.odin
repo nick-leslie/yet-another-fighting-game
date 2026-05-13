@@ -226,9 +226,8 @@ test_quarter_circle :: proc(t: ^testing.T) {
 		pritority   = 2,
 		state_index = 7,
 	}
-	append(&patterns,pattern_light_attack)
-	append(&patterns,pattern2_light_attack)
-	append(&patterns,pattern3_light_attack)
+	append(&patterns,pattern_quarter_circle)
+	append(&patterns,pattern_2_quarter_circle)
 
 	input_buffer := utils.Buffer(INPUT_BUFFER_LENGTH,Input) {}
 	update_input_buffer(&input_buffer,Input{dir = Direction.Down, attack = {ButtonPress {button=Button.None,PressType=.Tapped,},nil,nil,nil,nil}})

@@ -34,7 +34,7 @@ SerlizedWorld :: struct($CU:typeid) {
     p1_entity_pool:[dynamic]SerlizedEntityState,
     p2:CharecterSerlizedState(CU),
     p2_entity_pool:[dynamic]SerlizedEntityState,
-    hit_stop:u32,
+    hit_stop:u8,
     combo_counter:int,
    	p1_input_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
     p2_input_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
