@@ -3,6 +3,7 @@ package game_kernel
 
 CharecterHooks :: struct($CU:typeid) {
 	//required
+	// we set this as mutable so we can affect combo scalling
 	damage_formula:proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32,
 	charecter_check_counterhit: proc(self:CharecterBase(CU),other:CharecterBase(CU)) -> bool,
 	// on tic
