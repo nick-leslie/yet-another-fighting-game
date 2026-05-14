@@ -99,8 +99,11 @@ world_tic ::proc(w:^World($CU),p1_input:Input,p2_input:Input,frame:int) {
 	charecter_update(&w.p1,&w.p2, w.p1_input_buffer,w)
 	charecter_update(&w.p2,&w.p1, w.p2_input_buffer,w)
 
-	character_check_hit(&w.p1, &w.p2)
-	character_check_hit(&w.p2, &w.p1)
+	p1_hit_result := character_check_hit(&w.p1, &w.p2)
+	p2_hit_result := character_check_hit(&w.p2, &w.p1)
+
+	char_resolve_hit(&w.p1,&w.p2,p2_hit_result,w.p1_input_buffer,w)
+	char_resolve_hit(&w.p2,&w.p1,p1_hit_result,w.p2_input_buffer,w)
 }
 
 

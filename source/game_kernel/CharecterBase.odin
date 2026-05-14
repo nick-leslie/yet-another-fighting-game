@@ -200,27 +200,28 @@ CheckHitResult :: struct{
     hurt_box_index:int,
 }
 //bruh this shit about to get funky
-character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU)) {
+character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU)) -> [dynamic]CheckHitResult {
 	state, frame := charecter_get_current_state_frame(self^)
 	//this should be cleared every frame because we can recalculate it
 	hit_results := make_dynamic_array([dynamic]CheckHitResult,context.temp_allocator)
-	for &hitbox_index in frame.hitbox_list {
+	for hitbox_index in frame.hitbox_list {
 		//todo make me a function once we unify
 		hit_box := state.moveboxs[hitbox_index].(Hit_box)
-		for &hurt_boxe in frame.hurtbox_list {
-			hurt_box := state.moveboxs[hurt_boxe].(Hurt_box)
+		for hurt_box_index in frame.hurtbox_list {
+			hurt_box := state.moveboxs[hurt_box_index].(Hurt_box)
 			col_check_res := psy.check_body_body_collsion(
 			    hurt_box.box,
-    			other.body,hit_ctx.hitbox.box,
-    			self.body
+    			other.body,hit_box.box,
+    			self.body,
 			)
 			//if we collide and we havent used the hitbox yet this state
 			if col_check_res == true && hitbox_index in self.serlized_state.hit_box_tracker_bit_mask == false{
-				append_elem(&hit_results, CheckHitResult{hitbox_index, hurt_boxe})
-				self.serlized_state.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index}
+				append_elem(&hit_results, CheckHitResult{hit_box_index=hitbox_index, hurt_box_index=hurt_box_index})
+				self.serlized_state.hit_box_tracker_bit_mask += {hurt_box_index}
 			}
 		}
 	}
+	return hit_results
 }
 // the other player hands you a list of places that they hit you and you must resolve those interactions
 char_resolve_hit :: proc(
@@ -230,16 +231,16 @@ char_resolve_hit :: proc(
     self_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
     world:^World(CU),
 ) {
-    self_state,self_frame := charecter_get_current_state_frame(self^)
-    other_state,other_frame := charecter_get_current_state_frame(other^)
+    // self_state,_ := charecter_get_current_state_frame(self^)
+    other_state,_ := charecter_get_current_state_frame(other^)
    	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
 	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
 
 	for &hit_results in hit_results_from_other {
-	     block := charecter_check_block(self,self_buffer^)
-		  //
+	    block := charecter_check_block(self,self_buffer)
+		log.debug(hit_results)
 		hit_box := other_state.moveboxs[hit_results.hit_box_index].(Hit_box)
-		hurt_box := other_state.moveboxs[hit_results.hurt_box_index].(Hurt_box)
+		// hurt_box := other_state.moveboxs[hit_results.hurt_box_index].(Hurt_box)
 		if block == true {
 		    // if blocking
 			knockback := hit_box.blockKnockback
@@ -265,7 +266,7 @@ char_resolve_hit :: proc(
  			self.hit_stun_frames = other_state.hitstun
 
             self.serlized_state.block_stun_frames = 0
-            hit_ctx.world.combo_counter += 1
+            world.combo_counter += 1
 
  			if other.serlized_state.combo_scaling == 0 {
 				//do we want to do this to avoid 0% scalling
@@ -281,13 +282,14 @@ char_resolve_hit :: proc(
 			} else if other_state.soft_knockdown == true {
                 self.serlized_state.end_in_softknockdown = true
 			}
-			dammage := other.damage_formula(
-			    other,
+			log.debug("about to dammage hook")
+			dammage := other.hooks.damage_formula(
+			    other^,
 				self^,
-				hit_ctx.world^,
-				self.charecter_check_counterhit(self^,other^), // is counter hit todo detect counterhit
-				hit_ctx.self_state,
-				hit_ctx.hitbox^,
+				world^,
+				other.charecter_check_counterhit(other^,self^), // is counter hit todo detect counterhit
+				other_state,
+				hit_box,
 			)
 			self.serlized_state.health -= dammage
 			charecer_change_state(self,self.hit_stun_index)

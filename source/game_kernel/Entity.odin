@@ -2,7 +2,7 @@ package game_kernel
 
 import "core:log"
 import psy "../physics"
-import fixed "core:math/fixed"
+@(require)import fixed "core:math/fixed"
 
 /*
 	ENTITY desighn doc
