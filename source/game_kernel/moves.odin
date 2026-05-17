@@ -3,10 +3,14 @@ package game_kernel
 @(require)import "core:log"
 import psy "../physics"
 State :: struct($T:typeid,$CU:typeid) {
-	name:		   string,
+    using params:StateParams, //seperating so we can have generics
 	frames:        [dynamic]Frame(T,CU),
+}
+
+StateParams :: struct {
+	name:		   string,
 	moveboxs:      [dynamic]MoveBox,
-	state_type:    StateType,
+   	state_type:    StateType,
 	hard_knockdown:bool,
 	soft_knockdown:bool,
 	// should all this be in a seprate struct
@@ -35,11 +39,19 @@ StateType :: enum{
 
 //this is cringe see if we can fix
 Frame :: struct($T:typeid,$CU:typeid) {
-	frame_type:    FrameType,
+    using params:FrameParams,
+    using hooks:FrameHooks(T,CU),
+}
+
+FrameParams :: struct {
+   	frame_type:    FrameType,
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]int, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
-	on_frame:      proc(self: ^T,world:^World(CU)),
+}
+
+FrameHooks :: struct($T:typeid,$CU:typeid) {
+   	on_frame:      proc(self: ^T,world:^World(CU)),
 	side_effect:   proc(self: T, world: World(CU),inRollback:bool),
 	check_exit:    proc(self: ^T, frame: int) -> bool, // takes char pointer and proposed state
 }

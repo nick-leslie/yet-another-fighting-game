@@ -37,7 +37,7 @@ CharecterSerlizedState :: struct($CU:typeid) {
     combo_scaling:     u32,
     throw_protected:bool, // this is used to check if the player can be thrown
     charecter_info: CU,
-   	charecter_flags: bit_field u64 {
+   	charecter_flags: bit_field u32 {
 
 	}, // lots of flags for various states.. tuble extc
 }
@@ -59,6 +59,7 @@ CharecterBase :: struct($CU:typeid) {
 	hit_stun_index:       int, // we may replace this with a constent
 	block_stun_index:     int,
 	throw_reaction_index: int,
+	//could move all these to the world
 	states:               [dynamic]State(CharecterBase(CU),CU), // should this be state
 	patterns:             [dynamic]Pattern,
     entity_pool:   	      [dynamic]Entity(CU), // this is the pool of entitys that we can spawn
@@ -195,30 +196,85 @@ HitBoxCtx :: struct($T,$CU:typeid) {
 	self_state:State(T,CU),
 	extra:^T,
 }
+// CheckHitCtx :: struct {
+//     state_params:^StateParams,
+//     frame: FrameParams,
+//     body: ^psy.FixedBody,
+//     hitbox_tracking_ptr:^bit_set[0..<64; u64],//pointer to bit mask of if the hit box has been used,
+// }
+// construct_checkhit_ctx :: proc(self:^CharecterBase($CU)) -> CheckHitCtx{
+//     state,frame:=charecter_get_current_state_frame(self^)
+//     return CheckHitCtx{
+//         state_params=&state.params,
+//         frame=frame,
+//         body=&self.body,
+//         hitbox_tracking_ptr=&self.serlized_state.hit_box_tracker_bit_mask,
+//     }
+// }
 CheckHitResult :: struct{
     hit_box_index:int,
     hurt_box_index:int,
+    other_state:^StateParams, // this should not be modifyed its a pointer so its small and fast
+    other_body:^psy.FixedBody,
 }
 //bruh this shit about to get funky
-character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU)) -> [dynamic]CheckHitResult {
-	state, frame := charecter_get_current_state_frame(self^)
+character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU),world:^World) -> [dynamic]CheckHitResult {
 	//this should be cleared every frame because we can recalculate it
 	hit_results := make_dynamic_array([dynamic]CheckHitResult,context.temp_allocator)
-	for hitbox_index in frame.hitbox_list {
+    self_state,self_frame:=charecter_get_current_state_frame(self^)
+    other_state,other_frame:=charecter_get_current_state_frame(other^)
+
+	for hitbox_index in other_frame.hitbox_list {
 		//todo make me a function once we unify
-		hit_box := state.moveboxs[hitbox_index].(Hit_box)
-		for hurt_box_index in frame.hurtbox_list {
-			hurt_box := state.moveboxs[hurt_box_index].(Hurt_box)
+		hit_box := other_state.moveboxs[hitbox_index].(Hit_box)
+		for hurt_box_index in self_frame.hurtbox_list {
+			hurt_box := self_state.moveboxs[hurt_box_index].(Hurt_box)
 			col_check_res := psy.check_body_body_collsion(
 			    hurt_box.box,
     			other.body,hit_box.box,
     			self.body,
 			)
 			//if we collide and we havent used the hitbox yet this state
-			if col_check_res == true && hitbox_index in self.serlized_state.hit_box_tracker_bit_mask == false{
-				append_elem(&hit_results, CheckHitResult{hit_box_index=hitbox_index, hurt_box_index=hurt_box_index})
-				self.serlized_state.hit_box_tracker_bit_mask += {hurt_box_index}
+			if col_check_res == true && hitbox_index in other.serlized_state.hit_box_tracker_bit_mask == false{
+				append_elem(&hit_results, CheckHitResult{
+    				hit_box_index=hitbox_index,
+    				hurt_box_index=hurt_box_index,
+    				other_state=&other.states[other.serlized_state.current_state].params,
+                    other_body=&other.body,
+				})
+				hitbox_tracker := &other.serlized_state.hit_box_tracker_bit_mask
+				hitbox_tracker^ += {hurt_box_index}
 			}
+		}
+	}
+	//loop through entitys
+	for i:=0;i<len(other.entity_pool);i+=1 {
+		entity := &other.entity_pool[i]
+		if entity.active == true {
+		    entity_state,entity_frame := get_entity_state_frame(entity^)
+ 			for hitbox_index in entity_frame.hitbox_list {
+				//todo make me a function once we unify
+				hit_box := entity_state.moveboxs[hitbox_index].(Hit_box)
+				for hurt_box_index in self_frame.hurtbox_list {
+   					hurt_box := self_state.moveboxs[hurt_box_index].(Hurt_box)
+   					col_check_res := psy.check_body_body_collsion(
+   					    hurt_box.box,
+       					entity.body,hit_box.box,
+       					self.body,
+   					)
+    					//if we collide and we havent used the hitbox yet this state
+    				if col_check_res == true && hitbox_index in entity.serlized_state.hit_box_tracker_bit_mask == false{
+    					append_elem(&hit_results, CheckHitResult{
+            				hit_box_index=hitbox_index,
+            				hurt_box_index=hurt_box_index,
+            				other_state=&entity.states[entity.current_state].params,
+                            other_body=&other.body,
+    					})
+    					hitbox_tracker := &entity.serlized_state.hit_box_tracker_bit_mask
+    					hitbox_tracker^ += {hurt_box_index}
+    				}
+    			}
+    		}
 		}
 	}
 	return hit_results
@@ -226,19 +282,20 @@ character_check_hit :: proc(self: ^CharecterBase($CU),other:^CharecterBase(CU)) 
 // the other player hands you a list of places that they hit you and you must resolve those interactions
 char_resolve_hit :: proc(
     self:^CharecterBase($CU),
-    other:^CharecterBase(CU), // this is just for scalling
+    other:^CharecterBase(CU),
     hit_results_from_other:[dynamic]CheckHitResult,
     self_buffer:utils.FrameTrackedBuffer(INPUT_BUFFER_LENGTH,Input),
     world:^World(CU),
 ) {
     // self_state,_ := charecter_get_current_state_frame(self^)
-    other_state,_ := charecter_get_current_state_frame(other^)
    	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
-	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
+	if self.p1_side == true do side_mod = psy.init_from_parts(-1,0)
 
 	for &hit_results in hit_results_from_other {
 	    block := charecter_check_block(self,self_buffer)
-		log.debug(hit_results)
+		// log.debug(hit_results)
+		//we do this so that we can acccess entity info
+		other_state := hit_results.other_state
 		hit_box := other_state.moveboxs[hit_results.hit_box_index].(Hit_box)
 		// hurt_box := other_state.moveboxs[hit_results.hurt_box_index].(Hurt_box)
 		if block == true {
@@ -249,9 +306,10 @@ char_resolve_hit :: proc(
       		knockback.x = fixed.mul(knockback.x ,side_mod)
       		pushback.x = fixed.mul(pushback.x ,side_mod)
 
-            psy.add_fixed_vec2_to_vel(&self.serlized_state.body,pushback)
-            psy.add_fixed_vec2_to_vel(&other.serlized_state.body,knockback)
- 			self.block_stun_frames = other_state.blockstun
+            psy.add_fixed_vec2_to_vel(&self.serlized_state.body,knockback)
+            //we use other_body that way we can use this with projectiles
+            psy.add_fixed_vec2_to_vel(hit_results.other_body,pushback)
+ 			self.block_stun_frames = hit_results.other_state.blockstun
 			charecer_change_state(self,self.block_stun_index)
 		} else {
 		    //if hitting
@@ -261,8 +319,9 @@ char_resolve_hit :: proc(
       		knockback.x = fixed.mul(knockback.x ,side_mod)
       		pushback.x = fixed.mul(pushback.x ,side_mod)
 
-            psy.add_fixed_vec2_to_vel(&other.serlized_state.body,pushback)
+            psy.add_fixed_vec2_to_vel(hit_results.other_body,pushback)
             psy.add_fixed_vec2_to_vel(&self.serlized_state.body,knockback)
+
  			self.hit_stun_frames = other_state.hitstun
 
             self.serlized_state.block_stun_frames = 0
@@ -287,8 +346,8 @@ char_resolve_hit :: proc(
 			    other^,
 				self^,
 				world^,
-				other.charecter_check_counterhit(other^,self^), // is counter hit todo detect counterhit
-				other_state,
+				other.hooks.charecter_check_counterhit(other^,self^), // is counter hit todo detect counterhit
+				other_state^,
 				hit_box,
 			)
 			self.serlized_state.health -= dammage
@@ -298,135 +357,6 @@ char_resolve_hit :: proc(
 	}
 }
 
-
-
-enity_check_hit :: proc() {
-   	// should we make this a function in entity
-	// todo why is this not working
-	// for &entity in self.entity_pool {
-	// 	if entity.active {
-	// 		enity_state := entity.states[entity.current_state]
-	// 		enity_frame := enity_state.frames[entity.current_frame]
-	// 		//todo sub in non jolt physics collision
-	// 		for &hitbox_index in enity_frame.hitbox_list {
-	// 			hit_box := enity_state.moveboxs[hitbox_index].(Hit_box)
-	// 			hitbox_context := HitBoxCtx(Entity(CU),CU) {
-	// 				self_state = enity_state,
-	// 				self   = self,
-	// 				other   = other,
-	// 				hitbox       = &hit_box,
-	// 				hitbox_index = hitbox_index,
-	// 				hitbox_tracker_ptr = &entity.hit_box_tracker_bit_mask,
-	// 				self_buffer =  self_buffer,
-	// 				other_buffer = other_buffer,
-	// 				world 	   	 = w,
-	// 				extra = &entity,
-	// 			}
-	// 			check_hit_entity(hitbox_context)
-	// 		}
-	// 	}
-	// }
-}
-
-check_hit ::  proc (hit_ctx: HitBoxCtx(CharecterBase($CU),CU)) {
-	self := hit_ctx.self
-	other := hit_ctx.other
-
-	// self_buffer := hit_ctx.self_buffer
-	other_buffer := hit_ctx.other_buffer
-
-	stateOther, frameOther := charecter_get_current_state_frame(other^)
-	// we may want to speed this up later by seperating to a p1 layer
-   	if hit_ctx.self_state.state_type==.Throw {
-   	    // handle throw logic
-
-  		// throw_check:=psy.check_body_body_collsion(hit_ctx.hitbox.box,self.body,other.collision_box,other.body)
-        //todo change the other into throw
-   	}
-
-
-	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
-	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
-
-
-   	for &hurt_box_index in frameOther.hurtbox_list {
-        hurt_box := stateOther.moveboxs[hurt_box_index].(Hurt_box)
-        col_check_res := psy.check_body_body_collsion(hurt_box.box,other.body,hit_ctx.hitbox.box,self.body)
-        log.debug(col_check_res)
-        if col_check_res == false{
-            continue // skip to the next hurt box
-        }
-        block := charecter_check_block(other,other_buffer^)
-
-
-
-		other.body.velocity = psy.Vec2Fixed{}
-		//this sets it so we dont hit with the same hitbox for multiple frames
-
-        if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
-            // on hit
-            knockback := hit_ctx.hitbox.hitKnockback
-      		knockback.x = fixed.mul(knockback.x ,side_mod)
-      		pushback := hit_ctx.hitbox.hitPushback
-      		pushback.x = fixed.mul(pushback.x ,side_mod)
-
-
-            psy.add_fixed_vec2_to_vel(&self.body,pushback)
-            psy.add_fixed_vec2_to_vel(&other.body,knockback)
-            // hit
-			//todo set self current velocity
-			other.hit_stun_frames = hit_ctx.self_state.hitstun
-			other.block_stun_frames=0
-			hit_ctx.world.combo_counter += 1
-			if self.combo_scaling == 0 {
-				//do we want to do this to avoid 0% scalling
-				self.combo_scaling = 1
-			}
-			if  knockback.y.i > 0 {
-			    other.jump_requested=true
-			}
-
-			if hit_ctx.self_state.hard_knockdown == true {
-                other.serlized_state.end_in_hardknockdown = true
-			} else if hit_ctx.self_state.soft_knockdown == true {
-                other.serlized_state.end_in_softknockdown = true
-			}
-
-			//set in hit_stun
-			dammage := self.damage_formula(
-			    self^,
-				other^,
-				hit_ctx.world^,
-				self.charecter_check_counterhit(self^,other^), // is counter hit todo detect counterhit
-				hit_ctx.self_state,
-				hit_ctx.hitbox^,
-			)
-			other.health -= dammage
-			charecer_change_state(other,other.hit_stun_index)
-			hit_ctx.world.hit_stop+=hit_ctx.self_state.hitstop
-
-
-		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
-            // block
-      		knockback := hit_ctx.hitbox.blockKnockback
-    		knockback.x = fixed.mul(knockback.x ,side_mod)
-    		pushback := hit_ctx.hitbox.blockPushback
-    		pushback.x = fixed.mul(pushback.x ,side_mod)
-
-            psy.add_fixed_vec2_to_vel(&self.body,pushback)
-            psy.add_fixed_vec2_to_vel(&other.body,knockback)
-
-			other.block_stun_frames = hit_ctx.self_state.blockstun
-			charecer_change_state(other,other.block_stun_index)
-			// other.block_stun_frames=0
-
-			// other.hit_stun_frames=0
-		}
-
-		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-        //check if blocking and set to block or hit_stun
-    }
-}
 
 
 charecter_check_block ::proc(charecter:  ^CharecterBase($CU),input_buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input)) -> bool {

@@ -1494,11 +1494,11 @@ cyberpunk_entity_fireball_light ::proc(char: ^gk.CharecterBase($Charecter)) -> i
 			self.body.position = charecter.body.position
 		}, // this runs onetime
 		update=            proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)){},
-		on_hit=			   proc(self:^gk.Entity(Charecter),hit_ctx:gk.HitBoxCtx(gk.Entity(Charecter),Charecter)){
-			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		on_hit=			   proc(self:^gk.Entity(Charecter),hit_ctx:gk.CheckHitResult,w:^gk.World(Charecter)){
+			gk.deactivate_entity(self,self.charecter_ptr,w)
 		},
-		on_block=		   proc(self:^gk.Entity(Charecter),hit_ctx:gk.HitBoxCtx(gk.Entity(Charecter),Charecter)){
-			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		on_block=		   proc(self:^gk.Entity(Charecter),hit_ctx:gk.CheckHitResult,w:^gk.World(Charecter)){
+			gk.deactivate_entity(self,self.charecter_ptr,w)
 		},
 		physcis_update=    proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)){},
 		deactivate=        proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)) {},
@@ -1554,11 +1554,11 @@ cyberpunk_entity_fireball_medium ::proc(char: ^gk.CharecterBase($Charecter)) -> 
 			self.body.position = charecter.body.position
 		}, // this runs onetime
 		update=            proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)){},
-		on_hit=			   proc(self:^gk.Entity(Charecter),hit_ctx:gk.HitBoxCtx(gk.Entity(Charecter),Charecter)){
-			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		on_hit=			   proc(self:^gk.Entity(Charecter),hit_ctx:gk.CheckHitResult,w:^gk.World(Charecter)){
+			gk.deactivate_entity(self,self.charecter_ptr,w)
 		},
-		on_block=		   proc(self:^gk.Entity(Charecter),hit_ctx:gk.HitBoxCtx(gk.Entity(Charecter),Charecter)){
-			gk.deactivate_entity(self,self.charecter_ptr,hit_ctx.world)
+		on_block=		   proc(self:^gk.Entity(Charecter),hit_ctx:gk.CheckHitResult,w:^gk.World(Charecter)){
+			gk.deactivate_entity(self,self.charecter_ptr,w)
 		},
 		physcis_update=    proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)){},
 		deactivate=        proc(self:^gk.Entity(Charecter),charecter:^gk.CharecterBase(Charecter),world:^gk.World(Charecter)) {},

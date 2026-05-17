@@ -4,7 +4,7 @@ package game_kernel
 CharecterHooks :: struct($CU:typeid) {
 	//required
 	// we set this as mutable so we can affect combo scalling
-	damage_formula:proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32,
+	damage_formula:proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:StateParams,hitbox:Hit_box) -> u32,
 	charecter_check_counterhit: proc(self:CharecterBase(CU),other:CharecterBase(CU)) -> bool,
 	// on tic
 	on_update:[dynamic]proc(self:^CharecterBase(CU),world:^World(CU)),
@@ -33,8 +33,8 @@ CharecterHooks :: struct($CU:typeid) {
 // 	onStateChange:proc(self:^CharecterBase,other:^CharecterBase,world:^World),
 // }
 
-make_default_dammage_formula :: proc($CU:typeid) -> proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32{
-    return proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State(CharecterBase(CU),CU),hitbox:Hit_box) -> u32 {
+make_default_dammage_formula :: proc($CU:typeid) -> proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:StateParams,hitbox:Hit_box) -> u32{
+    return proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:StateParams,hitbox:Hit_box) -> u32 {
         //TODO FIX ME
         if self.combo_scaling > 0 do return u32(self.combo_scaling / state.damage)
         return 0
