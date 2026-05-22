@@ -2,15 +2,10 @@ package game_kernel
 
 @(require)import "core:log"
 import psy "../physics"
-State :: struct($T:typeid,$CU:typeid) {
-    using params:StateParams, //seperating so we can have generics
-	frames:        [dynamic]Frame(T,CU),
-}
-
-StateParams :: struct {
-	name:		   string,
+State :: struct {
+   	name:		   string,
 	moveboxs:      [dynamic]MoveBox,
-   	state_type:    StateType,
+    state_type:    StateType,
 	hard_knockdown:bool,
 	soft_knockdown:bool,
 	// should all this be in a seprate struct
@@ -25,7 +20,9 @@ StateParams :: struct {
 	hitstop:       u8,
 	// reaction_index:u8, we may want this
 	block_cancelable:bool,
+	frames:        [dynamic]Frame,
 }
+
 
 //used for determenting if we should use throw detection or hit detection
 StateType :: enum{
@@ -38,22 +35,16 @@ StateType :: enum{
 
 
 //this is cringe see if we can fix
-Frame :: struct($T:typeid,$CU:typeid) {
-    using params:FrameParams,
-    using hooks:FrameHooks(T,CU),
-}
-
-FrameParams :: struct {
+Frame :: struct {
    	frame_type:    FrameType,
+    on_hit: Maybe(int),
+    on_block:Maybe(int), // should these be distinct
+    on_frame:Maybe(int),
+    check_exit:Maybe(int),
+    // side_effect_index:Maybe(int),
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]int, // width height extent will be static we may want to make it an index
 	hitbox_list:   [dynamic]int, // index into the hit box array of the state
-}
-
-FrameHooks :: struct($T:typeid,$CU:typeid) {
-   	on_frame:      proc(self: ^T,world:^World(CU)),
-	side_effect:   proc(self: T, world: World(CU),inRollback:bool),
-	check_exit:    proc(self: ^T, frame: int) -> bool, // takes char pointer and proposed state
 }
 
 //This would improve cache locality by colocating hit and hurbox.
@@ -71,6 +62,8 @@ Hit_box :: struct {
 	blockKnockback:   psy.Vec2Fixed,
 	blockPushback:    psy.Vec2Fixed,
 	attackDir:        AttackDir,
+    on_hit_index: Maybe(int),
+    on_block_index:Maybe(int), // should these be distinct
 	// todo properties
 }
 
@@ -101,9 +94,8 @@ delete_state :: proc(move: ^State) {
 		delete(frame.hurtbox_list)
 		delete(frame.cancel_states)
 	}
-	delete(move.hit_boxes)
+	delete(move.moveboxs)
 	delete(move.frames)
-	delete(move.hurtbox_bodys)
 }
 
 check_cancel_options :: proc(char: ^CharecterBase($CU), cancel_index: int) -> bool {

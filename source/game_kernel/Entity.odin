@@ -32,7 +32,7 @@ Entity :: struct($CU:typeid) {
 	//not stored for rollbacks
 	// can we have a compile time amount of states
 	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
-	states:            [dynamic]State(Entity(CU),CU), // should this be state
+	states:            [dynamic]State, // should this be state
 	activate:          proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)), // this runs onetime
 	update:            proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
 	on_hit:            proc(self:^Entity(CU),hit_ctx:CheckHitResult,world:^World(CU)),
@@ -61,12 +61,16 @@ activate_entity :: proc(character:^CharecterBase($CU),entity_index:int,world:^Wo
 entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	state := entity.states[entity.current_state]
 	frame := state.frames[entity.current_frame]
-	exit := frame.check_exit(entity,entity.current_frame)
-	if exit == true {
+	exit_check := false
+	// todo add a proposed state index here
+	if frame.check_exit != nil do exit_check = charecter.hooks.moveCheckExit[frame.check_exit.(int)](charecter,entity.current_frame)
+	if exit_check == true {
 		entity.current_state = entity.state_map[entity.current_state]
 		entity.current_frame = 0
 	}
-	frame.on_frame(entity,world)
+	if frame.on_frame  != nil{
+	    charecter.hooks.onFrame[frame.on_frame.(int)](charecter,world)
+	}
 	if entity.current_frame > len(state.frames) {
 		entity.current_frame += 1
 	}
@@ -93,7 +97,7 @@ deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world
 	//todo remove
 }
 
-get_entity_state_frame :: proc(entity:Entity($CU))  -> (State(Entity(CU),CU), Frame(Entity(CU),CU)) {
+get_entity_state_frame :: proc(entity:Entity($CU))  -> (State, Frame) {
    	state := entity.states[entity.current_state]
 	frame_to_pick := entity.current_frame
 	state_frame_len := len(state.frames)

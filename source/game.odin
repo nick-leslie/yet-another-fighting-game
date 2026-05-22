@@ -275,7 +275,7 @@ game_update :: proc() {
 @(export)
 game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
-	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
+	rl.InitWindow(1920, 1080, "Odin + Raylib + Hot Reload template!")
 	// rl.ToggleFullscreen()
 	// rl.SetWwaindowPosition(200, 200)
 	rl.SetTargetFPS(60)
@@ -442,6 +442,7 @@ game_shutdown :: proc() {
 	delete(g.fonts)
 	// destory_lobby(&g.network_mannager)
 	free_rollback_state_queue(&g.rollback_state)
+	end_network_loop(&g.network_session)
 	vmem.arena_destroy(&g.arena)
 	free(g)
 	//destroy spall
