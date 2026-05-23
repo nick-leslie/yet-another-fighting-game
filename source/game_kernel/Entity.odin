@@ -2,7 +2,7 @@ package game_kernel
 
 import "core:log"
 import psy "../physics"
-import fixed "core:math/fixed"
+@(require)import fixed "core:math/fixed"
 
 /*
 	ENTITY desighn doc
@@ -32,11 +32,11 @@ Entity :: struct($CU:typeid) {
 	//not stored for rollbacks
 	// can we have a compile time amount of states
 	state_map: 		   [dynamic]int, // this is a map of what states can go into what. its the same state if there is no exit
-	states:            [dynamic]State(Entity(CU),CU), // should this be state
+	states:            [dynamic]State, // should this be state
 	activate:          proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)), // this runs onetime
 	update:            proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
-	on_hit:            proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
-	on_block:          proc(self:^Entity(CU),hit_ctx:HitBoxCtx(Entity(CU),CU)),
+	on_hit:            proc(self:^Entity(CU),hit_ctx:CheckHitResult,world:^World(CU)),
+	on_block:          proc(self:^Entity(CU),hit_ctx:CheckHitResult,world:^World(CU)),
 	physcis_update:    proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
 	deactivate:        proc(self:^Entity(CU),charecter:^CharecterBase(CU),world:^World(CU)),
 }
@@ -61,12 +61,16 @@ activate_entity :: proc(character:^CharecterBase($CU),entity_index:int,world:^Wo
 entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
 	state := entity.states[entity.current_state]
 	frame := state.frames[entity.current_frame]
-	exit := frame.check_exit(entity,entity.current_frame)
-	if exit == true {
+	exit_check := false
+	// todo add a proposed state index here
+	if frame.check_exit != nil do exit_check = charecter.hooks.moveCheckExit[frame.check_exit.(int)](charecter,entity.current_frame)
+	if exit_check == true {
 		entity.current_state = entity.state_map[entity.current_state]
 		entity.current_frame = 0
 	}
-	frame.on_frame(entity,world)
+	if frame.on_frame  != nil{
+	    charecter.hooks.onFrame[frame.on_frame.(int)](charecter,world)
+	}
 	if entity.current_frame > len(state.frames) {
 		entity.current_frame += 1
 	}
@@ -76,7 +80,6 @@ entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^Wo
 
 
 entity_physics_update::proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^World(CU)) {
-	log.debug("started entity physics update")
 	// state := entity.states[entity.current_state]
 	// frame := state.frames[entity.current_frame]
 	// remove_state_hurtboxes(frame.hurtbox_list,world.physicsManager)
@@ -94,76 +97,21 @@ deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world
 	//todo remove
 }
 
-
-
-//todo this is realy stinky and I dont like this get rid of it
-check_hit_entity ::  proc (hit_ctx: HitBoxCtx(Entity($C),C)) {
-    // self := hit_ctx.self
-	other := hit_ctx.other
-	entity := hit_ctx.extra
-
-	// self_buffer := hit_ctx.self_buffer
-	other_buffer := hit_ctx.other_buffer
-	stateOther, frameOther := charecter_get_current_state_frame(other^)
-	// we may want to speed this up later by seperating to a p1 layer
-
-
-
-	side_mod: psy.Fixed12_4 = psy.init_from_parts(1,0)
-	if other.p1_side == false do side_mod = psy.init_from_parts(-1,0)
-
-
-   	for hurt_box_index in frameOther.hurtbox_list {
-        hurt_box := stateOther.moveboxs[hurt_box_index].(Hurt_box).box
-        col_check_res := psy.check_body_body_collsion(hurt_box,other.body,hit_ctx.hitbox.box,entity.body)
-        log.debug(col_check_res)
-        if col_check_res == false{
-            continue // skip to the next hurt box
-        }
-        block := charecter_check_block(other,other_buffer^)
-		// should we remove existing velocity
-
-		//this sets it so we dont hit with the same hitbox for multiple frames
-		other.body.velocity = psy.Vec2Fixed{}
-
-        if block == false && hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false { // the in is checking if its set
-            // hit
-            knockback := hit_ctx.hitbox.hitKnockback
-      		knockback.x = fixed.mul(knockback.x ,side_mod)
-
-
-            psy.add_fixed_vec2_to_vel(&other.body,knockback)
-
-			//todo set self current velocity
-			other.hit_stun_frames = hit_ctx.self_state.hitstun
-			other.block_stun_frames=0
-			if  knockback.y.i > 0 {
-			    other.jump_requested=true
-			}
-			psy.add_fixed_vec2_to_vel(&other.body,knockback)
-
-			hit_ctx.world.combo_counter += 1
-			//set in hit_stun
-			other.health-= hit_ctx.self_state.damage
-			entity.on_hit(entity,hit_ctx)
-			hit_ctx.world.hit_stop+=hit_ctx.self_state.hitstop
-		} else if hit_ctx.hitbox_index in hit_ctx.hitbox_tracker_ptr == false {
-            // block
-      		knockback := hit_ctx.hitbox.blockKnockback
-      		knockback.x = fixed.mul(knockback.x ,side_mod)
-            psy.add_fixed_vec2_to_vel(&other.body,knockback)
-
-            psy.add_fixed_vec2_to_vel(&other.body,knockback)
-
-
-			other.block_stun_frames = hit_ctx.self_state.blockstun
-			other.hit_stun_index=0
-			entity.on_block(entity,hit_ctx)
-		}
-		hit_ctx.hitbox_tracker_ptr^ += {hit_ctx.hitbox_index} // todo check this
-        //check if blocking and set to block or hit_stun
-    }
+get_entity_state_frame :: proc(entity:Entity($CU))  -> (State, Frame) {
+   	state := entity.states[entity.current_state]
+	frame_to_pick := entity.current_frame
+	state_frame_len := len(state.frames)
+	if entity.current_frame >= state_frame_len {
+		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
+	}
+	frame := state.frames[frame_to_pick]
+	return state, frame
 }
+
+
+
+
+
 
 
 serlize_entity :: proc(char:Entity($C)) -> SerlizedEntityState {

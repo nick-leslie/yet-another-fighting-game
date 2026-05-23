@@ -104,22 +104,31 @@ start_network_loop :: proc(mannager:^SessionMannager) {
     mannager.thread = thread
 }
 
+end_network_loop :: proc(mannager:^SessionMannager) {
+    mannager.should_run = false
+    if mannager.thread != nil {
+        thread.destroy(mannager.thread)
+    }
+}
+
 //this should be in another thread
 recv_network_loop :: proc(mannager:^SessionMannager) {
 	context.logger = g_context.logger
 	// make this not fixed
     // log.debug("started listening for messages")
-    net.set_blocking(mannager.udp.socket,true)
+    net.set_blocking(mannager.udp.socket,false)
     for mannager.should_run {
         msg:= NetworkMessage {}
         // log.debug("waiting for next message")
-        err  := netcode.recv_packet(mannager.udp,&msg)
-        if err != nil { 
+        bytes_rcved, err  := netcode.recv_packet(mannager.udp,&msg)
+        if err != nil {
             log.warn(err)
             //todo just skip for now
             continue
         }
-
+        if bytes_rcved == 0 {
+            continue
+        }
 
 		switch state in msg.message_type {
 		//TODO game start not working of we packet loss

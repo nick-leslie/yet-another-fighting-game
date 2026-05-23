@@ -94,18 +94,21 @@ send_message :: proc(mannager:^ReliableUdpMannager($T), packet:T,tick:int) -> (i
     return bytes,net_err
 }
 
-recv_packet :: proc(mannager:ReliableUdpMannager($T),packet_write:^T) -> net.UDP_Recv_Error {
+recv_packet :: proc(mannager:ReliableUdpMannager($T),packet_write:^T) -> (int,net.UDP_Recv_Error) {
     buffer := [300]u8{}
     bytes_rcved,_,net_err := net.recv_udp(mannager.socket,buffer[:])
     if net_err != net.UDP_Recv_Error.None && bytes_rcved > 0 {
-        return net_err
+        return bytes_rcved,net_err
+    }
+    if bytes_rcved == 0 {
+        return bytes_rcved,net.UDP_Recv_Error.None
     }
     packet,err := mannager.deserlize_packet(buffer[:])
     if err {
-        return net.UDP_Recv_Error.Unknown
+        return bytes_rcved,net.UDP_Recv_Error.Unknown
     }
     packet_write^ = packet
-    return net_err
+    return bytes_rcved,net_err
 }
 
 ack_msg :: proc(mannager:^ReliableUdpMannager($T),tick:int) {
