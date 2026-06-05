@@ -131,3 +131,10 @@ This is cleared every frame.
 future improvements 
 * [ ] scripting lang support. lua,js,or custom
 * [ ] modding tools. sends scripts and sprites over the net
+
+
+## ideas
+could use the marvel token bar but let both players influce it
+one player trying to increase it the other trying to decrese it.
+
+videos for tutorials?

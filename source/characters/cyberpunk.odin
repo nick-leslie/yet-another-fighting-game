@@ -8,6 +8,9 @@ import psy "../physics"
 import vmem "core:mem/virtual"
 import "../tools"
 
+// could use the marvel token bar but let both players influce it
+
+
 Cyberpunk :: struct {
     light_fireball_entity_index:int,
     med_fireball_entity_index:int,

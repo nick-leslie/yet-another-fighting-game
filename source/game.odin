@@ -78,6 +78,8 @@ Game_Memory :: struct {
 	start_time:		Maybe(time.Time),
 	world: 		    gk.World(char.Charecter),
 	model_tmp: 		rl.Model,
+	animations_tmp: [^]rl.ModelAnimation,
+	animations_count_tmp:i32,
 	clay_arena:     clay.Arena,
 	cam: 			rl.Camera3D,
 	rollback_state: RollbackMannager(char.Charecter),
@@ -145,7 +147,7 @@ draw_game :: proc() {
 		g.cam = game_camera() // we may want to only do this once but tmp for now
 	}
 	rl.BeginMode3D(g.cam)
-
+	rl.DrawModel(g.model_tmp,{0,0,0},10,rl.WHITE)
 	charecter_draw(g.world.p1)
 	charecter_draw(g.world.p2)
 	charecter_draw_hit_boxes(g.world.p1)
@@ -350,12 +352,19 @@ game_init :: proc() {
 		  font=utf_font,
 	})
 
+
+	model_tmp := rl.LoadModel("assets/tmp/UAL1_Standard.glb")
+	animation_count:i32 = 0
+	animations := rl.LoadModelAnimations("assets/tmp/UAL1_Standard.glb",&animation_count)
 	// does this work
 	arena_alocator := vmem.arena_allocator(&g.arena)
 	g = new(Game_Memory)
 	g^ = Game_Memory {
         screen = InRound{},
 		app_run = true,
+		model_tmp = model_tmp,
+		animations_count_tmp=animation_count,
+		animations_tmp=animations,
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 		clay_arena=clay_arena,

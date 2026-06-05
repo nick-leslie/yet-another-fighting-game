@@ -11,5 +11,6 @@ joltc
 *.so
 *.bin
 assets/tmp
+assets/test
 *.spall
 *.png
