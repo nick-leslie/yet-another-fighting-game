@@ -19,13 +19,13 @@ get_stun_server_address :: proc(hostname:string) ->(result:net.DNS_Record,err:ne
         net.Endpoint {
             address=net.IP4_Address{8,8,8,8},
             port=53,
-        }
+        },
     }
     name_server_records := net.get_dns_records_from_nameservers(
         hostname,
         .DNS_TYPE_A,
         nameservers,
-        os_records
+        os_records,
     ) or_return
     defer net.destroy_dns_records(name_server_records)
     log.info(name_server_records)
@@ -43,6 +43,7 @@ create_stun_init :: proc () -> [2048]u8 {
     endian.put_u16(buffer[2:],.Big,0) // len
     endian.put_u32(buffer[4:],.Big,0x2112A442) // cookie
     n:=rand.read(buffer[8:8+12])
+    log.debug(n)
     //todo push data
     // todo get 96 random bytes
     // 0x0001 // class size
@@ -101,6 +102,6 @@ get_stun_server_address_test :: proc (t:^testing.T) {
         base = net.DNS_Record_Base{
             record_name = "stun.l.google.com",
             ttl_seconds = 226,
-        }, address = {74, 125, 250, 129}
+        }, address = {74, 125, 250, 129},
     })
 }

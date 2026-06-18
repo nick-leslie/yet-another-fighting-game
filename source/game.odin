@@ -74,7 +74,7 @@ Game_Memory :: struct {
 	screen:         Screen,
 	game_run: 		bool,
 	arena:     		vmem.Arena,
-	frame:          int,
+	frame:          i64,
 	start_time:		Maybe(time.Time),
 	world: 		    gk.World(char.Charecter),
 	model_tmp: 		rl.Model,
@@ -89,6 +89,9 @@ Game_Memory :: struct {
 	// setup game arena
 	fonts: 			[dynamic]Raylib_Font,
 }
+
+
+ROUND_DURATION_SECONDS :: 90
 
 CAMERA_DISTANCE :: 70
 CAMERA_POSITION :: Vec3{0, 0, CAMERA_DISTANCE}
