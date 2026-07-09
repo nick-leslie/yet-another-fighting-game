@@ -1,10 +1,26 @@
-package game
+package rendering
 
 // import "core:log"
-import gk "game_kernel"
+import gk "../game_kernel"
 import rl  "vendor:raylib"
-import psy "./physics"
+import psy "../physics"
 
+CAMERA_DISTANCE :: 70
+CAMERA_POSITION :: Vec3{0, 0, CAMERA_DISTANCE}
+CAMERA_TARGET   :: Vec3 {0,25,0}
+Vec3 :: [3]f32
+Vec364 :: [3]f64
+Vec2 :: [2]f32
+Vec264 :: [2]f64
+Vec4 :: [4]f32
+
+Quat :: quaternion128
+
+FLOOR_POSITION: Vec3 = {0, 0, 0}
+QUAT_IDENTITY: Quat = 1
+VEC3_ZERO: Vec3 = 0
+UP :: Vec3{0, 1, 0}
+FLOOR_EXTENT: Vec3={150, 0.05, 10}
 
 charecter_draw :: proc(character: gk.CharecterBase($C)) {
 	state,frame := gk.charecter_get_current_state_frame(character)

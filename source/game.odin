@@ -42,6 +42,7 @@ import "core:os"
 import "core:time"
 import char "./characters"
 import "./netcode"
+import render "rendering"
 @(require) import "core:sync"
 @(require) import "core:prof/spall"
 
@@ -87,7 +88,7 @@ Game_Memory :: struct {
 	p2_input_mannager:InputMannager,
 	network_session:SessionMannager,
 	// setup game arena
-	fonts: 			[dynamic]Raylib_Font,
+	fonts: 			[dynamic]render.Raylib_Font,
 }
 
 
@@ -151,10 +152,10 @@ draw_game :: proc() {
 	}
 	rl.BeginMode3D(g.cam)
 	rl.DrawModel(g.model_tmp,{0,0,0},10,rl.WHITE)
-	charecter_draw(g.world.p1)
-	charecter_draw(g.world.p2)
-	charecter_draw_hit_boxes(g.world.p1)
-	charecter_draw_hit_boxes(g.world.p2)
+	render.charecter_draw(g.world.p1)
+	render.charecter_draw(g.world.p2)
+	render.charecter_draw_hit_boxes(g.world.p1)
+	render.charecter_draw_hit_boxes(g.world.p2)
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
 	// rl.DrawModelEx(g.model_tmp,{0,0,0},{-1,0,0},90,500,rl.WHITE)
 
@@ -172,7 +173,7 @@ draw_game :: proc() {
 	commands := create_debug_ui_layout()
 
 	//something is going wrong with the interactions between the cam and clay
-	clay_raylib_render(&commands,g.fonts,context.temp_allocator)
+	render.clay_raylib_render(&commands,g.fonts,context.temp_allocator)
 	// rl.DrawFPS(5, 50)
 
 	rl.EndDrawing()
@@ -190,7 +191,7 @@ draw_main_menu :: proc(screen:^MainMenu) {
    	commands := create_menu_ui_layout(&screen.elements)
 
 	//something is going wrong with the interactions between the cam and clay
-	clay_raylib_render(&commands,g.fonts,context.temp_allocator)
+	render.clay_raylib_render(&commands,g.fonts,context.temp_allocator)
 	rl.EndDrawing()
 }
 // last_world_state:gk.SerlizedWorld
@@ -345,12 +346,12 @@ game_init :: proc() {
 		1280,
 		720,
 	})
-	fonts := make([dynamic]Raylib_Font)
-	append(&fonts,Raylib_Font{
+	fonts := make([dynamic]render.Raylib_Font)
+	append(&fonts,render.Raylib_Font{
 	  fontId=0,
 	  font=default_font,
 	})
-	append(&fonts,Raylib_Font{
+	append(&fonts,render.Raylib_Font{
 		  fontId=0,
 		  font=utf_font,
 	})
@@ -390,6 +391,7 @@ game_init :: proc() {
 		fonts = fonts,
 		game_run = false,
 	}
+	render.set_fonts(&g.fonts)
 	log.debug("connecting to network")
 	bind_port := 3636
 	target_port := 3636

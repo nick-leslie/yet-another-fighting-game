@@ -1,15 +1,23 @@
-package game
+package rendering
 import "core:unicode/utf8"
 import "base:runtime"
-import clay "../libs/clay-odin"
+import clay "../../libs/clay-odin"
 import "core:math"
 import "core:strings"
 import rl "vendor:raylib"
+
+FONTS : ^[dynamic]Raylib_Font
 
 Raylib_Font :: struct {
     fontId: u16,
     font:   rl.Font,
 }
+
+// this is cringe
+set_fonts :: proc(fonts:^[dynamic]Raylib_Font) {
+    FONTS = fonts
+}
+
 
 clay_color_to_rl_color :: proc(color: clay.Color) -> rl.Color {
     return {u8(color.r), u8(color.g), u8(color.b), u8(color.a)}
@@ -25,7 +33,7 @@ measure_text_unicode :: proc "c" (text: clay.StringSlice, config: ^clay.TextElem
 
 	line_width: f32 = 0
 
-	font := g.fonts[config.fontId].font
+	font := FONTS[config.fontId].font
 	text_str := string(text.chars[:text.length])
 
     // This function seems somewhat expensive, if you notice performance issues, you could assume
@@ -60,7 +68,7 @@ measure_text_unicode :: proc "c" (text: clay.StringSlice, config: ^clay.TextElem
 measure_text_ascii :: proc "c" (text: clay.StringSlice, config: ^clay.TextElementConfig, userData: rawptr) -> clay.Dimensions {
 	line_width: f32 = 0
 
-	font := g.fonts[config.fontId].font
+	font := FONTS[config.fontId].font
 	text_str := string(text.chars[:text.length])
 
 	for i in 0..<len(text_str) {

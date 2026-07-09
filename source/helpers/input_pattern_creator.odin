@@ -1,5 +1,5 @@
     #+feature dynamic-literals
-package tools
+package helpers
 import gk "../game_kernel"
 @(require)import "core:log"
 import "core:testing"

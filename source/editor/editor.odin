@@ -11,19 +11,19 @@ import rl "vendor:raylib"
 
 EditorState :: struct {
     charecter:gk.CharecterBase(chars.Charecter),
-    frame:int,
-    state:int,
 }
 
 // used to run stand alone
 main :: proc() {
+editor_state := EditorState{}
  for rl.WindowShouldClose() {
-     draw_editor()
+     draw_editor(editor_state)
  }
 }
 
-draw_editor :: proc() {
+draw_editor :: proc(editor_state:EditorState) {
     rl.BeginDrawing()
+
     rl.EndDrawing()
 }
 
