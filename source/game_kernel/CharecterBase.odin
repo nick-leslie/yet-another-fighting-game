@@ -15,6 +15,9 @@ CHARACTER_CAPSULE_RADIUS: i16 : 1
 
 HIT_BOX_MAX :: 64 // we may want to change this
 
+state_index :: distinct int
+frame_index :: distinct int
+
 CharecterSerlizedState :: struct($CU:typeid) {
    	health: 		   u32,
     end_in_hardknockdown:bool, // these flags are for if you end hitstun in hard or soft knockdown
@@ -30,8 +33,8 @@ CharecterSerlizedState :: struct($CU:typeid) {
     grav:              psy.Fixed12_4,
    	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
    	entity_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of what entitys are active
-   	current_frame:     int,
-    current_state:     int, // this is an index
+   	current_frame:     frame_index,
+    current_state:     state_index, // this is an index
     hit_stun_frames:   u8,
     block_stun_frames: u8,
     combo_scaling:     u32,
@@ -41,6 +44,8 @@ CharecterSerlizedState :: struct($CU:typeid) {
 
 	}, // lots of flags for various states.. tuble extc
 }
+
+
 
 
 
@@ -54,10 +59,10 @@ CharecterBase :: struct($CU:typeid) {
 	//for all of these we may want to move them to the move
 	// or we want to have a state that we then change off the charecter animation
 	// or we move this to a reaction in the move itself
-	soft_knockdown_index: int,
-	hard_knockdown_index: int,
-	hit_stun_index:       int, // we may replace this with a constent
-	block_stun_index:     int,
+	soft_knockdown_index: state_index,
+	hard_knockdown_index: state_index,
+	hit_stun_index:       state_index, // we may replace this with a constent
+	block_stun_index:     state_index,
 	throw_reaction_index: int,
 	//could move all these to the world
 	// todo keep a
@@ -105,10 +110,10 @@ charecter_update :: proc(character: ^CharecterBase($CU),other:^CharecterBase(CU)
 	state_frame_len := len(state.frames)
 
 	exit_check := false
-	if frame.check_exit != nil do exit_check = character.hooks.moveCheckExit[frame.check_exit.(int)](character,proposed_state_index)
+	if frame.check_exit != nil do exit_check = character.hooks.moveCheckExit[frame.check_exit.(function_index)](character,proposed_state_index)
 
 	//exit check has to be true and we have to be at the end. but if exit check is true we can end pre maturely
-	if (character.current_frame >= state_frame_len && exit_check == true) || exit_check == true {
+	if (int(character.current_frame) >= state_frame_len && exit_check == true) || exit_check == true {
 		// if we were in hitstun and we want to go to another state
 	    if(character.current_state == character.hit_stun_index) {
 			//this is the recovery point
@@ -136,7 +141,7 @@ charecter_update :: proc(character: ^CharecterBase($CU),other:^CharecterBase(CU)
 		state,frame = charecer_change_state(character,character.block_stun_index)
 	}
 	if frame.on_frame != nil {
-	    character.hooks.onFrame[frame.on_frame.(int)](character,w) // run frame update
+	    character.hooks.onFrame[frame.on_frame.(function_index)](character,w) // run frame update
 	}
 	for &updates in character.on_update {
 		updates(character,w)
@@ -162,7 +167,7 @@ charecter_side_effect :: proc(character:CharecterBase($CU),world:World(CU),inRol
     frame.side_effect(character,world,inRollback)
 }
 
-charecer_change_state :: proc(character:^CharecterBase($CU),state:int) -> (State,Frame) {
+charecer_change_state :: proc(character:^CharecterBase($CU),state:state_index) -> (State,Frame) {
 	character.current_state = state
 	character.current_frame = 0
 	character.jump_requested = false
@@ -179,9 +184,9 @@ charecer_change_state :: proc(character:^CharecterBase($CU),state:int) -> (State
 charecter_get_current_state_frame :: proc(character: CharecterBase($CU)) -> (State,Frame) {
 	state := character.states[character.current_state]
 	frame_to_pick := character.current_frame
-	state_frame_len := len(state.frames)
+	state_frame_len := frame_index(len(state.frames))
 	if character.current_frame >= state_frame_len {
-		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
+		frame_to_pick = frame_index(state_frame_len - 1) // lock on the last frame if we can progress
 	}
 	frame := state.frames[frame_to_pick]
 	return state, frame
@@ -477,4 +482,12 @@ deserlize_charecter :: proc(state:CharecterSerlizedState($CU),entitys_states:[dy
         deserlize_entity(entitys_states[i],&char.entity_pool[i])
     }
     //todo deserlize entity here
+}
+
+
+
+charecter_push_state :: proc(char: ^CharecterBase($CU), state: State) -> state_index {
+   	append(&char.states, state)
+	index := len(char.states)-1
+	return state_index(index)
 }

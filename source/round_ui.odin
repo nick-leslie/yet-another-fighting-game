@@ -29,7 +29,7 @@ timer_ui :: proc(time:u32) {
 		fontSize=20,letterSpacing=2,fontId=0,textColor={255,255,255,255},textAlignment=.Center}),
 	)
 }
-
+    
 health_bar_ui :: proc(char:gk.CharecterBase($CU)) {
     if clay.UI(clay.ID("Health-outer"))({
         layout = {

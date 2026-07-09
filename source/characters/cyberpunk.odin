@@ -16,10 +16,10 @@ Cyberpunk :: struct {
     med_fireball_entity_index:int,
 }
 
-air_state_cancel_index :int
-cancelable_on_hit_or_block_index :int
-nutral_on_frame_index:int
-reset_velocity_index:int
+air_state_cancel_index :gk.function_index
+cancelable_on_hit_or_block_index :gk.function_index
+nutral_on_frame_index:gk.function_index
+reset_velocity_index:gk.function_index
 create_cyberpunk_charecter :: proc(pos:[4]i16,budget:i64) -> gk.CharecterBase(Charecter) {
     hooks := gk.CharecterHooks(Charecter) {
         damage_formula = gk.make_default_dammage_formula(Charecter),
@@ -91,8 +91,8 @@ cyberpunk_add_state_movement ::proc(char: ^gk.CharecterBase(Charecter)) {
 	cyberpunk_pattern_jump_backward(char,index)
 	log.debug("done adding movement")
 }
-any_cancel_index :int
-cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
+any_cancel_index :gk.function_index
+cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	//todo we can load hitboxes
 	// test := #load("/", []gk.Hit_box)
@@ -112,11 +112,9 @@ cyberpunk_state_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		frames = {zero_frame},
 		moveboxs={hurt_box},
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
-cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box= psy.box_init({0,0,0,0},{5,0,5,0}),
@@ -133,12 +131,10 @@ cyberpunk_state_crouch_neutral ::proc(char: ^gk.CharecterBase(Charecter)) -> int
 		frames = {zero_frame},
 		moveboxs={hurt_box},
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
 
-cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box = psy.box_init({0,0,0,0},{5,0,10,0}),
@@ -160,13 +156,11 @@ cyberpunk_state_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		moveboxs={hurt_box},
 	}
 	log.debug("in setting up physics")
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
 
 
-cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index{
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box = psy.box_init({0,0,0,0},{5,0,10,0}),
@@ -188,11 +182,9 @@ cyberpunk_state_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		moveboxs={hurt_box},
 	}
 
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
-cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
+cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
@@ -221,13 +213,11 @@ cyberpunk_state_jump ::proc(char: ^gk.CharecterBase(Charecter)) -> int{
 		moveboxs={hurt_box},
 	}
 
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
 
 
-cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
+cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
@@ -258,11 +248,9 @@ cyberpunk_state_jump_forward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
 		moveboxs={hurt_box},
 	}
 
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
-cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int {
+cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> gk.state_index {
 	context.allocator = vmem.arena_allocator(&char.arena)
 	hurt_box := gk.Hurt_box {
 	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
@@ -294,12 +282,10 @@ cyberpunk_state_jump_backward ::proc(char: ^gk.CharecterBase(Charecter)) -> int 
 		moveboxs={hurt_box},
 		frames = {zero_frame, one_frame},
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
-	return index
+	return gk.charecter_push_state(char, move)
 }
 
-cyberpunk_pattern_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -310,7 +296,7 @@ cyberpunk_pattern_stand_neutral ::proc(char: ^gk.CharecterBase(Charecter),index:
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_crouch ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_crouch ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	append(&char.patterns,gk.Pattern {
@@ -333,7 +319,7 @@ cyberpunk_pattern_crouch ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	})
 
 }
-cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -344,7 +330,7 @@ cyberpunk_pattern_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -355,7 +341,7 @@ cyberpunk_pattern_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) 
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -367,7 +353,7 @@ cyberpunk_pattern_jump ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {
@@ -379,7 +365,7 @@ cyberpunk_pattern_jump_forward ::proc(char: ^gk.CharecterBase(Charecter),index:i
 	}
 	append(&char.patterns, pattern)
 }
-cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:int) {
+cyberpunk_pattern_jump_backward ::proc(char: ^gk.CharecterBase(Charecter),index:gk.state_index) {
 	context.allocator = vmem.arena_allocator(&char.arena)
 
 	pattern := gk.Pattern {

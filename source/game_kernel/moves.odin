@@ -33,14 +33,14 @@ StateType :: enum{
     ThrowReaction,
 }
 
-
+function_index :: distinct int
 //this is cringe see if we can fix
 Frame :: struct {
    	frame_type:    FrameType,
-    on_hit: Maybe(int),
-    on_block:Maybe(int), // should these be distinct
-    on_frame:Maybe(int),
-    check_exit:Maybe(int),
+    on_hit: Maybe(function_index),
+    on_block:Maybe(function_index), // should these be distinct
+    on_frame:Maybe(function_index),
+    check_exit:Maybe(function_index),
     // side_effect_index:Maybe(int),
 	cancel_states: [dynamic]int,
 	hurtbox_list:  [dynamic]int, // width height extent will be static we may want to make it an index

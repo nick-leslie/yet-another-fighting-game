@@ -74,7 +74,7 @@ Game_Memory :: struct {
 	screen:         Screen,
 	game_run: 		bool,
 	arena:     		vmem.Arena,
-	frame:          i64,
+	frame:          int,
 	start_time:		Maybe(time.Time),
 	world: 		    gk.World(char.Charecter),
 	model_tmp: 		rl.Model,

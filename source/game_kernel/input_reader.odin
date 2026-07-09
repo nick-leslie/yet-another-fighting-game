@@ -57,7 +57,7 @@ Pattern :: struct {
     // these are essently fixed. could we use code gen?
     inputs:       [dynamic]Input,
     pritority:    int,
-    state_index:  int,
+    state_index:  state_index,
     // we may want to also add a only in air check
     air_ok:       bool,
     air_only:     bool,
@@ -84,7 +84,7 @@ update_input_buffer :: proc(input_buffer:^utils.Buffer(INPUT_BUFFER_LENGTH,Input
 INPUT_BUFFER_LENGTH :: 25
 //look at how tks work and refne. right now we cant handle input of the same type before the attack type
 // could we speed this up with a binary tree
-pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern,in_air:bool) -> int {
+pick_state :: proc(buffer:utils.Buffer(INPUT_BUFFER_LENGTH,Input),pattern_list:[dynamic]Pattern,in_air:bool) -> state_index {
     // could we stack alocate this
     // we use the tmp alocator so that we can delete it at the end of each frame
     pattern_input_index := make([dynamic]int,len(pattern_list),context.temp_allocator)

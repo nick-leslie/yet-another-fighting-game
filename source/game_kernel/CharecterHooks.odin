@@ -22,7 +22,7 @@ CharecterHooks :: struct($CU:typeid) {
 	//--------------- move and frame hooks
 	// when a move hits self
 	onFrame: [dynamic]proc(self: ^CharecterBase(CU),world:^World(CU)),
-	moveCheckExit:[dynamic]proc(self: ^CharecterBase(CU), frame: int) -> bool,
+	moveCheckExit:[dynamic]proc(self: ^CharecterBase(CU), state: state_index) -> bool,
 	moveOnHit:[dynamic]proc(self:^CharecterBase(CU),other:^CharecterBase(CU),world:^World(CU)), // todo fill me out all the on hit function pointer
 	moveOnBlock:[dynamic]proc(self:^CharecterBase(CU),other:^CharecterBase(CU),world:^World(CU)), // todo fill me out all the on block function pointer
 }
@@ -31,7 +31,7 @@ CharecterHooks :: struct($CU:typeid) {
 initilize_charecter_hooks :: proc(char: ^CharecterBase($CU)) {
    	arena_alocator := vmem.arena_allocator(&char.arena)
     char.hooks.onFrame = make([dynamic]proc(self: ^CharecterBase(CU),world:^World(CU)),arena_alocator)
-    char.hooks.moveCheckExit = make([dynamic]proc(self: ^CharecterBase(CU), frame: int) -> bool,arena_alocator)
+    char.hooks.moveCheckExit = make([dynamic]proc(self: ^CharecterBase(CU), frame: state_index) -> bool,arena_alocator)
     char.hooks.moveOnHit = make([dynamic]proc(self:^CharecterBase(CU),other:^CharecterBase(CU),world:^World(CU)),arena_alocator)
     char.hooks.moveOnBlock = make([dynamic]proc(self:^CharecterBase(CU),other:^CharecterBase(CU),world:^World(CU)),arena_alocator)
 }
@@ -50,9 +50,9 @@ initilize_charecter_hooks :: proc(char: ^CharecterBase($CU)) {
 // }
 
 
-push_function :: proc(array: ^$T/[dynamic]$E,type:E) -> int {
+push_function :: proc(array: ^$T/[dynamic]$E,type:E) -> function_index {
     append(array,type)
-    return len(array)-1
+    return function_index(len(array)-1)
 }
 
 make_default_dammage_formula :: proc($CU:typeid) -> proc(self:CharecterBase(CU),other:CharecterBase(CU),world:World(CU),isCounter:bool,state:State,hitbox:Hit_box) -> u32{

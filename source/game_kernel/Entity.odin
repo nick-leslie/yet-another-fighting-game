@@ -16,8 +16,8 @@ SerlizedEntityState :: struct {
 	active:			   bool,
 	id: 		   	   int,
 	health: 		   u32,
-	current_state: 	   int,
-	current_frame: 	   int,
+	current_state: 	   state_index,
+	current_frame: 	   frame_index,
 	move_speed:        psy.Fixed12_4,
 	hit_box_tracker_bit_mask: bit_set[0..<64; u64],// bit mask of if the hit box has been used
 	// physics
@@ -63,15 +63,18 @@ entity_update :: proc(entity:^Entity($CU),charecter:^CharecterBase(CU),world:^Wo
 	frame := state.frames[entity.current_frame]
 	exit_check := false
 	// todo add a proposed state index here
-	if frame.check_exit != nil do exit_check = charecter.hooks.moveCheckExit[frame.check_exit.(int)](charecter,entity.current_frame)
-	if exit_check == true {
-		entity.current_state = entity.state_map[entity.current_state]
-		entity.current_frame = 0
+	if len(entity.state_map) > 0 {
+		proposed_state_index := state_index(entity.state_map[entity.current_state])
+    	if frame.check_exit != nil do exit_check = charecter.hooks.moveCheckExit[frame.check_exit.(function_index)](charecter,proposed_state_index)
+    	if exit_check == true {
+    		entity.current_state = state_index(entity.state_map[entity.current_state])
+    		entity.current_frame = 0
+    	}
 	}
 	if frame.on_frame  != nil{
-	    charecter.hooks.onFrame[frame.on_frame.(int)](charecter,world)
+	    charecter.hooks.onFrame[frame.on_frame.(function_index)](charecter,world)
 	}
-	if entity.current_frame > len(state.frames) {
+	if entity.current_frame > frame_index(len(state.frames)) {
 		entity.current_frame += 1
 	}
 	entity.update(entity,charecter,world)
@@ -100,9 +103,9 @@ deactivate_entity :: proc(entity:^Entity($CU),character:^CharecterBase(CU),world
 get_entity_state_frame :: proc(entity:Entity($CU))  -> (State, Frame) {
    	state := entity.states[entity.current_state]
 	frame_to_pick := entity.current_frame
-	state_frame_len := len(state.frames)
+	state_frame_len := frame_index(len(state.frames))
 	if entity.current_frame >= state_frame_len {
-		frame_to_pick = state_frame_len - 1 // lock on the last frame if we can progress
+		frame_to_pick = frame_index(state_frame_len - 1)// lock on the last frame if we can progress
 	}
 	frame := state.frames[frame_to_pick]
 	return state, frame

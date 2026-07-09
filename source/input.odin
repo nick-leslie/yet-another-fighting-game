@@ -63,7 +63,7 @@ InputMannager :: struct {
 
 
 poll_charecter_input ::proc (controls:Controls,p1_side:bool) ->  gk.Input {
-    switch &controls in controls {
+    switch controls in controls {
     case Keyboard:
         move_vec := Vec2{}
         side_mod := 1

@@ -14,7 +14,7 @@ import vmem "core:mem/virtual"
 // so like idk what to name it
 Charecter :: struct {
 	budget:i64,
-	debit_install_index:int,
+	debit_install_index: gk.state_index,
 	in_debit:bool,
 	charecter_spesific_data: union {
 		Cyberpunk,
@@ -22,7 +22,7 @@ Charecter :: struct {
 }
 
 
-air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: gk.state_index) -> bool {
 	//todo make it so we only cansle jump state when we land or do a
 	state := char.states[cancel_index]
 	// jump normal/special
@@ -33,7 +33,7 @@ air_state_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) 
    	return false
 }
 
-cancelable_on_hit_or_block :: proc(char:^gk.CharecterBase(Charecter),cancel_index:int ) -> bool{
+cancelable_on_hit_or_block :: proc(char:^gk.CharecterBase(Charecter),cancel_index: gk.state_index ) -> bool{
     // if any of the hit box trackers are used
     for i:=0;i<63;i+=1 {
         if i in char.serlized_state.hit_box_tracker_bit_mask == true {
@@ -43,23 +43,23 @@ cancelable_on_hit_or_block :: proc(char:^gk.CharecterBase(Charecter),cancel_inde
 	return false
 }
 
-any_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+any_cancel :: proc(char: ^gk.CharecterBase(Charecter), cancel_index:  gk.state_index) -> bool {
     return true
 }
 
-nil :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+nil :: proc(char: ^gk.CharecterBase(Charecter), cancel_index:  gk.state_index) -> bool {
     return false
 }
 
 // we cant cancel except into debit install
-nil_accept_install ::proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+nil_accept_install ::proc(char: ^gk.CharecterBase(Charecter), cancel_index:  gk.state_index) -> bool {
     if cancel_index == char.serlized_state.charecter_info.debit_install_index && char.serlized_state.charecter_info.in_debit == false{
         return true
     }
     return false
 }
 
-exit_block_stun :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+exit_block_stun :: proc(char: ^gk.CharecterBase(Charecter), cancel_index:  gk.state_index) -> bool {
     if char.block_stun_frames <= 0 {
         return true
     }
@@ -67,7 +67,7 @@ exit_block_stun :: proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -
 }
 
 
-exit_hit_stun ::  proc(char: ^gk.CharecterBase(Charecter), cancel_index: int) -> bool {
+exit_hit_stun ::  proc(char: ^gk.CharecterBase(Charecter), cancel_index:  gk.state_index) -> bool {
     if char.hit_stun_frames <= 0 {
         return true
     }
@@ -80,21 +80,19 @@ add_universal_states :: proc(char:^gk.CharecterBase(Charecter)) {
     add_state_block_stun(char)
     add_state_hit_stun(char)
 }
-knockdown_on_frame:Maybe(int)
+knockdown_on_frame:Maybe(gk.function_index)
 //taken from strive
 HARD_KNOCKDOWN_DURATION :: 55
 add_hard_knockdown_state :: proc(char:^gk.CharecterBase(Charecter)) {
     context.allocator = vmem.arena_allocator(&char.arena)
-    append(&char.hooks.onFrame,proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
+    knockdown_on_frame = gk.push_function(&char.hooks.onFrame,proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo if should we check if grounded?
 			// we are going to have to change this
 			char.body.velocity.x = psy.Fixed12_4 {}
 	})
-    knockdown_on_frame = len(char.hooks.onFrame)-1
-    append(&char.hooks.moveCheckExit,proc(char:^gk.CharecterBase(Charecter),proposed_state:int) -> bool{
+    hard_knockdown_exit := gk.push_function(&char.hooks.moveCheckExit,proc(char:^gk.CharecterBase(Charecter),proposed_state:gk.state_index) -> bool{
 		    return char.current_frame > HARD_KNOCKDOWN_DURATION
 	})
-    hard_knockdown_exit := len(char.hooks.moveCheckExit)-1
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {},
@@ -106,17 +104,15 @@ add_hard_knockdown_state :: proc(char:^gk.CharecterBase(Charecter)) {
 		name="hard_knockdown",
 		frames = {zero_frame},
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
-	char.hard_knockdown_index = index
+	hard_knockdown_index := gk.charecter_push_state(char, move)
+	char.hard_knockdown_index = hard_knockdown_index
 }
 SOFT_KNOCKDOWN_DURATION :: 30
 add_soft_knockdown_state :: proc(char:^gk.CharecterBase(Charecter)) {
     context.allocator = vmem.arena_allocator(&char.arena)
-    append(&char.hooks.moveCheckExit,proc(char:^gk.CharecterBase(Charecter),proposed_state:int) -> bool{
+    soft_knockdown_exit :=  gk.push_function(&char.hooks.moveCheckExit,proc(char:^gk.CharecterBase(Charecter),proposed_state:gk.state_index) -> bool{
 		    return char.current_frame > SOFT_KNOCKDOWN_DURATION
 	})
-    soft_knockdown_exit := len(char.hooks.moveCheckExit)-1
 	zero_frame := gk.Frame {
 		frame_type = gk.FrameType.Active,
 		hurtbox_list = {},
@@ -128,8 +124,7 @@ add_soft_knockdown_state :: proc(char:^gk.CharecterBase(Charecter)) {
 		name="soft_knockdown",
 		frames = {zero_frame},
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
+	index := gk.charecter_push_state(char, move)
 	char.soft_knockdown_index = index
 }
 
@@ -139,8 +134,7 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 	hurt_box := gk.Hurt_box {
 	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
 	}
-    append(&char.hooks.moveCheckExit,exit_hit_stun)
-    hit_stun_exit := len(char.hooks.moveCheckExit)-1
+    hit_stun_exit := gk.push_function(&char.hooks.moveCheckExit, exit_hit_stun)
     on_frame_hitstun := proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 			//todo add grav scaling
             if fixed.add(char.body.velocity.x,psy.invert_fixed(psy.init_from_parts(0,7))).i > (psy.init_from_parts(0,0)).i {
@@ -150,8 +144,7 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
                	))
         }
 	}
-	append(&char.hooks.onFrame, on_frame_hitstun)
-	on_frame_hitstun_index := len(char.hooks.onFrame)-1
+	on_frame_hitstun_index := gk.push_function(&char.hooks.onFrame, on_frame_hitstun)
 	move := gk.State {
 		name="hitstun",
 		moveboxs={hurt_box},
@@ -164,8 +157,7 @@ add_state_hit_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 		}},
 		isAttack  = false,
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
+	index := gk.charecter_push_state(char, move)
 	char.hit_stun_index = index
 }
 add_state_block_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
@@ -173,21 +165,19 @@ add_state_block_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 	hurt_box := gk.Hurt_box {
 	    box=psy.box_init({0,0,0,0},{5,0,10,0}),
 	}
-    append(&char.hooks.moveCheckExit,exit_block_stun)
-    block_stun_exit := len(char.hooks.moveCheckExit)-1
+	block_stun_exit := gk.push_function(&char.hooks.moveCheckExit, exit_block_stun)
 	move := gk.State {
 		name="blockstun",
 		frames = {gk.Frame {
 			frame_type = gk.FrameType.Active,
 			hurtbox_list = {0},
 			hitbox_list = {},
-			
+
 			check_exit = block_stun_exit, // todo change me
 		}},
 		isAttack  = false,
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
+	index := gk.charecter_push_state(char, move)
 	char.block_stun_index = index
 }
 
@@ -200,7 +190,7 @@ add_debit_install :: proc(char:^gk.CharecterBase(Charecter)) {
 	debit_index := gk.push_function(&char.hooks.onFrame,proc(char: ^gk.CharecterBase(Charecter),w:^gk.World(Charecter)) {
 	    char.serlized_state.charecter_info.in_debit = true
 	})
-	
+
 	move := gk.State {
 		name="debit-install",
 		frames = {},
@@ -213,7 +203,7 @@ add_debit_install :: proc(char:^gk.CharecterBase(Charecter)) {
 			frame_type = gk.FrameType.Startup,
 			hurtbox_list = {0},
 			hitbox_list = {},
-			
+
 		})
 	}
 	append(&move.frames,
@@ -229,10 +219,9 @@ add_debit_install :: proc(char:^gk.CharecterBase(Charecter)) {
 			frame_type = gk.FrameType.Recovery,
 			hurtbox_list = {0},
 			hitbox_list = {},
-			
+
 		})
 	}
-	append(&char.states, move)
-	index := len(char.states)-1
+	index := gk.charecter_push_state(char, move)
 	char.block_stun_index = index
 }

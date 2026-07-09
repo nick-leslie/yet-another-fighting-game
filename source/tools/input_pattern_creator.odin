@@ -82,7 +82,7 @@ number_notation_to_pattern :: proc(
     pattenrn := gk.Pattern{
         inputs=inputs,
         pritority=priority,
-        state_index=state_index,
+        state_index=gk.state_index(state_index),
         air_ok=air_ok,
         air_only=air_only,
     }
