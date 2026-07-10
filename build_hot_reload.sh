@@ -42,10 +42,10 @@ mv $OUT_DIR/game_tmp$DLL_EXT $OUT_DIR/game$DLL_EXT
 
 # If the executable is already running, then don't try to build and start it.
 # -f is there to make sure we match against full name, including .bin
-# if pgrep -f $EXE > /dev/null; then
-#     echo "Hot reloading..."
-#     exit 0
-# fi
+if pgrep -f $EXE > /dev/null; then
+    echo "Hot reloading..."
+    exit 0
+fi
 
 echo "Building $EXE"
 odin build source/main_hot_reload -out:$EXE -strict-style -vet -debug
