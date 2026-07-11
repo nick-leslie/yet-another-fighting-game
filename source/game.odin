@@ -134,7 +134,6 @@ ui_camera :: proc() -> rl.Camera2D {
 }
 
 
-
 free_cam := false
 
 draw_game :: proc() {
@@ -152,8 +151,8 @@ draw_game :: proc() {
 	}
 	rl.BeginMode3D(g.cam)
 	rl.DrawModel(g.model_tmp,{0,0,0},10,rl.WHITE)
-	render.charecter_draw(g.world.p1)
-	render.charecter_draw(g.world.p2)
+	render.charecter_draw(g.world.p1,true)
+	render.charecter_draw(g.world.p2,true)
 	render.charecter_draw_hit_boxes(g.world.p1)
 	render.charecter_draw_hit_boxes(g.world.p2)
 	rl.DrawCube(FLOOR_POSITION, 100, 1, 1, rl.WHITE)
@@ -173,7 +172,7 @@ draw_game :: proc() {
 	commands := create_debug_ui_layout()
 
 	//something is going wrong with the interactions between the cam and clay
-	render.clay_raylib_render(&commands,g.fonts,context.temp_allocator)
+	render.clay_raylib_render(&commands,context.temp_allocator)
 	// rl.DrawFPS(5, 50)
 
 	rl.EndDrawing()
@@ -191,7 +190,7 @@ draw_main_menu :: proc(screen:^MainMenu) {
    	commands := create_menu_ui_layout(&screen.elements)
 
 	//something is going wrong with the interactions between the cam and clay
-	render.clay_raylib_render(&commands,g.fonts,context.temp_allocator)
+	render.clay_raylib_render(&commands,context.temp_allocator)
 	rl.EndDrawing()
 }
 // last_world_state:gk.SerlizedWorld
@@ -342,7 +341,7 @@ game_init :: proc() {
 	p2 := chars.create_cyberpunk_charecter({10,0,2,0},200)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
-	clay_arena := setup_clay({
+	clay_arena := render.setup_clay({
 		1280,
 		720,
 	})

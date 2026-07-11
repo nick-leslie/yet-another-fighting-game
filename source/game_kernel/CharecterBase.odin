@@ -491,3 +491,5 @@ charecter_push_state :: proc(char: ^CharecterBase($CU), state: State) -> state_i
 	index := len(char.states)-1
 	return state_index(index)
 }
+
+

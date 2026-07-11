@@ -20,6 +20,7 @@ RollbackState :: struct($CU:typeid) {
 // MAX_ROLLBACK_FRAMES :: 25
 RollbackMannager ::struct($CU:typeid) {
     //todo note to future nick use an option to show if there state there
+    // not to past nick why...
     buffer:     [MAX_ROLLBACK_WINDOW]RollbackState(CU),
     current_index:int,
     prev_index:int,

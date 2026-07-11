@@ -81,12 +81,28 @@ unfix_body :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f64) {
 		prev_velocity = {fixed.to_f64(body.prev_velocity.x),fixed.to_f64(body.prev_velocity.y)},
 	}
 }
+unfix_body_32 :: proc(body:RiggedBody(Fixed12_4)) -> RiggedBody(f32) {
+	//todo convert the body out of float
+	return RiggedBody(f32) {
+		position = {f32(fixed.to_f64(body.position.x)),f32(fixed.to_f64(body.position.y))},
+		velocity = {f32(fixed.to_f64(body.velocity.x)),f32(fixed.to_f64(body.velocity.y))},
+		prev_position = {f32(fixed.to_f64(body.prev_position.x)),f32(fixed.to_f64(body.prev_position.y))},
+		prev_velocity = {f32(fixed.to_f64(body.prev_velocity.x)),f32(fixed.to_f64(body.prev_velocity.y))},
+	}
+}
 
 unfix_box :: proc(box:Box(Fixed12_4)) -> Box(f64) {
 	//todo convert the body out of float
 	return Box(f64) {
 		position = {fixed.to_f64(box.position.x),fixed.to_f64(box.position.y)},
 		extent = {fixed.to_f64(box.extent.x),fixed.to_f64(box.extent.y)},
+	}
+}
+unfix_box_32 :: proc(box:Box(Fixed12_4)) -> Box(f32) {
+	//todo convert the body out of float
+	return Box(f32) {
+		position = {f32(fixed.to_f64(box.position.x)),f32(fixed.to_f64(box.position.y))},
+		extent = {f32(fixed.to_f64(box.extent.x)),f32(fixed.to_f64(box.extent.y))},
 	}
 }
 // physics

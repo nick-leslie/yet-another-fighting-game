@@ -10,9 +10,7 @@ import "./utils"
 import "./netcode"
 @(require)import "core:log"
 
-error_handler :: proc "c" (errorData: clay.ErrorData) {
-    // Do something with the error data.
-}
+
 
 create_debug_ui_layout :: proc() -> clay.ClayArray(clay.RenderCommand) {
 	clay.BeginLayout()
@@ -279,14 +277,6 @@ charecter_debug_ui :: proc(charecter:gk.CharecterBase($CU)) {
 }
 
 
-setup_clay :: proc(resolution:Vec2) -> clay.Arena {
-	min_memory_size := clay.MinMemorySize()
-	memory := make([^]u8, min_memory_size,)
-	arena: clay.Arena = clay.CreateArenaWithCapacityAndMemory(uint(min_memory_size), memory)
-	clay.Initialize(arena, {resolution.x,resolution.y}, { handler = error_handler })
-	clay.SetMeasureTextFunction(measure_text, nil)
-	return arena
-}
 
 
 measure_text :: proc "c" (

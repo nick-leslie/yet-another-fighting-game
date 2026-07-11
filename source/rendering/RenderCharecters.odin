@@ -22,7 +22,7 @@ VEC3_ZERO: Vec3 = 0
 UP :: Vec3{0, 1, 0}
 FLOOR_EXTENT: Vec3={150, 0.05, 10}
 
-charecter_draw :: proc(character: gk.CharecterBase($C)) {
+charecter_draw :: proc(character: gk.CharecterBase($C),draw_boxes: bool) {
 	state,frame := gk.charecter_get_current_state_frame(character)
 	char_body := psy.unfix_body(character.body)
 	pos := [3]f32 {f32(char_body.position.x),f32(char_body.y),0}
@@ -36,19 +36,22 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
     		rl.DARKBLUE,
     	)
         first_active_drew:=false
-        for i := 0; i < len(state.frames); i += 1 {
-            future_frame := state.frames[i]
-            if future_frame.frame_type == .Active && first_active_drew==false {
-                for j := 0; j < len(future_frame.hitbox_list); j += 1 {
-                    hitbox := state.moveboxs[future_frame.hitbox_list[j]]
-                    unfixed_box := psy.unfix_box(hitbox.(gk.Hit_box).box)
-              		rl.DrawCube(
-             			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
-             			f32(unfixed_box.extent.x),
-             			f32(unfixed_box.extent.y),
-             			0.0,
-             			rl.RED,
-              		)
+        if draw_boxes {
+            for i := 0; i < len(state.frames); i += 1 {
+                future_frame := state.frames[i]
+                if future_frame.frame_type == .Active && first_active_drew==false {
+                    for j := 0; j < len(future_frame.hitbox_list); j += 1 {
+                        hitbox := state.moveboxs[future_frame.hitbox_list[j]]
+                        unfixed_box := psy.unfix_box(hitbox.(gk.Hit_box).box)
+                  		rl.DrawCube(
+                 			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
+                 			f32(unfixed_box.extent.x),
+                 			f32(unfixed_box.extent.y),
+                 			0.0,
+                 			rl.RED,
+                  		)
+                    }
+                    first_active_drew = true
                 }
                 first_active_drew = true
             }
@@ -65,16 +68,17 @@ charecter_draw :: proc(character: gk.CharecterBase($C)) {
     	)
 	}
 
-
-	for hurt_box_index in frame.hurtbox_list {
-        unfixed_box := psy.unfix_box(state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
-		rl.DrawCube(
-			pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
-			f32(unfixed_box.extent.x),
-			f32(unfixed_box.extent.y),
-			0.0,
-			rl.BLUE,
-		)
+	if draw_boxes {
+		for hurt_box_index in frame.hurtbox_list {
+	        unfixed_box := psy.unfix_box(state.moveboxs[hurt_box_index].(gk.Hurt_box).box)
+			rl.DrawCube(
+				pos + {f32(unfixed_box.position.x),f32(unfixed_box.position.y),0},
+				f32(unfixed_box.extent.x),
+				f32(unfixed_box.extent.y),
+				0.0,
+				rl.BLUE,
+			)
+		}
 	}
 	for &enity in character.entity_pool {
 		if enity.active == true {
