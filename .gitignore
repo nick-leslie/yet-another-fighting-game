@@ -14,5 +14,4 @@ assets/tmp
 assets/test
 *.spall
 *.png
-editor
 debug_build

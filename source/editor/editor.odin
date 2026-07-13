@@ -20,6 +20,7 @@ EditorState :: struct {
     fonts:     [dynamic]render.Raylib_Font,
     clay_arena:     clay.Arena,
     arena: vmem.Arena,
+    show_moves_dropdown:bool
     //store currently selected hit box
     // also we should figure out file format
 }
@@ -34,9 +35,12 @@ setup_editor :: proc(charecter:gk.CharecterBase(chars.Charecter)) -> EditorState
 	})
     arena_alocator := vmem.arena_allocator(&e.arena)
     fonts := make([dynamic]render.Raylib_Font,arena_alocator)
+   	append(&fonts,render.Raylib_Font{
+	  fontId=0,
+	  font=rl.GetFontDefault(),
+	})
     e.fonts = fonts
     e.clay_arena = clay_arena
-    render.set_fonts(&e.fonts)
     return e
 }
 
@@ -51,6 +55,8 @@ clean_up_editor :: proc(editor_state:^EditorState) {
 
 }
 
+editor:^EditorState
+
 // used to run stand alone
 main :: proc() {
    	context.logger = log.create_console_logger()
@@ -58,14 +64,16 @@ main :: proc() {
     defer rl.CloseWindow()
 
 
-    editor_state := setup_editor(chars.create_cyberpunk_charecter({0,0,2,0},200))
-    set_charecter_state_by_name(&editor_state, "neutral")
+    editor := new(EditorState)
+    editor^ = setup_editor(chars.create_cyberpunk_charecter({0,0,2,0},200))
+    render.set_fonts(&editor.fonts)
+    set_charecter_state_by_name(editor, "neutral")
     for rl.WindowShouldClose()==false {
-        draw_editor(editor_state)
+        draw_editor(editor)
         update_editor()
     }
 
-    clean_up_editor(&editor_state)
+    clean_up_editor(editor)
     // todo setup a close
 }
 
@@ -94,7 +102,7 @@ set_charecter_state_by_name :: proc(editor_state:^EditorState,name:string) {
     assert(false, "state not found:")
 }
 
-draw_editor :: proc(editor_state: EditorState) {
+draw_editor :: proc(editor_state: ^EditorState) {
     rl.BeginDrawing()
     rl.ClearBackground(rl.BLACK)
     char_body := psy.unfix_body_32(editor_state.charecter.body)
@@ -108,15 +116,71 @@ draw_editor :: proc(editor_state: EditorState) {
 
     clay.BeginLayout()
     state, frame := gk.charecter_get_current_state_frame(editor_state.charecter)
+    state_drop_down(editor_state)
     for &hurt_box_index in frame.hurtbox_list {
-        draw_hurt_boxe_clay(char_body.position, state.moveboxs[hurt_box_index].(gk.Hurt_box), cam)    }
+        draw_hurt_boxe_clay(char_body.position, state.moveboxs[hurt_box_index].(gk.Hurt_box), cam)
+    }
     commands := clay.EndLayout()
     render.clay_raylib_render(&commands)
 
     rl.EndDrawing()
 }
 
-@(private = "file")
+state_drop_down :: proc(editor_state: ^EditorState) {
+    if clay.UI()({
+        layout = {
+            layoutDirection = .TopToBottom,
+            sizing = {
+                width  = clay.SizingFit(),
+                height = clay.SizingFit(),
+            },
+            padding = {10,10,10,10},
+        },
+        border = {
+            color = render.rl_to_clay_color(rl.GRAY),
+            width = {1, 1, 1, 1, 0},
+        },
+    })
+    {
+        state, frame := gk.charecter_get_current_state_frame(editor_state.charecter)
+        clay.TextDynamic(state.name,clay.TextConfig({fontSize=40,letterSpacing=2,fontId=0,textColor={255,255,255,255},textAlignment=.Left}))
+        clay.OnHover(proc "c" (id: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+            editor_state := (^EditorState)(userData)
+            if pointerData.state == .Pressed {
+                editor_state.show_moves_dropdown = true
+            } else if pointerData.state == .Released {
+                editor_state.show_moves_dropdown = false
+            }
+        }, editor_state)
+    }
+
+    if editor_state.show_moves_dropdown {
+        clay.UI()({
+            layout = {
+                layoutDirection = .TopToBottom,
+                sizing = {
+                    width  = clay.SizingFit(),
+                    height = clay.SizingFit(),
+                },
+                padding = {10,10,10,10},
+            },
+            border = {
+                color = render.rl_to_clay_color(rl.GRAY),
+                width = {1, 1, 1, 1, 0},
+            },
+        })
+        {
+            for states in editor_state.charecter.states {
+                if clay.UI()({
+                    backgroundColor = render.rl_to_clay_color(rl.GRAY) if clay.Hovered() else render.rl_to_clay_color(rl.BLACK),
+                }) {
+                    clay.TextDynamic(states.name, clay.TextConfig({fontSize=20,letterSpacing=1,fontId=0,textColor={255,255,255,255},textAlignment=.Left}))
+                }
+            }
+        }
+    }
+}
+
 anchor_point :: proc() {
     if clay.UI()({
         layout = {sizing = {clay.SizingFixed(10), clay.SizingFixed(10)}},
@@ -124,9 +188,6 @@ anchor_point :: proc() {
     }) {}
 }
 
-
-
-@(private = "file")
 anchor_row :: proc(grow_height: bool) {
     if clay.UI()({
         layout = {
@@ -154,7 +215,7 @@ draw_hurt_boxe_clay :: proc(offset: [2]f32, hurt_box: gk.Hurt_box, cam: rl.Camer
     // ortho: fovy = visible world height
     px_per_unit := f32(rl.GetScreenHeight()) / cam.fovy
 
-    if clay.UI()({
+    if clay.UI(clay.ID_LOCAL("hurt box"))({
         floating = {
             offset     = {screen_center.x, screen_center.y},
             attachment = {element = .CenterCenter},
