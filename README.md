@@ -121,7 +121,7 @@ This is cleared every frame.
 
 # tools that could help
 * [ ] hit box editor
-* [ ] numpad notation to pattern
+* [x] numpad notation to pattern
 
 
 # nice to haves

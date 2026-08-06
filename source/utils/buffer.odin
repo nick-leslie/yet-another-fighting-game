@@ -30,7 +30,6 @@ ring_pop :: proc(buffer:^RingBuffer($N,$T)) -> T {
 	buffer.read_index = buffer.read_index %% len(buffer.buffer)
 	if buffer.read_index == buffer.index {
 		if ODIN_DISABLE_ASSERT == true {
-
 			assert(false,"not consuming fast enough")
 		}
 	}

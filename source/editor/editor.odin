@@ -20,7 +20,8 @@ EditorState :: struct {
     fonts:     [dynamic]render.Raylib_Font,
     clay_arena:     clay.Arena,
     arena: vmem.Arena,
-    show_moves_dropdown:bool
+    show_moves_dropdown:bool,
+    selected_box: ^gk.MoveBox
     //store currently selected hit box
     // also we should figure out file format
 }
@@ -70,7 +71,7 @@ main :: proc() {
     set_charecter_state_by_name(editor, "neutral")
     for rl.WindowShouldClose()==false {
         draw_editor(editor)
-        update_editor()
+        update_editor(editor)
     }
 
     clean_up_editor(editor)
@@ -102,6 +103,23 @@ set_charecter_state_by_name :: proc(editor_state:^EditorState,name:string) {
     assert(false, "state not found:")
 }
 
+debugModeEnabled := false
+update_editor :: proc(editor_state: ^EditorState) {
+    clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(rl.MouseButton.LEFT))
+    clay.UpdateScrollContainers(false, rl.GetMouseWheelMoveV(), rl.GetFrameTime())
+    clay.SetLayoutDimensions({cast(f32)rl.GetRenderWidth(), cast(f32)rl.GetRenderHeight() })
+    if (rl.IsKeyPressed(.C)) {
+        debugModeEnabled = !debugModeEnabled
+        clay.SetDebugModeEnabled(debugModeEnabled)
+    }
+    if editor_state.selected_box != nil {
+        if rl.IsMouseButtonUp(.LEFT) {
+            editor_state.selected_box = nil
+        }
+    }
+}
+
+
 draw_editor :: proc(editor_state: ^EditorState) {
     rl.BeginDrawing()
     rl.ClearBackground(rl.BLACK)
@@ -118,7 +136,7 @@ draw_editor :: proc(editor_state: ^EditorState) {
     state, frame := gk.charecter_get_current_state_frame(editor_state.charecter)
     state_drop_down(editor_state)
     for &hurt_box_index in frame.hurtbox_list {
-        draw_hurt_boxe_clay(char_body.position, state.moveboxs[hurt_box_index].(gk.Hurt_box), cam)
+        draw_hurt_box_clay(char_body.position, &state.moveboxs[hurt_box_index], cam)
     }
     commands := clay.EndLayout()
     render.clay_raylib_render(&commands)
@@ -206,8 +224,8 @@ anchor_row :: proc(grow_height: bool) {
     }
 }
 
-draw_hurt_boxe_clay :: proc(offset: [2]f32, hurt_box: gk.Hurt_box, cam: rl.Camera3D) {
-    unfixed_box := psy.unfix_box_32(hurt_box)
+draw_hurt_box_clay :: proc(offset: [2]f32, hurt_box: ^gk.MoveBox, cam: rl.Camera3D) {
+    unfixed_box := psy.unfix_box_32(hurt_box.(gk.Hurt_box))
 
     world_center := offset + unfixed_box.position
     screen_center := rl.GetWorldToScreen({world_center.x, world_center.y, 0}, cam)
@@ -222,7 +240,7 @@ draw_hurt_boxe_clay :: proc(offset: [2]f32, hurt_box: gk.Hurt_box, cam: rl.Camer
             attachTo   = .Root,
         },
         layout = {
-            layoutDirection = .TopToBottom,   // <- replaces childAlignment
+            layoutDirection = .TopToBottom,
             sizing = {
                 width  = clay.SizingFixed(unfixed_box.extent.x * px_per_unit),
                 height = clay.SizingFixed(unfixed_box.extent.y * px_per_unit),
@@ -237,15 +255,11 @@ draw_hurt_boxe_clay :: proc(offset: [2]f32, hurt_box: gk.Hurt_box, cam: rl.Camer
         anchor_row(false) // top:    corners + top-center
         anchor_row(true)  // middle: left-center, center, right-center
         anchor_row(false) // bottom: corners + bottom-center
-    }
-}
-debugModeEnabled := false
-update_editor :: proc() {
-    clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(rl.MouseButton.LEFT))
-    clay.UpdateScrollContainers(false, rl.GetMouseWheelMoveV(), rl.GetFrameTime())
-    clay.SetLayoutDimensions({cast(f32)rl.GetRenderWidth(), cast(f32)rl.GetRenderHeight() })
-    if (rl.IsKeyPressed(.C)) {
-        debugModeEnabled = !debugModeEnabled
-        clay.SetDebugModeEnabled(debugModeEnabled)
+        clay.OnHover(proc "c" (id: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+            // box := (^gk.MoveBox)(userData)
+            // if pointerData.state == .PressedThisFrame {
+            //     editor.selected_box = box
+            // }
+        },hurt_box)
     }
 }
