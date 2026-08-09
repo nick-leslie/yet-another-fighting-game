@@ -4,7 +4,7 @@ import fixed "core:math/fixed"
 @(require) import "core:log"
 
 
-Fixed12_4 :: distinct fixed.Fixed(i16,6) // fixed
+Fixed12_4 :: distinct fixed.Fixed(i32,6) // fixed
 Vec2Fixed ::  [2]Fixed12_4
 Vec3Fixed ::  [3]Fixed12_4
 
@@ -105,6 +105,22 @@ unfix_box_32 :: proc(box:Box(Fixed12_4)) -> Box(f32) {
 		extent = {f32(fixed.to_f64(box.extent.x)),f32(fixed.to_f64(box.extent.y))},
 	}
 }
+
+unfix_vec_32 :: proc(vec:Vec2Fixed) -> [2]f32 {
+    return [2]f32 {f32(fixed.to_f64(vec.x)),f32(fixed.to_f64(vec.y))}
+}
+
+fix_vector_32 :: proc(vec:[2]f32) -> [2]Fixed12_4 {
+    fixed_x :Fixed12_4
+    fixed_y :Fixed12_4
+    fixed.init_from_f64(&fixed_x,f64(vec[0]))
+	fixed.init_from_f64(&fixed_y,f64(vec[1]))
+	return [2]Fixed12_4 {
+    	fixed_x,
+    	fixed_y
+	}
+}
+
 // physics
 move_by_vel :: proc(body:^RiggedBody(Fixed12_4)) -> ^RiggedBody(Fixed12_4) {
     delta := init_from_parts(0,17)
@@ -163,6 +179,13 @@ add_fixed_vec3_to_vel:: proc (body:^RiggedBody(Fixed12_4),vec:[3]Fixed12_4) -> ^
 	return body
 }
 
+sub_fixed_vec2 :: proc(vec1:[2]Fixed12_4,vec2:[2]Fixed12_4) -> [2]Fixed12_4 {
+	return [2]Fixed12_4 {
+		fixed.sub(vec1.x,vec2.x),
+		fixed.sub(vec1.y,vec2.y),
+	}
+}
+
 // depreacted todo figure out how to do this
 // or figure out how to take any static 2 + len vec
 float_vec3_to_fixed :: proc(vec:[3]f64) -> [2]Fixed12_4 {
@@ -180,7 +203,7 @@ float_vec2_to_fixed :: proc(vec:[2]f64) -> [2]Fixed12_4 {
 
 init_from_parts :: proc(front:i16,back:i16) -> Fixed12_4{
 	value := Fixed12_4 {}
-	fixed.init_from_parts(&value,front,back)
+	fixed.init_from_parts(&value,i32(front),i32(back))
 	// log.debug(value)
 	// log.debug(fixed_to_f64(value))
 	return value
@@ -214,4 +237,3 @@ add_fixed_vecs :: proc(vec1:[2]Fixed12_4,vec2:[2]Fixed12_4) -> [2]Fixed12_4 {
         fixed.add(vec1.y,vec2.y),
     }
 }
-

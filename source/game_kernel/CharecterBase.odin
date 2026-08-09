@@ -192,6 +192,7 @@ charecter_get_current_state_frame :: proc(character: CharecterBase($CU)) -> (Sta
 	return state, frame
 }
 
+
 // should we inline this
 
 // may want to put this in moves
@@ -491,5 +492,3 @@ charecter_push_state :: proc(char: ^CharecterBase($CU), state: State) -> state_i
 	index := len(char.states)-1
 	return state_index(index)
 }
-
-

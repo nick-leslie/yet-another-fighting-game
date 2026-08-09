@@ -1,5 +1,6 @@
 package editor
 
+import "base:runtime"
 
 import "core:log"
 import gk "../game_kernel"
@@ -20,6 +21,7 @@ EditorState :: struct {
     fonts:     [dynamic]render.Raylib_Font,
     clay_arena:     clay.Arena,
     arena: vmem.Arena,
+    clay_context: ^clay.Context,
     show_moves_dropdown:bool,
     selected_box: ^gk.MoveBox
     //store currently selected hit box
@@ -30,7 +32,7 @@ setup_editor :: proc(charecter:gk.CharecterBase(chars.Charecter)) -> EditorState
     e := EditorState{
         charecter=charecter,
     }
-   	clay_arena := render.setup_clay({
+   	clay_arena,ctx := render.setup_clay({
 		1920,
 		1080,
 	})
@@ -41,6 +43,7 @@ setup_editor :: proc(charecter:gk.CharecterBase(chars.Charecter)) -> EditorState
 	  font=rl.GetFontDefault(),
 	})
     e.fonts = fonts
+    e.clay_context = ctx
     e.clay_arena = clay_arena
     return e
 }
@@ -57,18 +60,20 @@ clean_up_editor :: proc(editor_state:^EditorState) {
 }
 
 editor:^EditorState
-
+g_context:runtime.Context
 // used to run stand alone
 main :: proc() {
    	context.logger = log.create_console_logger()
+    g_context = context
     make_editor_window()
     defer rl.CloseWindow()
 
 
-    editor := new(EditorState)
+    editor = new(EditorState)
     editor^ = setup_editor(chars.create_cyberpunk_charecter({0,0,2,0},200))
     render.set_fonts(&editor.fonts)
     set_charecter_state_by_name(editor, "neutral")
+    clay.SetCurrentContext(editor.clay_context)
     for rl.WindowShouldClose()==false {
         draw_editor(editor)
         update_editor(editor)
@@ -105,15 +110,26 @@ set_charecter_state_by_name :: proc(editor_state:^EditorState,name:string) {
 
 debugModeEnabled := false
 update_editor :: proc(editor_state: ^EditorState) {
-    clay.SetPointerState(rl.GetMousePosition(), rl.IsMouseButtonDown(rl.MouseButton.LEFT))
+    left_mouse_state := rl.IsMouseButtonDown(rl.MouseButton.LEFT)
+    clay.SetPointerState(rl.GetMousePosition(), left_mouse_state)
     clay.UpdateScrollContainers(false, rl.GetMouseWheelMoveV(), rl.GetFrameTime())
     clay.SetLayoutDimensions({cast(f32)rl.GetRenderWidth(), cast(f32)rl.GetRenderHeight() })
     if (rl.IsKeyPressed(.C)) {
         debugModeEnabled = !debugModeEnabled
         clay.SetDebugModeEnabled(debugModeEnabled)
     }
+
+    ray := rl.GetScreenToWorldRay(rl.GetMousePosition(), editor_camera())
     if editor_state.selected_box != nil {
-        if rl.IsMouseButtonUp(.LEFT) {
+        switch v in editor_state.selected_box {
+            case gk.Hit_box:
+                hit_box := &editor_state.selected_box.(gk.Hit_box)
+                hit_box.box.position = psy.sub_fixed_vec2(editor_state.charecter.serlized_state.body.position,psy.fix_vector_32([2]f32{ray.position.x,ray.position.y}))
+            case gk.Hurt_box:
+                hurt_box := &editor_state.selected_box.(gk.Hurt_box)
+                hurt_box.box.position = psy.sub_fixed_vec2(editor_state.charecter.serlized_state.body.position,psy.fix_vector_32([2]f32{-ray.position.x,-ray.position.y}))
+        }
+        if left_mouse_state == false {
             editor_state.selected_box = nil
         }
     }
@@ -133,10 +149,13 @@ draw_editor :: proc(editor_state: ^EditorState) {
     zoom := f32(rl.GetScreenHeight()) / PIXEL_WINDOW_HEIGHT
 
     clay.BeginLayout()
-    state, frame := gk.charecter_get_current_state_frame(editor_state.charecter)
+    _, frame := gk.charecter_get_current_state_frame(editor_state.charecter)
+    state_index := editor_state.charecter.serlized_state.current_state
     state_drop_down(editor_state)
-    for &hurt_box_index in frame.hurtbox_list {
-        draw_hurt_box_clay(char_body.position, &state.moveboxs[hurt_box_index], cam)
+    if len(editor_state.charecter.states[state_index].moveboxs) > 0 {
+        for &hurt_box_index in frame.hurtbox_list {
+            draw_hurt_box_clay(char_body.position, &editor_state.charecter.states[state_index].moveboxs[hurt_box_index], cam)
+        }  
     }
     commands := clay.EndLayout()
     render.clay_raylib_render(&commands)
@@ -188,11 +207,16 @@ state_drop_down :: proc(editor_state: ^EditorState) {
             },
         })
         {
-            for states in editor_state.charecter.states {
+            for states,state_index in editor_state.charecter.states {
                 if clay.UI()({
                     backgroundColor = render.rl_to_clay_color(rl.GRAY) if clay.Hovered() else render.rl_to_clay_color(rl.BLACK),
                 }) {
                     clay.TextDynamic(states.name, clay.TextConfig({fontSize=20,letterSpacing=1,fontId=0,textColor={255,255,255,255},textAlignment=.Left}))
+                    clay.OnHover(proc "c" (id: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
+                        if pointerData.state == .ReleasedThisFrame {
+                            editor.charecter.serlized_state.current_state = gk.state_index(uintptr(userData))
+                        }
+                    },rawptr(uintptr(state_index)))
                 }
             }
         }
@@ -256,10 +280,11 @@ draw_hurt_box_clay :: proc(offset: [2]f32, hurt_box: ^gk.MoveBox, cam: rl.Camera
         anchor_row(true)  // middle: left-center, center, right-center
         anchor_row(false) // bottom: corners + bottom-center
         clay.OnHover(proc "c" (id: clay.ElementId, pointerData: clay.PointerData, userData: rawptr) {
-            // box := (^gk.MoveBox)(userData)
-            // if pointerData.state == .PressedThisFrame {
-            //     editor.selected_box = box
-            // }
+            context = g_context
+            box := (^gk.MoveBox)(userData)
+            if pointerData.state == .PressedThisFrame {
+                editor.selected_box = box
+            }
         },hurt_box)
     }
 }

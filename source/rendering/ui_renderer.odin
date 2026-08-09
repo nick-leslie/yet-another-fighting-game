@@ -21,13 +21,13 @@ error_handler :: proc "c" (errorData: clay.ErrorData) {
     // log.error(error_str)
 }
 
-setup_clay :: proc(resolution:Vec2) -> clay.Arena {
+setup_clay :: proc(resolution:Vec2) -> (clay.Arena,^clay.Context) {
 	min_memory_size := clay.MinMemorySize()
 	memory := make([^]u8, min_memory_size,)
 	arena: clay.Arena = clay.CreateArenaWithCapacityAndMemory(uint(min_memory_size), memory)
-	clay.Initialize(arena, {resolution.x,resolution.y}, { handler = error_handler })
+	clay_context := clay.Initialize(arena, {resolution.x,resolution.y}, { handler = error_handler })
 	clay.SetMeasureTextFunction(measure_text_ascii, nil)
-	return arena
+	return arena,clay_context
 }
 
 // this is cringe
