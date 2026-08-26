@@ -15,4 +15,4 @@ assets/test
 *.spall
 *.png
 debug_build
-editor
+editor_bin
