@@ -175,6 +175,7 @@ add_state_block_stun ::proc(char: ^gk.CharecterBase(Charecter)) {
 
 			check_exit = block_stun_exit, // todo change me
 		}},
+		moveboxs={hurt_box},
 		isAttack  = false,
 	}
 	index := gk.charecter_push_state(char, move)

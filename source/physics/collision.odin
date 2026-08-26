@@ -18,6 +18,21 @@ check_body_static_collsion :: proc(a_box:FixedBox,a_body:FixedBody,b_box:FixedBo
     return check_box_box_collision(a_box,b_box)
 }
 
+check_box_point_collision :: proc(box: FixedBox, point: [2]Fixed12_4) -> bool {
+    two_fixed := Fixed12_4{}
+    fixed.init_from_f64(&two_fixed, 2.0)
+
+    a_half_width := fixed.div(box.extent.x, two_fixed)
+    a_half_height := fixed.div(box.extent.y, two_fixed)
+
+    return (
+        fixed.add(box.x, a_half_width).i >= point[0].i &&
+        fixed.sub(box.x, a_half_width).i <= point[0].i &&
+        fixed.add(box.y, a_half_height).i >= point[1].i &&
+        fixed.sub(box.y, a_half_height).i <= point[1].i
+    )
+}
+
 check_box_box_collision :: proc(a: FixedBox, b: FixedBox) -> bool {
     two_fixed := Fixed12_4{}
     fixed.init_from_f64(&two_fixed, 2.0)

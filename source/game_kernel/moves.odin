@@ -56,7 +56,7 @@ MoveBox :: union {
 	// todo properties
 //for multi hits spawn a new hitbox
 Hit_box :: struct {
-    box:psy.FixedBox,
+    using box:psy.FixedBox,
 	hitKnockback:     psy.Vec2Fixed, // this is applied to other
 	hitPushback:      psy.Vec2Fixed, // this is applied to self
 	blockKnockback:   psy.Vec2Fixed,

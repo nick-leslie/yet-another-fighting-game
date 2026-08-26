@@ -117,7 +117,7 @@ fix_vector_32 :: proc(vec:[2]f32) -> [2]Fixed12_4 {
 	fixed.init_from_f64(&fixed_y,f64(vec[1]))
 	return [2]Fixed12_4 {
     	fixed_x,
-    	fixed_y
+    	fixed_y,
 	}
 }
 

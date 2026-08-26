@@ -82,6 +82,7 @@ Game_Memory :: struct {
 	animations_tmp: [^]rl.ModelAnimation,
 	animations_count_tmp:i32,
 	clay_arena:     clay.Arena,
+	clay_ctx:       ^clay.Context,
 	cam: 			rl.Camera3D,
 	rollback_state: RollbackMannager(char.Charecter),
 	p1_input_mannager:InputMannager,
@@ -341,7 +342,7 @@ game_init :: proc() {
 	p2 := chars.create_cyberpunk_charecter({10,0,2,0},200)
 	old_allocator := context.allocator
 	context.allocator = old_allocator
-	clay_arena := render.setup_clay({
+	clay_arena,clay_ctx := render.setup_clay({
 		1280,
 		720,
 	})
@@ -371,6 +372,7 @@ game_init :: proc() {
 		// You can put textures, sounds and music in the `assets` folder. Those
 		// files will be part any release or web build.
 		clay_arena=clay_arena,
+		clay_ctx=clay_ctx,
 		world=gk.world_init(p1,p2),
 		// network_mannager=network_mannager.?,
 		p1_input_mannager=InputMannager {

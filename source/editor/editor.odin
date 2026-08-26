@@ -121,17 +121,20 @@ update_editor :: proc(editor_state: ^EditorState) {
 
     ray := rl.GetScreenToWorldRay(rl.GetMousePosition(), editor_camera())
     if editor_state.selected_box != nil {
-        switch v in editor_state.selected_box {
-            case gk.Hit_box:
-                hit_box := &editor_state.selected_box.(gk.Hit_box)
-                hit_box.box.position = psy.sub_fixed_vec2(editor_state.charecter.serlized_state.body.position,psy.fix_vector_32([2]f32{ray.position.x,ray.position.y}))
-            case gk.Hurt_box:
-                hurt_box := &editor_state.selected_box.(gk.Hurt_box)
-                hurt_box.box.position = psy.sub_fixed_vec2(editor_state.charecter.serlized_state.body.position,psy.fix_vector_32([2]f32{-ray.position.x,-ray.position.y}))
+        //todo dont snap the box pos directly to the mouse
+        mouse_to_char := psy.sub_fixed_vec2(editor_state.charecter.serlized_state.body.position,psy.fix_vector_32([2]f32{-ray.position.x,-ray.position.y}))
+            switch &v in editor_state.selected_box {
+                case gk.Hit_box:
+                    if rl.IsMouseButtonDown(rl.MouseButton.LEFT) && psy.check_box_point_collision(v,mouse_to_char) {
+                        v.box.position = mouse_to_char
+                    }
+                case gk.Hurt_box:
+                    if rl.IsMouseButtonDown(rl.MouseButton.LEFT) && psy.check_box_point_collision(v,mouse_to_char) {
+                        v.box.position = mouse_to_char
+                    }
+            }
         }
         if left_mouse_state == false {
-            editor_state.selected_box = nil
-        }
     }
 }
 
@@ -248,10 +251,10 @@ anchor_row :: proc(grow_height: bool) {
     }
 }
 
-draw_hurt_box_clay :: proc(offset: [2]f32, hurt_box: ^gk.MoveBox, cam: rl.Camera3D) {
+draw_hurt_box_clay :: proc(charecter_offset: [2]f32, hurt_box: ^gk.MoveBox, cam: rl.Camera3D) {
     unfixed_box := psy.unfix_box_32(hurt_box.(gk.Hurt_box))
 
-    world_center := offset + unfixed_box.position
+    world_center := charecter_offset + unfixed_box.position
     screen_center := rl.GetWorldToScreen({world_center.x, world_center.y, 0}, cam)
 
     // ortho: fovy = visible world height
